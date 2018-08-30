@@ -26,8 +26,6 @@ function mapStateToProps(state) {
     const enableUserCreation = config.EnableUserCreation === 'true';
     const enableEmailInvitations = config.EnableEmailInvitations === 'true';
     const experimentalPrimaryTeam = config.ExperimentalPrimaryTeam;
-    const helpLink = config.HelpLink;
-    const reportAProblemLink = config.ReportAProblemLink;
     const restrictTeamInvite = config.RestrictTeamInvite;
 
     let canCreateCustomEmoji = haveISystemPermission(state, {permission: Permissions.MANAGE_EMOJIS});
@@ -53,8 +51,6 @@ function mapStateToProps(state) {
         enableUserCreation,
         enableEmailInvitations,
         experimentalPrimaryTeam,
-        helpLink,
-        reportAProblemLink,
         restrictTeamInvite,
         pluginMenuItems: state.plugins.components.MainMenu,
         canCreateCustomEmoji,

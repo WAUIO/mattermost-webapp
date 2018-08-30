@@ -724,7 +724,6 @@ export default class SidebarHeaderDropdown extends React.Component {
                     {keyboardShortcuts}
                     {reportLink}
                     {nativeAppLink}
-                    {about}
                     {logoutDivider}
                     {logout}
                     {teamMembersModal}
