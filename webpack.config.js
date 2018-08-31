@@ -335,11 +335,11 @@ if (TEST) {
 // <link rel="apple-touch-icon" ... /> and <meta name="apple-*" ... /> tags into root.html.
 config.plugins.push(
     new WebpackPwaManifest({
-        name: 'Mattermost',
-        short_name: 'Mattermost',
-        description: 'Mattermost is an open source, self-hosted Slack-alternative',
+        name: 'WAU Chat',
+        short_name: 'Wau Chat',
+        description: 'Wau Chat is an open source, self-hosted Slack-alternative',
         background_color: '#ffffff',
-        inject: true,
+        inject: false,
         ios: true,
         fingerprints: false,
         orientation: 'any',
