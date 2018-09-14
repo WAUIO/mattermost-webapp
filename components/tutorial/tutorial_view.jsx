@@ -32,6 +32,7 @@ export default class TutorialView extends React.Component {
                     isLicensed={this.props.isLicensed}
                     restrictTeamInvite={this.props.restrictTeamInvite}
                     supportEmail={this.props.supportEmail}
+                    siteName = {this.props.siteName}
                 />
             </div>
         );
@@ -45,6 +46,7 @@ TutorialView.propTypes = {
     isLicensed: PropTypes.bool.isRequired,
     restrictTeamInvite: PropTypes.string.isRequired,
     supportEmail: PropTypes.string.isRequired,
+    siteName: PropTypes.string,
 };
 
 TutorialView.defaultProps = {

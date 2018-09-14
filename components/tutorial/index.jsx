@@ -21,12 +21,16 @@ function mapStateToProps(state) {
     const restrictTeamInvite = config.RestrictTeamInvite;
     const supportEmail = config.SupportEmail;
 
+    const siteName = config.SiteName;
+
     return {
         townSquareDisplayName,
         appDownloadLink,
         isLicensed,
         restrictTeamInvite,
         supportEmail,
+        siteName,
+
     };
 }
 
