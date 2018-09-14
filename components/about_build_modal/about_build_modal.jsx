@@ -7,7 +7,7 @@ import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
 import FormattedMarkdownMessage from 'components/formatted_markdown_message';
-import MattermostLogo from 'components/svg/mattermost_logo';
+import WauLogo from 'components/svg/wau_logo';
 
 export default class AboutBuildModal extends React.PureComponent {
     static defaultProps = {
@@ -172,7 +172,7 @@ export default class AboutBuildModal extends React.PureComponent {
                 <Modal.Body>
                     <div className='about-modal__content'>
                         <div className='about-modal__logo'>
-                            <MattermostLogo/>
+                            <WauLogo/>
                         </div>
                         <div>
                             <h3 className='about-modal__title'>{'Mattermost'} {title}</h3>
