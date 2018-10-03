@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import crypto from 'crypto';
@@ -57,7 +57,7 @@ export default class ErrorPage extends React.PureComponent {
                 <Link to={returnTo}>
                     <FormattedMessage
                         id='error.generic.link'
-                        defaultMessage='Back to WAU Chat'
+                        defaultMessage='Back to Mattermost'
                     />
                 </Link>
             );

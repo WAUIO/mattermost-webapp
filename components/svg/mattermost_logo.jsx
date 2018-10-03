@@ -1,11 +1,11 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
 
 import {localizeMessage} from 'utils/utils.jsx';
 
-export default class WAU ChatLogo extends React.PureComponent {
+export default class MattermostLogo extends React.PureComponent {
     render() {
         return (
             <span {...this.props}>
@@ -17,7 +17,7 @@ export default class WAU ChatLogo extends React.PureComponent {
                     viewBox='0 0 500 500'
                     style={style.background}
                     role='icon'
-                    aria-label={localizeMessage('generic_icons.mattermost', 'WAU Chat Logo')}
+                    aria-label={localizeMessage('generic_icons.mattermost', 'Mattermost Logo')}
                 >
                     <g id='XMLID_1_'>
                         <g id='XMLID_3_'>

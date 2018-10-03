@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -66,7 +66,7 @@ export default class DatabaseSettings extends AdminSettings {
                     helpText={
                         <FormattedMessage
                             id='admin.recycle.recycleDescription'
-                            defaultMessage='Deployments using multiple databases can switch from one master database to another without restarting the WAU Chat server by updating "config.json" to the new desired configuration and using the {reloadConfiguration} feature to load the new settings while the server is running. The administrator should then use {featureName} feature to recycle the database connections based on the new settings.'
+                            defaultMessage='Deployments using multiple databases can switch from one master database to another without restarting the Mattermost server by updating "config.json" to the new desired configuration and using the {reloadConfiguration} feature to load the new settings while the server is running. The administrator should then use {featureName} feature to recycle the database connections based on the new settings.'
                             values={{
                                 featureName: (
                                     <b>

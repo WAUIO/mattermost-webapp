@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -33,7 +33,7 @@ describe('components/select_team/SelectTeam', () => {
             {id: 'team_id_2', delete_at: 0, name: 'b-team', display_name: 'B Team'},
         ],
         roles: {system_admin: {name: 'system_admin'}, system_user: {name: 'system_user'}},
-        siteName: 'WAU Chat',
+        siteName: 'Mattermost',
         actions: {
             getTeams: jest.fn(),
             loadRolesIfNeeded: jest.fn(),

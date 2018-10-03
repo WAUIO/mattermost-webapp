@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import $ from 'jquery';
@@ -111,7 +111,7 @@ class LicenseSettings extends React.Component {
 
         if (this.props.license.IsLicensed === 'true') {
             // Note: DO NOT LOCALISE THESE STRINGS. Legally we can not since the license is in English.
-            edition = 'WAU Chat Enterprise Edition. Enterprise features on this server have been unlocked with a license key and a valid subscription.';
+            edition = 'Mattermost Enterprise Edition. Enterprise features on this server have been unlocked with a license key and a valid subscription.';
             licenseType = (
                 <div>
                     <p>
@@ -152,7 +152,7 @@ class LicenseSettings extends React.Component {
             // Note: DO NOT LOCALISE THESE STRINGS. Legally we can not since the license is in English.
             edition = (
                 <p>
-                    {'WAU Chat Enterprise Edition. Unlock enterprise features in this software through the purchase of a subscription from '}
+                    {'Mattermost Enterprise Edition. Unlock enterprise features in this software through the purchase of a subscription from '}
                     <a
                         target='_blank'
                         rel='noopener noreferrer'
@@ -213,7 +213,7 @@ class LicenseSettings extends React.Component {
                     <p className='help-text no-margin'>
                         <FormattedHTMLMessage
                             id='admin.license.uploadDesc'
-                            defaultMessage='Upload a license key for WAU Chat Enterprise Edition to upgrade this server. <a href="http://mattermost.com" target="_blank">Visit us online</a> to learn more about the benefits of Enterprise Edition or to purchase a key.'
+                            defaultMessage='Upload a license key for Mattermost Enterprise Edition to upgrade this server. <a href="http://mattermost.com" target="_blank">Visit us online</a> to learn more about the benefits of Enterprise Edition or to purchase a key.'
                         />
                     </p>
                 </div>

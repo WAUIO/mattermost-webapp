@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -16,7 +16,7 @@ export default function GetIosApp({iosAppDownloadLink}) {
             <h1 className='get-app__header'>
                 <FormattedMessage
                     id='get_app.iosHeader'
-                    defaultMessage='WAU Chat works best if you switch to our iPhone app'
+                    defaultMessage='Mattermost works best if you switch to our iPhone app'
                 />
             </h1>
             <hr/>
@@ -42,8 +42,8 @@ export default function GetIosApp({iosAppDownloadLink}) {
                 href='mattermost://'
             >
                 <FormattedMessage
-                    id='get_app.openWAU Chat'
-                    defaultMessage='Open WAU Chat'
+                    id='get_app.openMattermost'
+                    defaultMessage='Open Mattermost'
                 />
             </a>
             <span className='get-app__continue-with-browser'>

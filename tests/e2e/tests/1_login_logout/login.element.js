@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import {Constants} from '../../utils';
@@ -11,7 +11,7 @@ module.exports = {
 
         loginPage.navigate().
             navigateToPage().
-            assert.title('WAU Chat').
+            assert.title('Mattermost').
             assert.visible('@loginInput').
             assert.visible('@passwordInput').
             assert.visible('@signinButton');

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -378,7 +378,7 @@ export class UsersAndTeamsSettings extends AdminSettings {
                 <DropdownSetting
                     id='restrictDirectMessage'
                     values={[
-                        {value: RESTRICT_DIRECT_MESSAGE_ANY, text: Utils.localizeMessage('admin.team.restrict_direct_message_any', 'Any user on the WAU Chat server')},
+                        {value: RESTRICT_DIRECT_MESSAGE_ANY, text: Utils.localizeMessage('admin.team.restrict_direct_message_any', 'Any user on the Mattermost server')},
                         {value: RESTRICT_DIRECT_MESSAGE_TEAM, text: Utils.localizeMessage('admin.team.restrict_direct_message_team', 'Any member of the team')},
                     ]}
                     label={
@@ -390,7 +390,7 @@ export class UsersAndTeamsSettings extends AdminSettings {
                     helpText={
                         <FormattedHTMLMessage
                             id='admin.team.restrictDirectMessageDesc'
-                            defaultMessage='"Any user on the WAU Chat server" enables users to open a Direct Message channel with any user on the server, even if they are not on any teams together. "Any member of the team" limits the ability in the Direct Messages "More" menu to only open Direct Message channels with users who are in the same team.<br /><br />Note: This setting only affects the UI, not permissions on the server.'
+                            defaultMessage='"Any user on the Mattermost server" enables users to open a Direct Message channel with any user on the server, even if they are not on any teams together. "Any member of the team" limits the ability in the Direct Messages "More" menu to only open Direct Message channels with users who are in the same team.<br /><br />Note: This setting only affects the UI, not permissions on the server.'
                         />
                     }
                     value={this.state.restrictDirectMessage}

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -273,7 +273,7 @@ export default class ElasticsearchSettings extends AdminSettings {
                     helpText={
                         <FormattedMessage
                             id='admin.elasticsearch.testHelpText'
-                            defaultMessage='Tests if the WAU Chat server can connect to the Elasticsearch server specified. Testing the connection only saves the configuration if the test is successful. See log file for more detailed error messages.'
+                            defaultMessage='Tests if the Mattermost server can connect to the Elasticsearch server specified. Testing the connection only saves the configuration if the test is successful. See log file for more detailed error messages.'
                         />
                     }
                     buttonText={

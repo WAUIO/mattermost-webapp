@@ -3,7 +3,7 @@
 exports[`/components/common/SiteNameAndDescription should match snapshot, default 1`] = `
 <React.Fragment>
   <h1>
-    WAU Chat
+    Mattermost
   </h1>
   <h4
     className="color--light"

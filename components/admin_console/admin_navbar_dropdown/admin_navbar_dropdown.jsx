@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import $ from 'jquery';
@@ -214,7 +214,7 @@ export default class AdminNavbarDropdown extends React.Component {
                             >
                                 <FormattedMessage
                                     id='navbar_dropdown.about'
-                                    defaultMessage='About WAU Chat'
+                                    defaultMessage='About Mattermost'
                                 />
                             </button>
                         </li>

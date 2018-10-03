@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -40,10 +40,10 @@ export default class SecurityTab extends React.Component {
          */
         canUseAccessTokens: PropTypes.bool,
 
-        // Whether or not this instance of WAU Chat is licensed.
+        // Whether or not this instance of Mattermost is licensed.
         isLicensed: PropTypes.bool,
 
-        // Whether or not this instance of WAU Chat is licensed to use multi-factor authentication.
+        // Whether or not this instance of Mattermost is licensed to use multi-factor authentication.
         mfaLicensed: PropTypes.bool,
 
         // Whether or not OAuth applications are enabled.
