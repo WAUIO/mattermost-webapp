@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -108,7 +108,7 @@ export default class ManageLanguage extends React.Component {
                     <br/>
                     <FormattedHTMLMessage
                         id='user.settings.languages.promote'
-                        defaultMessage='Select which language Mattermost displays in the user interface.<br /><br />Would you like to help with translations? Join the <a href="http://translate.mattermost.com/" target="_blank">Mattermost Translation Server</a> to contribute.'
+                        defaultMessage='Select which language WAU Chat displays in the user interface.<br /><br />Would you like to help with translations? Join the <a href="http://translate.mattermost.com/" target="_blank">WAU Chat Translation Server</a> to contribute.'
                     />
                 </div>
             </div>

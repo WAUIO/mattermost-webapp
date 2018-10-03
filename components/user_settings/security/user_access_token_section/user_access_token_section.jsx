@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -227,7 +227,7 @@ export default class UserAccessTokenSection extends React.Component {
                 <div className='alert alert-danger'>
                     <FormattedHTMLMessage
                         id='user.settings.tokens.confirmDeleteMessage'
-                        defaultMessage='Any integrations using this token will no longer be able to access the Mattermost API. You cannot undo this action. <br /><br />Are you sure want to delete the {description} token?'
+                        defaultMessage='Any integrations using this token will no longer be able to access the WAU Chat API. You cannot undo this action. <br /><br />Are you sure want to delete the {description} token?'
                         values={{
                             description: token.description,
                         }}

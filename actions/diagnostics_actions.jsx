@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
@@ -79,7 +79,7 @@ export function measure(name1, name2) {
         return [-1, ''];
     }
 
-    const displayPrefix = '🐐 Mattermost: ';
+    const displayPrefix = '🐐 WAU Chat: ';
     const measurementName = `${displayPrefix}${name1} - ${name2}`;
     performance.measure(measurementName, name1, name2);
     const lastDuration = mostRecentDurationByEntryName(measurementName);

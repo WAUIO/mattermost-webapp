@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -7,7 +7,7 @@ import {Link} from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import {useSafeUrl} from 'utils/url';
-import MattermostIcon from 'images/favicon/android-chrome-192x192.png';
+import WAU ChatIcon from 'images/favicon/android-chrome-192x192.png';
 import Nexus6Mockup from 'images/nexus-6p-mockup.png';
 
 export default function GetAndroidApp({androidAppDownloadLink}) {
@@ -16,26 +16,26 @@ export default function GetAndroidApp({androidAppDownloadLink}) {
             <h1 className='get-app__header'>
                 <FormattedMessage
                     id='get_app.androidHeader'
-                    defaultMessage='Mattermost works best if you switch to our Android app'
+                    defaultMessage='WAU Chat works best if you switch to our Android app'
                 />
             </h1>
             <hr/>
             <div>
                 <img
                     className='get-android-app__icon'
-                    src={MattermostIcon}
+                    src={WAU ChatIcon}
                 />
                 <div className='get-android-app__app-info'>
                     <span className='get-android-app__app-name'>
                         <FormattedMessage
                             id='get_app.androidAppName'
-                            defaultMessage='Mattermost for Android'
+                            defaultMessage='WAU Chat for Android'
                         />
                     </span>
                     <span className='get-android-app__app-creator'>
                         <FormattedMessage
                             id='get_app.mattermostInc'
-                            defaultMessage='Mattermost, Inc'
+                            defaultMessage='WAU Chat, Inc'
                         />
                     </span>
                 </div>

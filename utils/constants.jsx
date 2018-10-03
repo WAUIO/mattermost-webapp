@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 /* eslint-disable no-magic-numbers */
@@ -768,7 +768,7 @@ export const Constants = {
     EMOJI_SIZE: 16,
     THEMES: {
         default: {
-            type: 'Mattermost',
+            type: 'WAU Chat',
             sidebarBg: '#145dbf',
             sidebarText: '#ffffff',
             sidebarUnreadText: '#ffffff',
@@ -822,7 +822,7 @@ export const Constants = {
             image: defaultThemeImage,
         },
         mattermostDark: {
-            type: 'Mattermost Dark',
+            type: 'WAU Chat Dark',
             sidebarBg: '#1b2c3e',
             sidebarText: '#ffffff',
             sidebarUnreadText: '#ffffff',

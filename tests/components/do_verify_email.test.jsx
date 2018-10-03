@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -14,7 +14,7 @@ describe('components/DoVerifyEmail', () => {
                 email: 'test@example.com',
             },
         },
-        siteName: 'Mattermost',
+        siteName: 'WAU Chat',
         actions: {verifyUserEmail: jest.fn()},
     };
 

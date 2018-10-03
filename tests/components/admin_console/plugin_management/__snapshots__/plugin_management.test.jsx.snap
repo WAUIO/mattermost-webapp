@@ -70,7 +70,7 @@ exports[`components/PluginManagement should match snapshot 1`] = `
           className="help-text"
         >
           <FormattedHTMLMessage
-            defaultMessage="Upload a plugin for your Mattermost server. See <a href=\\"https://about.mattermost.com/default-plugin-uploads\\" target=\\"_blank\\">documentation</a> to learn more."
+            defaultMessage="Upload a plugin for your WAU Chat server. See <a href=\\"https://about.mattermost.com/default-plugin-uploads\\" target=\\"_blank\\">documentation</a> to learn more."
             id="admin.plugin.uploadDesc"
             values={Object {}}
           />
@@ -96,7 +96,7 @@ exports[`components/PluginManagement should match snapshot 1`] = `
           className="help-text"
         >
           <FormattedHTMLMessage
-            defaultMessage="Installed plugins on your Mattermost server. Pre-packaged plugins are installed by default, and can be disabled but not removed."
+            defaultMessage="Installed plugins on your WAU Chat server. Pre-packaged plugins are installed by default, and can be disabled but not removed."
             id="admin.plugin.installedDesc"
             values={Object {}}
           />
@@ -230,7 +230,7 @@ exports[`components/PluginManagement should match snapshot, upload disabled 1`] 
           className="help-text"
         >
           <FormattedHTMLMessage
-            defaultMessage="Installed plugins on your Mattermost server. Pre-packaged plugins are installed by default, and can be disabled but not removed."
+            defaultMessage="Installed plugins on your WAU Chat server. Pre-packaged plugins are installed by default, and can be disabled but not removed."
             id="admin.plugin.installedDesc"
             values={Object {}}
           />
