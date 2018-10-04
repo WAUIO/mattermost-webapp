@@ -1,6 +1,6 @@
 # Code Contribution Guidelines
 
-Thank you for your interest in contributing! Please see the [Mattermost Contribution Guide](https://developers.mattermost.com/contribute/getting-started/) which describes the process for making code contributions across Mattermost projects and [join our "Contributors" community channel](https://pre-release.mattermost.com/core/channels/tickets) to ask questions from community members and the Mattermost core team.
+Thank you for your interest in contributing! Please see the [WAU Chat Contribution Guide](https://developers.mattermost.com/contribute/getting-started/) which describes the process for making code contributions across WAU Chat projects and [join our "Contributors" community channel](https://pre-release.mattermost.com/core/channels/tickets) to ask questions from community members and the WAU Chat core team.
 
 ### Review Process for this Repo
 
@@ -29,7 +29,7 @@ A product manager (PM) will review the pull request to make sure it:
 This step is sometimes skipped for bugs or small improvements with a well-defined ticket. In this case the core committer will assign the appropriate devs for review. A PM can also ask developer support to set up a separate test instance if the PR cannot be easily tested.
 
 When the review process begins:
- - Mattermost Core Committer
+ - WAU Chat Core Committer
     - Assigns `1: PM Review` label within 1 business day after the PR is submitted.
     - Assigns PM reviewer under Assignees. Those related to end user features are assigned to @esethna, others to @jasonblais. PM re-assigns as needed.
  - PM
@@ -62,7 +62,7 @@ Two developers will review the pull request and either give feedback or approve 
 Review process is complete and the pull request is merged.
 
  - Dev assigns `3: Ready to Merge` label.
- - If Mattermost is not in release mode (between [major feature cut and release candidate cut](https://docs.mattermost.com/process/release-process.html)), the PR is merged into `master`.
+ - If WAU Chat is not in release mode (between [major feature cut and release candidate cut](https://docs.mattermost.com/process/release-process.html)), the PR is merged into `master`.
  - If the PR is a major change, merge is postponed until the next release cycle.
    - Dev calls out on the issue that it is a major change and it will be merged after branching.
    - Once the current release is branched the PR can be merged into `master`.
