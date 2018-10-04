@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
@@ -14,7 +14,7 @@ const SECTION_NONE = (
         <td>
             <FormattedMessage
                 id='admin.connectionSecurityNoneDescription'
-                defaultMessage='Mattermost will connect over an insecure connection.'
+                defaultMessage='WAU Chat will connect over an insecure connection.'
             />
         </td>
     </tr>
@@ -31,7 +31,7 @@ const SECTION_TLS = (
         <td>
             <FormattedMessage
                 id='admin.connectionSecurityTlsDescription'
-                defaultMessage='Encrypts the communication between Mattermost and your server.'
+                defaultMessage='Encrypts the communication between WAU Chat and your server.'
             />
         </td>
     </tr>
@@ -109,7 +109,7 @@ export const WEBSERVER_MODE_HELP_TEXT = (
                     <td>
                         <FormattedMessage
                             id='admin.webserverModeGzipDescription'
-                            defaultMessage='The Mattermost server will serve static files compressed with gzip.'
+                            defaultMessage='The WAU Chat server will serve static files compressed with gzip.'
                         />
                     </td>
                 </tr>
@@ -123,7 +123,7 @@ export const WEBSERVER_MODE_HELP_TEXT = (
                     <td>
                         <FormattedMessage
                             id='admin.webserverModeUncompressedDescription'
-                            defaultMessage='The Mattermost server will serve static files uncompressed.'
+                            defaultMessage='The WAU Chat server will serve static files uncompressed.'
                         />
                     </td>
                 </tr>
@@ -137,7 +137,7 @@ export const WEBSERVER_MODE_HELP_TEXT = (
                     <td>
                         <FormattedMessage
                             id='admin.webserverModeDisabledDescription'
-                            defaultMessage='The Mattermost server will not serve static files.'
+                            defaultMessage='The WAU Chat server will not serve static files.'
                         />
                     </td>
                 </tr>

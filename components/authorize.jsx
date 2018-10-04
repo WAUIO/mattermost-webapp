@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -111,7 +111,7 @@ export default class Authorize extends React.Component {
                         <div className='text'>
                             <FormattedHTMLMessage
                                 id='authorize.title'
-                                defaultMessage='<strong>{appName}</strong> would like to connect to your <strong>Mattermost</strong> user account'
+                                defaultMessage='<strong>{appName}</strong> would like to connect to your <strong>WAU Chat</strong> user account'
                                 values={{
                                     appName: app.name,
                                 }}

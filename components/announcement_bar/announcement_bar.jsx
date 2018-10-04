@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -286,7 +286,7 @@ export default class AnnouncementBar extends React.PureComponent {
             message = (
                 <FormattedMarkdownMessage
                     id={ErrorBarTypes.WEBSOCKET_PORT_ERROR}
-                    defaultMessage={'Please check connection, Mattermost unreachable. If issue persists, ask administrator to [check WebSocket port](!https://about.mattermost.com/default-websocket-port-help).'}
+                    defaultMessage={'Please check connection, WAU Chat unreachable. If issue persists, ask administrator to [check WebSocket port](!https://about.mattermost.com/default-websocket-port-help).'}
                 />
             );
         } else if (message === ErrorBarTypes.SITE_URL) {
@@ -294,7 +294,7 @@ export default class AnnouncementBar extends React.PureComponent {
             let defaultMessage;
             if (this.props.enableSignUpWithGitLab) {
                 id = 'error_bar.site_url_gitlab';
-                defaultMessage = 'Please configure your {docsLink} in the System Console or in gitlab.rb if you\'re using GitLab Mattermost.';
+                defaultMessage = 'Please configure your {docsLink} in the System Console or in gitlab.rb if you\'re using GitLab WAU Chat.';
             } else {
                 id = 'error_bar.site_url';
                 defaultMessage = 'Please configure your {docsLink} in the System Console.';

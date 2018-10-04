@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -18,7 +18,7 @@ export default function ErrorMessage({type, message, service}) {
                 <div>
                     <FormattedMessage
                         id='error.local_storage.message'
-                        defaultMessage='Mattermost was unable to load because a setting in your browser prevents the use of its local storage features. To allow Mattermost to load, try the following actions:'
+                        defaultMessage='WAU Chat was unable to load because a setting in your browser prevents the use of its local storage features. To allow WAU Chat to load, try the following actions:'
                     />
                     <ul>
                         <li>
@@ -103,7 +103,7 @@ export default function ErrorMessage({type, message, service}) {
                     <p>
                         <FormattedMessage
                             id='error.oauth_missing_code.office365'
-                            defaultMessage='For {link} make sure the administrator of your Microsoft organization has enabled the Mattermost app.'
+                            defaultMessage='For {link} make sure the administrator of your Microsoft organization has enabled the WAU Chat app.'
                             values={{
                                 link: (
                                     <ErrorLink

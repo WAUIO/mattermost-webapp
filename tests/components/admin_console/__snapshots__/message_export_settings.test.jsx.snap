@@ -32,7 +32,7 @@ exports[`components/MessageExportSettings should match snapshot, disabled, actia
         }
         helpText={
           <FormattedHTMLMessage
-            defaultMessage="When true, Mattermost will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
+            defaultMessage="When true, WAU Chat will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
             id="admin.service.complianceExportDesc"
             values={Object {}}
           />
@@ -210,7 +210,7 @@ exports[`components/MessageExportSettings should match snapshot, disabled, globa
         }
         helpText={
           <FormattedHTMLMessage
-            defaultMessage="When true, Mattermost will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
+            defaultMessage="When true, WAU Chat will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
             id="admin.service.complianceExportDesc"
             values={Object {}}
           />
@@ -498,7 +498,7 @@ exports[`components/MessageExportSettings should match snapshot, enabled, actian
         }
         helpText={
           <FormattedHTMLMessage
-            defaultMessage="When true, Mattermost will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
+            defaultMessage="When true, WAU Chat will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
             id="admin.service.complianceExportDesc"
             values={Object {}}
           />
@@ -676,7 +676,7 @@ exports[`components/MessageExportSettings should match snapshot, enabled, global
         }
         helpText={
           <FormattedHTMLMessage
-            defaultMessage="When true, Mattermost will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
+            defaultMessage="When true, WAU Chat will export all messages that were posted in the last 24 hours. The export task is scheduled to run once per day. See <a href=\\\\\\"https://about.mattermost.com/default-compliance-export-documentation\\\\\\" target=\\\\\\"_blank\\\\\\">the documentation</a> to learn more."
             id="admin.service.complianceExportDesc"
             values={Object {}}
           />

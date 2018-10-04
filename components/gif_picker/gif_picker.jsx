@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -17,7 +17,7 @@ export const appProps = {
     basePath: '/mattermost',
     itemTapType: constants.ItemTapAction.SHARE,
     appClassName: 'gfycat',
-    shareEvent: 'shareMattermost',
+    shareEvent: 'shareWAU Chat',
     appId: 'mattermostwebviews',
     enableHistory: true,
     header: {
