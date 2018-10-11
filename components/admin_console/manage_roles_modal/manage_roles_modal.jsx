@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -193,7 +193,7 @@ export default class ManageRolesModal extends React.PureComponent {
                             </strong>
                             <FormattedMessage
                                 id='admin.manage_roles.postAllRole'
-                                defaultMessage='Access to post to all WAU Chat channels including direct messages.'
+                                defaultMessage='Access to post to all Silicon Chat channels including direct messages.'
                             />
                         </label>
                     </div>
@@ -214,7 +214,7 @@ export default class ManageRolesModal extends React.PureComponent {
                             </strong>
                             <FormattedMessage
                                 id='admin.manage_roles.postAllPublicRole'
-                                defaultMessage='Access to post to all WAU Chat public channels.'
+                                defaultMessage='Access to post to all Silicon Chat public channels.'
                             />
                         </label>
                     </div>

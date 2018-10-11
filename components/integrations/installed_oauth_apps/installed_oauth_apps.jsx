@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -130,7 +130,7 @@ export default class InstalledOAuthApps extends React.PureComponent {
                 helpText={
                     <FormattedMessage
                         id='installed_oauth_apps.help'
-                        defaultMessage='Create {oauthApplications} to securely integrate bots and third-party apps with WAU Chat. Visit the {appDirectory} to find available self-hosted apps.'
+                        defaultMessage='Create {oauthApplications} to securely integrate bots and third-party apps with Silicon Chat. Visit the {appDirectory} to find available self-hosted apps.'
                         values={{
                             oauthApplications: (
                                 <a

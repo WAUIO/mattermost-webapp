@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -586,7 +586,7 @@ export default class PluginManagement extends React.Component {
             uploadHelpText = (
                 <FormattedHTMLMessage
                     id='admin.plugin.uploadDesc'
-                    defaultMessage='Upload a plugin for your WAU Chat server. See <a href="https://about.mattermost.com/default-plugin-uploads" target="_blank">documentation</a> to learn more.'
+                    defaultMessage='Upload a plugin for your Silicon Chat server. See <a href="https://about.mattermost.com/default-plugin-uploads" target="_blank">documentation</a> to learn more.'
                 />
             );
         } else {
@@ -669,7 +669,7 @@ export default class PluginManagement extends React.Component {
                             <p className='help-text'>
                                 <FormattedHTMLMessage
                                     id='admin.plugin.installedDesc'
-                                    defaultMessage='Installed plugins on your WAU Chat server. Pre-packaged plugins are installed by default, and can be disabled but not removed.'
+                                    defaultMessage='Installed plugins on your Silicon Chat server. Pre-packaged plugins are installed by default, and can be disabled but not removed.'
                                 />
                             </p>
                             <br/>

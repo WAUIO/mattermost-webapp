@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -73,7 +73,7 @@ export default class AboutBuildModal extends React.PureComponent {
             <div>
                 <FormattedMessage
                     id='about.teamEditionLearn'
-                    defaultMessage='Join the WAU Chat community at '
+                    defaultMessage='Join the Silicon Chat community at '
                 />
                 <a
                     target='_blank'
@@ -165,7 +165,7 @@ export default class AboutBuildModal extends React.PureComponent {
                     <Modal.Title>
                         <FormattedMessage
                             id='about.title'
-                            defaultMessage='About WAU Chat'
+                            defaultMessage='About Silicon Chat'
                         />
                     </Modal.Title>
                 </Modal.Header>
@@ -175,13 +175,13 @@ export default class AboutBuildModal extends React.PureComponent {
                             <WauLogo/>
                         </div>
                         <div>
-                            <h3 className='about-modal__title'>{'WAU Chat'} {title}</h3>
+                            <h3 className='about-modal__title'>{'Silicon Chat'} {title}</h3>
                             <p className='about-modal__subtitle padding-bottom'>{subTitle}</p>
                             <div className='form-group less'>
                                 <div>
                                     <FormattedMessage
                                         id='about.version'
-                                        defaultMessage='WAU Chat Version:'
+                                        defaultMessage='Silicon Chat Version:'
                                     />
                                     <span id='versionString'>{'\u00a0' + mmversion}</span>
                                 </div>
@@ -209,7 +209,7 @@ export default class AboutBuildModal extends React.PureComponent {
                         <div className='form-group about-modal__copyright'>
                             <FormattedMessage
                                 id='about.copyright'
-                                defaultMessage='Copyright 2015 - {currentYear} WAU Chat, Inc. All rights reserved'
+                                defaultMessage='Copyright 2015 - {currentYear} Silicon Chat, Inc. All rights reserved'
                                 values={{
                                     currentYear: new Date().getFullYear(),
                                 }}
@@ -220,7 +220,7 @@ export default class AboutBuildModal extends React.PureComponent {
                         <p>
                             <FormattedMarkdownMessage
                                 id='about.notice'
-                                defaultMessage='WAU Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps.'
+                                defaultMessage='Silicon Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps.'
                             />
                         </p>
                     </div>

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -34,7 +34,7 @@ export default class BackstageNavbar extends React.Component {
                     />
                     <span>
                         <FormattedMessage
-                            id='backstage_navbar.backToWAU Chat'
+                            id='backstage_navbar.backToSilicon Chat'
                             defaultMessage='Back to {siteName}'
                             values={{
                                 siteName: this.props.siteName,

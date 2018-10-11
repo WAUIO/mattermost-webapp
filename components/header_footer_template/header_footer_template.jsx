@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -14,7 +14,7 @@ export default class NotLoggedIn extends React.PureComponent {
         children: PropTypes.object,
 
         /*
-         * WAU Chat configuration
+         * Silicon Chat configuration
          */
         config: PropTypes.object,
     };
@@ -99,11 +99,11 @@ export default class NotLoggedIn extends React.PureComponent {
                 <div className='row footer'>
                     <div className='footer-pane col-xs-12'>
                         <div className='col-xs-12'>
-                            <span className='pull-right footer-site-name'>{'WAU Chat'}</span>
+                            <span className='pull-right footer-site-name'>{'Silicon Chat'}</span>
                         </div>
                         <div className='col-xs-12'>
                             <span className='pull-right footer-link copyright'>
-                                {`© ${new Date().getFullYear()} WAU IO`}
+                                {`© ${new Date().getFullYear()} Silicon IO`}
                             </span>
                             <span className='pull-right'>
                                 {content}

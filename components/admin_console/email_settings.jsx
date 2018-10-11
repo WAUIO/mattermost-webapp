@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -125,7 +125,7 @@ export default class EmailSettings extends AdminSettings {
                     <FormattedHTMLMessage
                         key='admin.email.notification.contents.full.description'
                         id='admin.email.notification.contents.full.description'
-                        defaultMessage='Sender name and channel are included in email notifications.</br>Typically used for compliance reasons if WAU Chat contains confidential information and policy dictates it cannot be stored in email.'
+                        defaultMessage='Sender name and channel are included in email notifications.</br>Typically used for compliance reasons if Silicon Chat contains confidential information and policy dictates it cannot be stored in email.'
                     />
                 );
             } else if (this.state.emailNotificationContentsType === EMAIL_NOTIFICATION_CONTENTS_GENERIC) {
@@ -133,7 +133,7 @@ export default class EmailSettings extends AdminSettings {
                     <FormattedHTMLMessage
                         key='admin.email.notification.contents.generic.description'
                         id='admin.email.notification.contents.generic.description'
-                        defaultMessage='Only the name of the person who sent the message, with no information about channel name or message contents are included in email notifications.</br>Typically used for compliance reasons if WAU Chat contains confidential information and policy dictates it cannot be stored in email.'
+                        defaultMessage='Only the name of the person who sent the message, with no information about channel name or message contents are included in email notifications.</br>Typically used for compliance reasons if Silicon Chat contains confidential information and policy dictates it cannot be stored in email.'
                     />
                 );
             }
@@ -170,7 +170,7 @@ export default class EmailSettings extends AdminSettings {
                     helpText={
                         <FormattedHTMLMessage
                             id='admin.email.notificationsDescription'
-                            defaultMessage='Typically set to true in production. When true, WAU Chat attempts to send email notifications. Developers may set this field to false to skip email setup for faster development.'
+                            defaultMessage='Typically set to true in production. When true, Silicon Chat attempts to send email notifications. Developers may set this field to false to skip email setup for faster development.'
                         />
                     }
                     value={this.state.sendEmailNotifications}
@@ -226,11 +226,11 @@ export default class EmailSettings extends AdminSettings {
                             defaultMessage='Notification Display Name:'
                         />
                     }
-                    placeholder={Utils.localizeMessage('admin.email.notificationDisplayExample', 'Ex: "WAU Chat Notification", "System", "No-Reply"')}
+                    placeholder={Utils.localizeMessage('admin.email.notificationDisplayExample', 'Ex: "Silicon Chat Notification", "System", "No-Reply"')}
                     helpText={
                         <FormattedMessage
                             id='admin.email.notificationDisplayDescription'
-                            defaultMessage='Display name on email account used when sending notification emails from WAU Chat.'
+                            defaultMessage='Display name on email account used when sending notification emails from Silicon Chat.'
                         />
                     }
                     value={this.state.feedbackName}
@@ -250,7 +250,7 @@ export default class EmailSettings extends AdminSettings {
                     helpText={
                         <FormattedMessage
                             id='admin.email.notificationEmailDescription'
-                            defaultMessage='Email address displayed on email account used when sending notification emails from WAU Chat.'
+                            defaultMessage='Email address displayed on email account used when sending notification emails from Silicon Chat.'
                         />
                     }
                     value={this.state.feedbackEmail}
@@ -270,7 +270,7 @@ export default class EmailSettings extends AdminSettings {
                     helpText={
                         <FormattedMessage
                             id='admin.email.notificationOrganizationDescription'
-                            defaultMessage='Organization name and address displayed on email notifications from WAU Chat, such as "© ABC Corporation, 565 Knight Way, Palo Alto, California, 94305, USA". If the field is left empty, the organization name and address will not be displayed.'
+                            defaultMessage='Organization name and address displayed on email notifications from Silicon Chat, such as "© ABC Corporation, 565 Knight Way, Palo Alto, California, 94305, USA". If the field is left empty, the organization name and address will not be displayed.'
                         />
                     }
                     value={this.state.feedbackOrganization}
@@ -400,7 +400,7 @@ export default class EmailSettings extends AdminSettings {
                     helpText={
                         <FormattedMessage
                             id='admin.email.skipServerCertificateVerification.description'
-                            defaultMessage='When true, WAU Chat will not verify the email server certificate.'
+                            defaultMessage='When true, Silicon Chat will not verify the email server certificate.'
                         />
                     }
                     value={this.state.skipServerCertificateVerification}

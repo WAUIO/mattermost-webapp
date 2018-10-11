@@ -264,7 +264,7 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
         onClick={[Function]}
       >
         <FormattedMessage
-          defaultMessage="About WAU Chat"
+          defaultMessage="About Silicon Chat"
           id="navbar_dropdown.about"
           values={Object {}}
         />
@@ -501,7 +501,7 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
             className="icon fa fa-info"
           />
           <FormattedMessage
-            defaultMessage="About WAU Chat"
+            defaultMessage="About Silicon Chat"
             id="navbar_dropdown.about"
             values={Object {}}
           />

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -90,7 +90,7 @@ export default class GitLabSettings extends AdminSettings {
                         <div>
                             <FormattedMessage
                                 id='admin.gitlab.enableDescription'
-                                defaultMessage='When true, WAU Chat allows team creation and account signup using GitLab OAuth.'
+                                defaultMessage='When true, Silicon Chat allows team creation and account signup using GitLab OAuth.'
                             />
                             <br/>
                             <FormattedHTMLMessage

@@ -80,7 +80,7 @@ exports[`components/user_settings/notifications/DesktopNotificationSettings shou
         <br />
         <span>
           <FormattedMessage
-            defaultMessage="Desktop notifications are available on Edge, Firefox, Safari, Chrome and WAU Chat Desktop Apps."
+            defaultMessage="Desktop notifications are available on Edge, Firefox, Safari, Chrome and Silicon Chat Desktop Apps."
             id="user.settings.notifications.info"
             values={Object {}}
           />
@@ -140,7 +140,7 @@ exports[`components/user_settings/notifications/DesktopNotificationSettings shou
           <br />
           <span>
             <FormattedMessage
-              defaultMessage="Notification sounds are available on IE11, Safari, Chrome and WAU Chat Desktop Apps."
+              defaultMessage="Notification sounds are available on IE11, Safari, Chrome and Silicon Chat Desktop Apps."
               id="user.settings.notifications.sounds_info"
               values={Object {}}
             />
@@ -238,7 +238,7 @@ exports[`components/user_settings/notifications/DesktopNotificationSettings shou
         <br />
         <span>
           <FormattedMessage
-            defaultMessage="Desktop notifications are available on Edge, Firefox, Safari, Chrome and WAU Chat Desktop Apps."
+            defaultMessage="Desktop notifications are available on Edge, Firefox, Safari, Chrome and Silicon Chat Desktop Apps."
             id="user.settings.notifications.info"
             values={Object {}}
           />
@@ -371,7 +371,7 @@ exports[`components/user_settings/notifications/DesktopNotificationSettings shou
         <br />
         <span>
           <FormattedMessage
-            defaultMessage="Desktop notifications are available on Edge, Firefox, Safari, Chrome and WAU Chat Desktop Apps."
+            defaultMessage="Desktop notifications are available on Edge, Firefox, Safari, Chrome and Silicon Chat Desktop Apps."
             id="user.settings.notifications.info"
             values={Object {}}
           />
@@ -431,7 +431,7 @@ exports[`components/user_settings/notifications/DesktopNotificationSettings shou
           <br />
           <span>
             <FormattedMessage
-              defaultMessage="Notification sounds are available on IE11, Safari, Chrome and WAU Chat Desktop Apps."
+              defaultMessage="Notification sounds are available on IE11, Safari, Chrome and Silicon Chat Desktop Apps."
               id="user.settings.notifications.sounds_info"
               values={Object {}}
             />

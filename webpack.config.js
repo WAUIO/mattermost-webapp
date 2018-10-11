@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 const childProcess = require('child_process');
@@ -335,7 +335,7 @@ if (TEST) {
 // <link rel="apple-touch-icon" ... /> and <meta name="apple-*" ... /> tags into root.html.
 config.plugins.push(
     new WebpackPwaManifest({
-        name: 'WAU Chat',
+        name: 'Silicon Chat',
         short_name: 'Wau Chat',
         description: 'Wau Chat is an open source, self-hosted Slack-alternative',
         background_color: '#ffffff',

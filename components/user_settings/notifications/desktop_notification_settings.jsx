@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -99,7 +99,7 @@ export default class DesktopNotificationSettings extends React.Component {
                         <span>
                             <FormattedMessage
                                 id='user.settings.notifications.sounds_info'
-                                defaultMessage='Notification sounds are available on IE11, Safari, Chrome and WAU Chat Desktop Apps.'
+                                defaultMessage='Notification sounds are available on IE11, Safari, Chrome and Silicon Chat Desktop Apps.'
                             />
                         </span>
                     </div>
@@ -190,7 +190,7 @@ export default class DesktopNotificationSettings extends React.Component {
                 <span>
                     <FormattedMessage
                         id='user.settings.notifications.info'
-                        defaultMessage='Desktop notifications are available on Edge, Firefox, Safari, Chrome and WAU Chat Desktop Apps.'
+                        defaultMessage='Desktop notifications are available on Edge, Firefox, Safari, Chrome and Silicon Chat Desktop Apps.'
                     />
                 </span>
                 {soundSection}

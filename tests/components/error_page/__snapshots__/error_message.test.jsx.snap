@@ -13,7 +13,7 @@ exports[`components/error_page/ErrorMessage should match snapshot, channel_not_f
 exports[`components/error_page/ErrorMessage should match snapshot, local_storage type 1`] = `
 <div>
   <FormattedMessage
-    defaultMessage="WAU Chat was unable to load because a setting in your browser prevents the use of its local storage features. To allow WAU Chat to load, try the following actions:"
+    defaultMessage="Silicon Chat was unable to load because a setting in your browser prevents the use of its local storage features. To allow Silicon Chat to load, try the following actions:"
     id="error.local_storage.message"
     values={Object {}}
   />
@@ -89,7 +89,7 @@ exports[`components/error_page/ErrorMessage should match snapshot, oauth_missing
   </p>
   <p>
     <FormattedMessage
-      defaultMessage="For {link} make sure the administrator of your Microsoft organization has enabled the WAU Chat app."
+      defaultMessage="For {link} make sure the administrator of your Microsoft organization has enabled the Silicon Chat app."
       id="error.oauth_missing_code.office365"
       values={
         Object {

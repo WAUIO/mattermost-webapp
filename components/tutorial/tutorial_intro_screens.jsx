@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -96,7 +96,7 @@ export default class TutorialIntroScreens extends React.Component {
     createScreenOne() {
         const circles = this.createCircles();
         const defaultMessage = '<h3>Welcome to:</h3>' +
-        '<h1>WAU Chat</h1>' +
+        '<h1>Silicon Chat</h1>' +
         '<p>Your team communication all in one place, instantly searchable and available anywhere.</p>' +
         '<p>Keep your team connected to help them achieve what matters most.</p>';
 
@@ -164,7 +164,7 @@ export default class TutorialIntroScreens extends React.Component {
                 <FormattedHTMLMessage
                     values={{siteName: this.props.siteName}}
                     id='tutorial_intro.screenTwo'
-                    defaultMessage='<h3>How WAU Chat works:</h3>
+                    defaultMessage='<h3>How Silicon Chat works:</h3>
                     <p>Communication happens in public discussion channels, private channels and direct messages.</p>
                     <p>Everything is archived and searchable from any web-enabled desktop, laptop or phone.</p>'
                 />

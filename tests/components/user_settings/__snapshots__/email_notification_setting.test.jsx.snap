@@ -36,7 +36,7 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
   saving={false}
   sendEmailNotifications={true}
   serverError=""
-  siteName="WAU Chat"
+  siteName="Silicon Chat"
   updateSection={[MockFunction]}
 >
   <SettingItemMax
@@ -99,7 +99,7 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
               id="user.settings.notifications.emailInfo"
               values={
                 Object {
-                  "siteName": "WAU Chat",
+                  "siteName": "Silicon Chat",
                 }
               }
             />
@@ -201,12 +201,12 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
                   id="user.settings.notifications.emailInfo"
                   values={
                     Object {
-                      "siteName": "WAU Chat",
+                      "siteName": "Silicon Chat",
                     }
                   }
                 >
                   <span>
-                    Email notifications are sent for mentions and direct messages when you are offline or away from WAU Chat for more than 5 minutes.
+                    Email notifications are sent for mentions and direct messages when you are offline or away from Silicon Chat for more than 5 minutes.
                   </span>
                 </FormattedMessage>
                  
@@ -347,7 +347,7 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
   saving={false}
   sendEmailNotifications={true}
   serverError=""
-  siteName="WAU Chat"
+  siteName="Silicon Chat"
   updateSection={[MockFunction]}
 >
   <SettingItemMax
@@ -456,7 +456,7 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
               id="user.settings.notifications.emailInfo"
               values={
                 Object {
-                  "siteName": "WAU Chat",
+                  "siteName": "Silicon Chat",
                 }
               }
             />
@@ -617,12 +617,12 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
                   id="user.settings.notifications.emailInfo"
                   values={
                     Object {
-                      "siteName": "WAU Chat",
+                      "siteName": "Silicon Chat",
                     }
                   }
                 >
                   <span>
-                    Email notifications are sent for mentions and direct messages when you are offline or away from WAU Chat for more than 5 minutes.
+                    Email notifications are sent for mentions and direct messages when you are offline or away from Silicon Chat for more than 5 minutes.
                   </span>
                 </FormattedMessage>
                  
@@ -769,7 +769,7 @@ exports[`components/user_settings/notifications/EmailNotificationSetting should 
             id="user.settings.notifications.emailInfo"
             values={
               Object {
-                "siteName": "WAU Chat",
+                "siteName": "Silicon Chat",
               }
             }
           />

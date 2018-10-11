@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -25,7 +25,7 @@ export default [
         title: (
             <FormattedMarkdownMessage
                 id='system_notice.title'
-                defaultMessage='**Notice**\nfrom WAU Chat'
+                defaultMessage='**Notice**\nfrom Silicon Chat'
             />
         ),
         icon: mattermostIcon,
@@ -49,7 +49,7 @@ export default [
         title: (
             <FormattedMarkdownMessage
                 id='system_notice.title'
-                defaultMessage='**Notice**\nfrom WAU Chat'
+                defaultMessage='**Notice**\nfrom Silicon Chat'
             />
         ),
         icon: mattermostIcon,
@@ -79,7 +79,7 @@ export default [
         title: (
             <FormattedMarkdownMessage
                 id='system_notice.title'
-                defaultMessage='**Notice**\nfrom WAU Chat'
+                defaultMessage='**Notice**\nfrom Silicon Chat'
             />
         ),
         icon: mattermostIcon,

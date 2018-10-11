@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -15,7 +15,7 @@ describe('/components/create_team', () => {
     const defaultProps = {
         currentChannel: {name: 'test-channel'},
         currentTeam: {name: 'test-team'},
-        siteName: 'WAU Chat',
+        siteName: 'Silicon Chat',
         customBrand: true,
         enableCustomBrand: true,
         customDescriptionText: 'Welcome to our custom branded site!',

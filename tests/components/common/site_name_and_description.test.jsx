@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -10,7 +10,7 @@ import SiteNameAndDescription from 'components/common/site_name_and_description.
 describe('/components/common/SiteNameAndDescription', () => {
     const baseProps = {
         customDescriptionText: '',
-        siteName: 'WAU Chat',
+        siteName: 'Silicon Chat',
     };
 
     test('should match snapshot, default', () => {

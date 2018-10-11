@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -98,7 +98,7 @@ class TeamImportTab extends React.Component {
                 <p>
                     <FormattedMessage
                         id='team_import_tab.importHelpLine1'
-                        defaultMessage="Slack import to WAU Chat supports importing of messages in your Slack team's public channels."
+                        defaultMessage="Slack import to Silicon Chat supports importing of messages in your Slack team's public channels."
                     />
                 </p>
                 <p>
@@ -173,7 +173,7 @@ class TeamImportTab extends React.Component {
                     />
                     <a
                         href={this.state.link}
-                        download='WAU ChatImportSummary.txt'
+                        download='Silicon ChatImportSummary.txt'
                     >
                         <FormattedMessage
                             id='team_import_tab.summary'
@@ -196,7 +196,7 @@ class TeamImportTab extends React.Component {
                     />
                     <a
                         href={this.state.link}
-                        download='WAU ChatImportSummary.txt'
+                        download='Silicon ChatImportSummary.txt'
                     >
                         <FormattedMessage
                             id='team_import_tab.summary'

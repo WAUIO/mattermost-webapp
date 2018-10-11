@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -12,7 +12,7 @@ export default class SiteNameAndDescription extends React.PureComponent {
     };
 
     static defaultProps = {
-        siteName: 'WAU Chat',
+        siteName: 'Silicon Chat',
     };
 
     render() {

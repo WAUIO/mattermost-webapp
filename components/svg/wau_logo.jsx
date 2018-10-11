@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -15,7 +15,7 @@ export default class WauLogo extends React.PureComponent {
                     viewBox='0 0 500.000000 500.000000'
                     preserveAspectRatio='xMidYMid meet'
                     role='icon'
-                    aria-label='WAU Logo'
+                    aria-label='Silicon Logo'
                 >
                     <g
                         transform='translate(0.000000,500.000000) scale(0.100000,-0.100000)'

@@ -37,7 +37,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
       componentClass="h4"
     >
       <FormattedMessage
-        defaultMessage="About WAU Chat"
+        defaultMessage="About Silicon Chat"
         id="about.title"
         values={Object {}}
       />
@@ -53,13 +53,13 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
       <div
         className="about-modal__logo"
       >
-        <WAU ChatLogo />
+        <Silicon ChatLogo />
       </div>
       <div>
         <h3
           className="about-modal__title"
         >
-          WAU Chat
+          Silicon Chat
            
           <FormattedMessage
             defaultMessage="Enterprise Edition"
@@ -81,7 +81,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
         >
           <div>
             <FormattedMessage
-              defaultMessage="WAU Chat Version:"
+              defaultMessage="Silicon Chat Version:"
               id="about.version"
               values={Object {}}
             />
@@ -121,7 +121,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
             values={Object {}}
           />
            
-          WAU Chat Inc
+          Silicon Chat Inc
         </div>
       </div>
     </div>
@@ -146,7 +146,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
         className="form-group about-modal__copyright"
       >
         <FormattedMessage
-          defaultMessage="Copyright 2015 - {currentYear} WAU Chat, Inc. All rights reserved"
+          defaultMessage="Copyright 2015 - {currentYear} Silicon Chat, Inc. All rights reserved"
           id="about.copyright"
           values={
             Object {
@@ -161,7 +161,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
     >
       <p>
         <InjectIntl(FormattedMarkdownMessage)
-          defaultMessage="WAU Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+          defaultMessage="Silicon Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
           id="about.notice"
         />
       </p>
@@ -245,7 +245,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
       componentClass="h4"
     >
       <FormattedMessage
-        defaultMessage="About WAU Chat"
+        defaultMessage="About Silicon Chat"
         id="about.title"
         values={Object {}}
       />
@@ -261,13 +261,13 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
       <div
         className="about-modal__logo"
       >
-        <WAU ChatLogo />
+        <Silicon ChatLogo />
       </div>
       <div>
         <h3
           className="about-modal__title"
         >
-          WAU Chat
+          Silicon Chat
            
           <FormattedMessage
             defaultMessage="Team Edition"
@@ -289,7 +289,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
         >
           <div>
             <FormattedMessage
-              defaultMessage="WAU Chat Version:"
+              defaultMessage="Silicon Chat Version:"
               id="about.version"
               values={Object {}}
             />
@@ -327,7 +327,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
     >
       <div>
         <FormattedMessage
-          defaultMessage="Join the WAU Chat community at "
+          defaultMessage="Join the Silicon Chat community at "
           id="about.teamEditionLearn"
           values={Object {}}
         />
@@ -343,7 +343,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
         className="form-group about-modal__copyright"
       >
         <FormattedMessage
-          defaultMessage="Copyright 2015 - {currentYear} WAU Chat, Inc. All rights reserved"
+          defaultMessage="Copyright 2015 - {currentYear} Silicon Chat, Inc. All rights reserved"
           id="about.copyright"
           values={
             Object {
@@ -358,7 +358,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
     >
       <p>
         <InjectIntl(FormattedMarkdownMessage)
-          defaultMessage="WAU Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+          defaultMessage="Silicon Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
           id="about.notice"
         />
       </p>
@@ -441,7 +441,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
       componentClass="h4"
     >
       <FormattedMessage
-        defaultMessage="About WAU Chat"
+        defaultMessage="About Silicon Chat"
         id="about.title"
         values={Object {}}
       />
@@ -457,13 +457,13 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
       <div
         className="about-modal__logo"
       >
-        <WAU ChatLogo />
+        <Silicon ChatLogo />
       </div>
       <div>
         <h3
           className="about-modal__title"
         >
-          WAU Chat
+          Silicon Chat
            
           <FormattedMessage
             defaultMessage="Team Edition"
@@ -485,7 +485,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
         >
           <div>
             <FormattedMessage
-              defaultMessage="WAU Chat Version:"
+              defaultMessage="Silicon Chat Version:"
               id="about.version"
               values={Object {}}
             />
@@ -535,7 +535,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
     >
       <div>
         <FormattedMessage
-          defaultMessage="Join the WAU Chat community at "
+          defaultMessage="Join the Silicon Chat community at "
           id="about.teamEditionLearn"
           values={Object {}}
         />
@@ -551,7 +551,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
         className="form-group about-modal__copyright"
       >
         <FormattedMessage
-          defaultMessage="Copyright 2015 - {currentYear} WAU Chat, Inc. All rights reserved"
+          defaultMessage="Copyright 2015 - {currentYear} Silicon Chat, Inc. All rights reserved"
           id="about.copyright"
           values={
             Object {
@@ -566,7 +566,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
     >
       <p>
         <InjectIntl(FormattedMarkdownMessage)
-          defaultMessage="WAU Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+          defaultMessage="Silicon Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
           id="about.notice"
         />
       </p>
@@ -649,7 +649,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
       componentClass="h4"
     >
       <FormattedMessage
-        defaultMessage="About WAU Chat"
+        defaultMessage="About Silicon Chat"
         id="about.title"
         values={Object {}}
       />
@@ -665,13 +665,13 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
       <div
         className="about-modal__logo"
       >
-        <WAU ChatLogo />
+        <Silicon ChatLogo />
       </div>
       <div>
         <h3
           className="about-modal__title"
         >
-          WAU Chat
+          Silicon Chat
            
           <FormattedMessage
             defaultMessage="Team Edition"
@@ -693,7 +693,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
         >
           <div>
             <FormattedMessage
-              defaultMessage="WAU Chat Version:"
+              defaultMessage="Silicon Chat Version:"
               id="about.version"
               values={Object {}}
             />
@@ -731,7 +731,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
     >
       <div>
         <FormattedMessage
-          defaultMessage="Join the WAU Chat community at "
+          defaultMessage="Join the Silicon Chat community at "
           id="about.teamEditionLearn"
           values={Object {}}
         />
@@ -747,7 +747,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
         className="form-group about-modal__copyright"
       >
         <FormattedMessage
-          defaultMessage="Copyright 2015 - {currentYear} WAU Chat, Inc. All rights reserved"
+          defaultMessage="Copyright 2015 - {currentYear} Silicon Chat, Inc. All rights reserved"
           id="about.copyright"
           values={
             Object {
@@ -762,7 +762,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
     >
       <p>
         <InjectIntl(FormattedMarkdownMessage)
-          defaultMessage="WAU Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+          defaultMessage="Silicon Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
           id="about.notice"
         />
       </p>

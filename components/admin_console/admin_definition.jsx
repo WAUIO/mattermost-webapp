@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -154,7 +154,7 @@ export default {
                             label: 'admin.service.siteURL',
                             label_default: 'Site URL:',
                             help_text: 'admin.service.siteURLDescription',
-                            help_text_default: 'The URL that users will use to access WAU Chat. Standard ports, such as 80 and 443, can be omitted, but non-standard ports are required. For example: http://example.com:8065. This setting is required.\n \nWAU Chat may be hosted at a subpath. For example: http://example.com:8065/company/mattermost. A restart is required before the server will work correctly.',
+                            help_text_default: 'The URL that users will use to access Silicon Chat. Standard ports, such as 80 and 443, can be omitted, but non-standard ports are required. For example: http://example.com:8065. This setting is required.\n \nSilicon Chat may be hosted at a subpath. For example: http://example.com:8065/company/mattermost. A restart is required before the server will work correctly.',
                             help_text_markdown: true,
                             placeholder: 'admin.service.siteURLExample',
                             placeholder_default: 'E.g.: "http://example.com:8065"',
@@ -167,7 +167,7 @@ export default {
                             placeholder: 'admin.service.listenExample',
                             placeholder_default: 'E.g.: ":8065"',
                             help_text: 'admin.service.listenDescription',
-                            help_text_default: 'The address and port to which to bind and listen. Specifying ":8065" will bind to all network interfaces. Specifying "127.0.0.1:8065" will only bind to the network interface having that IP address. If you choose a port of a lower level (called "system ports" or "well-known ports", in the range of 0-1023), you must have permissions to bind to that port. On Linux you can use: "sudo setcap cap_net_bind_service=+ep ./bin/mattermost" to allow WAU Chat to bind to well-known ports.',
+                            help_text_default: 'The address and port to which to bind and listen. Specifying ":8065" will bind to all network interfaces. Specifying "127.0.0.1:8065" will only bind to the network interface having that IP address. If you choose a port of a lower level (called "system ports" or "well-known ports", in the range of 0-1023), you must have permissions to bind to that port. On Linux you can use: "sudo setcap cap_net_bind_service=+ep ./bin/mattermost" to allow Silicon Chat to bind to well-known ports.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_BOOL,
@@ -286,7 +286,7 @@ export default {
                             label: 'admin.reload.button',
                             label_default: 'Reload Configuration From Disk',
                             help_text: 'admin.reload.reloadDescription',
-                            help_text_default: 'Deployments using multiple databases can switch from one master database to another without restarting the WAU Chat server by updating "config.json" to the new desired configuration and using the {featureName} feature to load the new settings while the server is running. The administrator should then use the {recycleDatabaseConnections} feature to recycle the database connections based on the new settings.',
+                            help_text_default: 'Deployments using multiple databases can switch from one master database to another without restarting the Silicon Chat server by updating "config.json" to the new desired configuration and using the {featureName} feature to load the new settings while the server is running. The administrator should then use the {recycleDatabaseConnections} feature to recycle the database connections based on the new settings.',
                             help_text_values: {
                                 featureName: (
                                     <b>
@@ -353,7 +353,7 @@ export default {
                             label_default: 'Available Languages:',
                             help_text: 'admin.general.localization.availableLocalesDescription',
                             help_text_markdown: true,
-                            help_text_default: 'Set which languages are available for users in Account Settings (leave this field blank to have all supported languages available). If you\'re manually adding new languages, the **Default Client Language** must be added before saving this setting.\n \nWould like to help with translations? Join the [WAU Chat Translation Server](!http://translate.mattermost.com/) to contribute.',
+                            help_text_default: 'Set which languages are available for users in Account Settings (leave this field blank to have all supported languages available). If you\'re manually adding new languages, the **Default Client Language** must be added before saving this setting.\n \nWould like to help with translations? Join the [Silicon Chat Translation Server](!http://translate.mattermost.com/) to contribute.',
                             multiple: true,
                             no_result: 'admin.general.localization.availableLocalesNoResults',
                             no_result_default: 'No results found',
@@ -408,7 +408,7 @@ export default {
                             label: 'admin.compliance.enableTitle',
                             label_default: 'Enable Compliance Reporting:',
                             help_text: 'admin.compliance.enableDesc',
-                            help_text_default: 'When true, WAU Chat allows compliance reporting from the **Compliance and Auditing** tab. See [documentation](!https://docs.mattermost.com/administration/compliance.html) to learn more.',
+                            help_text_default: 'When true, Silicon Chat allows compliance reporting from the **Compliance and Auditing** tab. See [documentation](!https://docs.mattermost.com/administration/compliance.html) to learn more.',
                             help_text_markdown: true,
                             isHidden: needsUtils.not(needsUtils.hasLicense),
                         },
@@ -430,7 +430,7 @@ export default {
                             label: 'admin.compliance.enableDailyTitle',
                             label_default: 'Enable Daily Report:',
                             help_text: 'admin.compliance.enableDailyDesc',
-                            help_text_default: 'When true, WAU Chat will generate a daily compliance report.',
+                            help_text_default: 'When true, Silicon Chat will generate a daily compliance report.',
                             isDisabled: needsUtils.stateValueFalse('ComplianceSettings.Enable'),
                             isHidden: needsUtils.not(needsUtils.hasLicense),
                         },
@@ -503,7 +503,7 @@ export default {
                             label: 'admin.log.locationTitle',
                             label_default: 'File Log Directory:',
                             help_text: 'admin.log.locationDescription',
-                            help_text_default: 'The location of the log files. If blank, they are stored in the ./logs directory. The path that you set must exist and WAU Chat must have write permissions in it. Changing this setting requires a server restart before taking effect.',
+                            help_text_default: 'The location of the log files. If blank, they are stored in the ./logs directory. The path that you set must exist and Silicon Chat must have write permissions in it. Changing this setting requires a server restart before taking effect.',
                             placeholder: 'admin.log.locationPlaceholder',
                             placeholder_default: 'Enter your file location',
                             isDisabled: needsUtils.stateValueFalse('LogSettings.EnableFile'),
@@ -532,7 +532,7 @@ export default {
                             label: 'admin.log.enableDiagnostics',
                             label_default: 'Enable Diagnostics and Error Reporting:',
                             help_text: 'admin.log.enableDiagnosticsDescription',
-                            help_text_default: 'Enable this feature to improve the quality and performance of WAU Chat by sending error reporting and diagnostic information to WAU Chat, Inc. Read our [privacy policy](!https://about.mattermost.com/default-privacy-policy/) to learn more.',
+                            help_text_default: 'Enable this feature to improve the quality and performance of Silicon Chat by sending error reporting and diagnostic information to Silicon Chat, Inc. Read our [privacy policy](!https://about.mattermost.com/default-privacy-policy/) to learn more.',
                             help_text_markdown: true,
                             onConfigSave: (displayVal, previousVal) => {
                                 if (previousVal && previousVal !== displayVal) {
@@ -578,7 +578,7 @@ export default {
                             label: 'admin.email.allowSignupTitle',
                             label_default: 'Enable account creation with email:',
                             help_text: 'admin.email.allowSignupDescription',
-                            help_text_default: 'When true, WAU Chat allows account creation using email and password. This value should be false only when you want to limit sign up to a single sign-on service like AD/LDAP, SAML or GitLab.',
+                            help_text_default: 'When true, Silicon Chat allows account creation using email and password. This value should be false only when you want to limit sign up to a single sign-on service like AD/LDAP, SAML or GitLab.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_BOOL,
@@ -586,7 +586,7 @@ export default {
                             label: 'admin.email.allowEmailSignInTitle',
                             label_default: 'Enable sign-in with email:',
                             help_text: 'admin.email.allowEmailSignInDescription',
-                            help_text_default: 'When true, WAU Chat allows users to sign in using their email and password.',
+                            help_text_default: 'When true, Silicon Chat allows users to sign in using their email and password.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_BOOL,
@@ -611,7 +611,7 @@ export default {
                             label: 'admin.ldap.enableTitle',
                             label_default: 'Enable sign-in with AD/LDAP:',
                             help_text: 'admin.ldap.enableDesc',
-                            help_text_default: 'When true, WAU Chat allows login using AD/LDAP',
+                            help_text_default: 'When true, Silicon Chat allows login using AD/LDAP',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_BOOL,
@@ -619,7 +619,7 @@ export default {
                             label: 'admin.ldap.enableSyncTitle',
                             label_default: 'Enable Synchronization with AD/LDAP:',
                             help_text: 'admin.ldap.enableSyncDesc',
-                            help_text_default: 'When true, WAU Chat periodically synchronizes users from AD/LDAP. When false, user attributes are updated from AD/LDAP during user login only.',
+                            help_text_default: 'When true, Silicon Chat periodically synchronizes users from AD/LDAP. When false, user attributes are updated from AD/LDAP during user login only.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_TEXT,
@@ -641,7 +641,7 @@ export default {
                             label: 'admin.ldap.portTitle',
                             label_default: 'AD/LDAP Port:',
                             help_text: 'admin.ldap.portDesc',
-                            help_text_default: 'The port WAU Chat will use to connect to the AD/LDAP server. Default is 389.',
+                            help_text_default: 'The port Silicon Chat will use to connect to the AD/LDAP server. Default is 389.',
                             placeholder: 'admin.ldap.portEx',
                             placeholder_default: 'E.g.: "389"',
                             isDisabled: needsUtils.and(
@@ -692,7 +692,7 @@ export default {
                             label: 'admin.ldap.baseTitle',
                             label_default: 'BaseDN:',
                             help_text: 'admin.ldap.baseDesc',
-                            help_text_default: 'The Base DN is the Distinguished Name of the location where WAU Chat should start its search for users in the AD/LDAP tree.',
+                            help_text_default: 'The Base DN is the Distinguished Name of the location where Silicon Chat should start its search for users in the AD/LDAP tree.',
                             placeholder: 'admin.ldap.baseEx',
                             placeholder_default: 'E.g.: "ou=Unit Name,dc=corp,dc=example,dc=com"',
                             isDisabled: needsUtils.and(
@@ -706,7 +706,7 @@ export default {
                             label: 'admin.ldap.bindUserTitle',
                             label_default: 'Bind Username:',
                             help_text: 'admin.ldap.bindUserDesc',
-                            help_text_default: 'The username used to perform the AD/LDAP search. This should typically be an account created specifically for use with WAU Chat. It should have access limited to read the portion of the AD/LDAP tree specified in the BaseDN field.',
+                            help_text_default: 'The username used to perform the AD/LDAP search. This should typically be an account created specifically for use with Silicon Chat. It should have access limited to read the portion of the AD/LDAP tree specified in the BaseDN field.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -730,7 +730,7 @@ export default {
                             label: 'admin.ldap.userFilterTitle',
                             label_default: 'User Filter:',
                             help_text: 'admin.ldap.userFilterDisc',
-                            help_text_default: '(Optional) Enter an AD/LDAP Filter to use when searching for user objects. Only the users selected by the query will be able to access WAU Chat. For Active Directory, the query to filter out disabled users is (&(objectCategory=Person)(!(UserAccountControl:1.2.840.113556.1.4.803:=2))).',
+                            help_text_default: '(Optional) Enter an AD/LDAP Filter to use when searching for user objects. Only the users selected by the query will be able to access Silicon Chat. For Active Directory, the query to filter out disabled users is (&(objectCategory=Person)(!(UserAccountControl:1.2.840.113556.1.4.803:=2))).',
                             placeholder: 'admin.ldap.userFilterEx',
                             placeholder_default: 'Ex. "(objectClass=user)"',
                             isDisabled: needsUtils.and(
@@ -746,7 +746,7 @@ export default {
                             placeholder: 'admin.ldap.firstnameAttrEx',
                             placeholder_default: 'E.g.: "givenName"',
                             help_text: 'admin.ldap.firstnameAttrDesc',
-                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the first name of users in WAU Chat. When set, users cannot edit their first name, since it is synchronized with the LDAP server. When left blank, users can set their first name in Account Settings.',
+                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the first name of users in Silicon Chat. When set, users cannot edit their first name, since it is synchronized with the LDAP server. When left blank, users can set their first name in Account Settings.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -760,7 +760,7 @@ export default {
                             placeholder: 'admin.ldap.lastnameAttrEx',
                             placeholder_default: 'E.g.: "sn"',
                             help_text: 'admin.ldap.lastnameAttrDesc',
-                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the last name of users in WAU Chat. When set, users cannot edit their last name, since it is synchronized with the LDAP server. When left blank, users can set their last name in Account Settings.',
+                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the last name of users in Silicon Chat. When set, users cannot edit their last name, since it is synchronized with the LDAP server. When left blank, users can set their last name in Account Settings.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -774,7 +774,7 @@ export default {
                             placeholder: 'admin.ldap.nicknameAttrEx',
                             placeholder_default: 'E.g.: "nickname"',
                             help_text: 'admin.ldap.nicknameAttrDesc',
-                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the nickname of users in WAU Chat. When set, users cannot edit their nickname, since it is synchronized with the LDAP server. When left blank, users can set their nickname in Account Settings.',
+                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the nickname of users in Silicon Chat. When set, users cannot edit their nickname, since it is synchronized with the LDAP server. When left blank, users can set their nickname in Account Settings.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -788,7 +788,7 @@ export default {
                             placeholder: 'admin.ldap.positionAttrEx',
                             placeholder_default: 'E.g.: "title"',
                             help_text: 'admin.ldap.positionAttrDesc',
-                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the position field in WAU Chat. When set, users cannot edit their position, since it is synchronized with the LDAP server. When left blank, users can set their position in Account Settings.',
+                            help_text_default: '(Optional) The attribute in the AD/LDAP server used to populate the position field in Silicon Chat. When set, users cannot edit their position, since it is synchronized with the LDAP server. When left blank, users can set their position in Account Settings.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -802,7 +802,7 @@ export default {
                             placeholder: 'admin.ldap.emailAttrEx',
                             placeholder_default: 'E.g.: "mail" or "userPrincipalName"',
                             help_text: 'admin.ldap.emailAttrDesc',
-                            help_text_default: 'The attribute in the AD/LDAP server used to populate the email address field in WAU Chat.',
+                            help_text_default: 'The attribute in the AD/LDAP server used to populate the email address field in Silicon Chat.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -816,7 +816,7 @@ export default {
                             placeholder: 'admin.ldap.usernameAttrEx',
                             placeholder_default: 'E.g.: "sAMAccountName"',
                             help_text: 'admin.ldap.usernameAttrDesc',
-                            help_text_default: 'The attribute in the AD/LDAP server used to populate the username field in WAU Chat. This may be the same as the Login ID Attribute.',
+                            help_text_default: 'The attribute in the AD/LDAP server used to populate the username field in Silicon Chat. This may be the same as the Login ID Attribute.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -831,7 +831,7 @@ export default {
                             placeholder_default: 'E.g.: "objectGUID"',
                             help_text: 'admin.ldap.idAttrDesc',
                             help_text_markdown: true,
-                            help_text_default: 'The attribute in the AD/LDAP server used as a unique identifier in WAU Chat. It should be an AD/LDAP attribute with a value that does not change. If a user\'s ID Attribute changes, it will create a new WAU Chat account unassociated with their old one.\n \nIf you need to change this field after users have already logged in, use the [mattermost ldap idmigrate](!https://about.mattermost.com/default-mattermost-ldap-idmigrate) CLI tool.',
+                            help_text_default: 'The attribute in the AD/LDAP server used as a unique identifier in Silicon Chat. It should be an AD/LDAP attribute with a value that does not change. If a user\'s ID Attribute changes, it will create a new Silicon Chat account unassociated with their old one.\n \nIf you need to change this field after users have already logged in, use the [mattermost ldap idmigrate](!https://about.mattermost.com/default-mattermost-ldap-idmigrate) CLI tool.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueEqual('LdapSettings.Enable', false),
                                 needsUtils.stateValueEqual('LdapSettings.EnableSync', false),
@@ -846,7 +846,7 @@ export default {
                             placeholder_default: 'E.g.: "sAMAccountName"',
                             help_text: 'admin.ldap.loginAttrDesc',
                             help_text_markdown: true,
-                            help_text_default: 'The attribute in the AD/LDAP server used to log in to WAU Chat. Normally this attribute is the same as the "Username Attribute" field above.\n \nIf your team typically uses domain/username to log in to other services with AD/LDAP, you may enter domain/username in this field to maintain consistency between sites.',
+                            help_text_default: 'The attribute in the AD/LDAP server used to log in to Silicon Chat. Normally this attribute is the same as the "Username Attribute" field above.\n \nIf your team typically uses domain/username to log in to other services with AD/LDAP, you may enter domain/username in this field to maintain consistency between sites.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -872,7 +872,7 @@ export default {
                             label: 'admin.ldap.syncIntervalTitle',
                             label_default: 'Synchronization Interval (minutes):',
                             help_text: 'admin.ldap.syncIntervalHelpText',
-                            help_text_default: 'AD/LDAP Synchronization updates WAU Chat user information to reflect updates on the AD/LDAP server. For example, when a user\'s name changes on the AD/LDAP server, the change updates in WAU Chat when synchronization is performed. Accounts removed from or disabled in the AD/LDAP server have their WAU Chat accounts set to "Inactive" and have their account sessions revoked. WAU Chat performs synchronization on the interval entered. For example, if 60 is entered, WAU Chat synchronizes every 60 minutes.',
+                            help_text_default: 'AD/LDAP Synchronization updates Silicon Chat user information to reflect updates on the AD/LDAP server. For example, when a user\'s name changes on the AD/LDAP server, the change updates in Silicon Chat when synchronization is performed. Accounts removed from or disabled in the AD/LDAP server have their Silicon Chat accounts set to "Inactive" and have their account sessions revoked. Silicon Chat performs synchronization on the interval entered. For example, if 60 is entered, Silicon Chat synchronizes every 60 minutes.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -886,7 +886,7 @@ export default {
                             placeholder: 'admin.ldap.maxPageSizeEx',
                             placeholder_default: 'E.g.: "2000"',
                             help_text: 'admin.ldap.maxPageSizeHelpText',
-                            help_text_default: 'The maximum number of users the WAU Chat server will request from the AD/LDAP server at one time. 0 is unlimited.',
+                            help_text_default: 'The maximum number of users the Silicon Chat server will request from the AD/LDAP server at one time. 0 is unlimited.',
                             isDisabled: needsUtils.and(
                                 needsUtils.stateValueFalse('LdapSettings.Enable'),
                                 needsUtils.stateValueFalse('LdapSettings.EnableSync'),
@@ -1002,7 +1002,7 @@ export default {
                             label_default: 'Enforce Multi-factor Authentication:',
                             help_text: 'admin.service.enforceMfaDesc',
                             help_text_markdown: true,
-                            help_text_default: 'When true, [multi-factor authentication](!https://docs.mattermost.com/deployment/auth.html) is required for login. New users will be required to configure MFA on signup. Logged in users without MFA configured are redirected to the MFA setup page until configuration is complete.\n \nIf your system has users with login methods other than AD/LDAP and email, MFA must be enforced with the authentication provider outside of WAU Chat.',
+                            help_text_default: 'When true, [multi-factor authentication](!https://docs.mattermost.com/deployment/auth.html) is required for login. New users will be required to configure MFA on signup. Logged in users without MFA configured are redirected to the MFA setup page until configuration is complete.\n \nIf your system has users with login methods other than AD/LDAP and email, MFA must be enforced with the authentication provider outside of Silicon Chat.',
                             isDisabled: needsUtils.stateValueFalse('ServiceSettings.EnableMultifactorAuthentication'),
                         },
                     ],
@@ -1022,7 +1022,7 @@ export default {
                             label: 'admin.email.requireVerificationTitle',
                             label_default: 'Require Email Verification: ',
                             help_text: 'admin.email.requireVerificationDescription',
-                            help_text_default: 'Typically set to true in production. When true, WAU Chat requires email verification after account creation prior to allowing login. Developers may set this field to false to skip sending verification emails for faster development.',
+                            help_text_default: 'Typically set to true in production. When true, Silicon Chat requires email verification after account creation prior to allowing login. Developers may set this field to false to skip sending verification emails for faster development.',
                             disabled_help_text: 'admin.security.requireEmailVerification.disabled',
                             disabled_help_text_default: 'Email verification cannot be changed while sending emails is disabled.',
                             isDisabled: (config) => !config.EmailSettings.SendEmailNotifications,
@@ -1178,7 +1178,7 @@ export default {
                             label: 'admin.oauth.providerTitle',
                             label_default: 'Enable OAuth 2.0 Service Provider: ',
                             help_text: 'admin.oauth.providerDescription',
-                            help_text_default: 'When true, WAU Chat can act as an OAuth 2.0 service provider allowing WAU Chat to authorize API requests from external applications. See [documentation](!https://docs.mattermost.com/developer/oauth-2-0-applications.html) to learn more.',
+                            help_text_default: 'When true, Silicon Chat can act as an OAuth 2.0 service provider allowing Silicon Chat to authorize API requests from external applications. See [documentation](!https://docs.mattermost.com/developer/oauth-2-0-applications.html) to learn more.',
                             help_text_markdown: true,
                         },
                         {
@@ -1215,15 +1215,15 @@ export default {
                 schema: {
                     id: 'WebrtcSettings',
                     name: 'admin.integrations.webrtc',
-                    name_default: 'WAU Chat WebRTC (Beta)',
+                    name_default: 'Silicon Chat WebRTC (Beta)',
                     settings: [
                         {
                             type: Constants.SettingsTypes.TYPE_BOOL,
                             key: 'WebrtcSettings.Enable',
                             label: 'admin.webrtc.enableTitle',
-                            label_default: 'Enable WAU Chat WebRTC: ',
+                            label_default: 'Enable Silicon Chat WebRTC: ',
                             help_text: 'admin.webrtc.enableDescription',
-                            help_text_default: 'When true, WAU Chat allows making **one-on-one** video calls. WebRTC calls are available on Chrome, Firefox and WAU Chat Desktop Apps.',
+                            help_text_default: 'When true, Silicon Chat allows making **one-on-one** video calls. WebRTC calls are available on Chrome, Firefox and Silicon Chat Desktop Apps.',
                             help_text_markdown: true,
                         },
                         {
@@ -1247,7 +1247,7 @@ export default {
                             placeholder_default: 'E.g.: "https://webrtc.mattermost.com:7089/admin"',
                             help_text: 'admin.webrtc.gatewayAdminUrlDescription',
                             help_text_default: 'Enter https://<mattermost-webrtc-gateway-url>:<port>/admin. Make sure you use HTTP or HTTPS in your URL depending on your server configuration.\n' +
-                                'WAU Chat WebRTC uses this URL to obtain valid tokens for each peer to establish the connection.',
+                                'Silicon Chat WebRTC uses this URL to obtain valid tokens for each peer to establish the connection.',
                             isDisabled: needsUtils.stateValueFalse('WebrtcSettings.Enable'),
                         },
                         {
@@ -1348,7 +1348,7 @@ export default {
                             label: 'admin.plugins.settings.enable',
                             label_default: 'Enable Plugins: ',
                             help_text: 'admin.plugins.settings.enableDesc',
-                            help_text_default: 'When true, enables plugins on your WAU Chat server. Use plugins to integrate with third-party systems, extend functionality or customize the user interface of your WAU Chat server. See [documentation](!https://about.mattermost.com/default-plugins) to learn more.',
+                            help_text_default: 'When true, enables plugins on your Silicon Chat server. Use plugins to integrate with third-party systems, extend functionality or customize the user interface of your Silicon Chat server. See [documentation](!https://about.mattermost.com/default-plugins) to learn more.',
                             help_text_markdown: true,
                         },
                     ],
@@ -1411,7 +1411,7 @@ export default {
                             label: 'admin.image.amazonS3RegionTitle',
                             label_default: 'Amazon S3 Region:',
                             help_text: 'admin.image.amazonS3RegionDescription',
-                            help_text_default: 'AWS region you selected when creating your S3 bucket. If no region is set, WAU Chat attempts to get the appropriate region from AWS, or sets it to "us-east-1" if none found.',
+                            help_text_default: 'AWS region you selected when creating your S3 bucket. If no region is set, Silicon Chat attempts to get the appropriate region from AWS, or sets it to "us-east-1" if none found.',
                             placeholder: 'admin.image.amazonS3RegionExample',
                             placeholder_default: 'E.g.: "us-east-1"',
                             isDisabled: needsUtils.not(needsUtils.stateValueEqual('FileSettings.DriverName', FILE_STORAGE_DRIVER_S3)),
@@ -1646,7 +1646,7 @@ export default {
                             label: 'admin.support.termsTitle',
                             label_default: 'Terms of Service link:',
                             help_text: 'admin.support.termsDesc',
-                            help_text_default: 'Link to the terms under which users may use your online service. By default, this includes the "WAU Chat Conditions of Use (End Users)" explaining the terms under which WAU Chat software is provided to end users. If you change the default link to add your own terms for using the service you provide, your new terms must include a link to the default terms so end users are aware of the WAU Chat Conditions of Use (End User) for WAU Chat software.',
+                            help_text_default: 'Link to the terms under which users may use your online service. By default, this includes the "Silicon Chat Conditions of Use (End Users)" explaining the terms under which Silicon Chat software is provided to end users. If you change the default link to add your own terms for using the service you provide, your new terms must include a link to the default terms so end users are aware of the Silicon Chat Conditions of Use (End User) for Silicon Chat software.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_TEXT,
@@ -1662,7 +1662,7 @@ export default {
                             label: 'admin.support.aboutTitle',
                             label_default: 'About link:',
                             help_text: 'admin.support.aboutDesc',
-                            help_text_default: 'The URL for the About link on the WAU Chat login and sign-up pages. If this field is empty, the About link is hidden from users.',
+                            help_text_default: 'The URL for the About link on the Silicon Chat login and sign-up pages. If this field is empty, the About link is hidden from users.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_TEXT,
@@ -1670,7 +1670,7 @@ export default {
                             label: 'admin.support.helpTitle',
                             label_default: 'Help link:',
                             help_text: 'admin.support.helpDesc',
-                            help_text_default: 'The URL for the Help link on the WAU Chat login page, sign-up pages, and Main Menu. If this field is empty, the Help link is hidden from users.',
+                            help_text_default: 'The URL for the Help link on the Silicon Chat login page, sign-up pages, and Main Menu. If this field is empty, the Help link is hidden from users.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_TEXT,
@@ -1695,15 +1695,15 @@ export default {
                 schema: {
                     id: 'LegalAndSupportSettings',
                     name: 'admin.customization.nativeAppLinks',
-                    name_default: 'WAU Chat App Links',
+                    name_default: 'Silicon Chat App Links',
                     settings: [
                         {
                             type: Constants.SettingsTypes.TYPE_TEXT,
                             key: 'NativeAppSettings.AppDownloadLink',
                             label: 'admin.customization.appDownloadLinkTitle',
-                            label_default: 'WAU Chat Apps Download Page Link:',
+                            label_default: 'Silicon Chat Apps Download Page Link:',
                             help_text: 'admin.customization.appDownloadLinkDesc',
-                            help_text_default: 'Add a link to a download page for the WAU Chat apps. When a link is present, an option to "Download WAU Chat Apps" will be added in the Main Menu so users can find the download page. Leave this field blank to hide the option from the Main Menu.',
+                            help_text_default: 'Add a link to a download page for the Silicon Chat apps. When a link is present, an option to "Download Silicon Chat Apps" will be added in the Main Menu so users can find the download page. Leave this field blank to hide the option from the Main Menu.',
                         },
                         {
                             type: Constants.SettingsTypes.TYPE_TEXT,
@@ -1864,7 +1864,7 @@ export default {
                             label: 'admin.metrics.enableTitle',
                             label_default: 'Enable Performance Monitoring:',
                             help_text: 'admin.metrics.enableDescription',
-                            help_text_default: 'When true, WAU Chat will enable performance monitoring collection and profiling. Please see [documentation](!http://docs.mattermost.com/deployment/metrics.html) to learn more about configuring performance monitoring for WAU Chat.',
+                            help_text_default: 'When true, Silicon Chat will enable performance monitoring collection and profiling. Please see [documentation](!http://docs.mattermost.com/deployment/metrics.html) to learn more about configuring performance monitoring for Silicon Chat.',
                             help_text_markdown: true,
                         },
                         {

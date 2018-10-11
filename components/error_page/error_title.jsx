@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import PropTypes from 'prop-types';
@@ -16,7 +16,7 @@ export default function ErrorTitle({type, title}) {
             errorTitle = (
                 <FormattedMessage
                     id='error.local_storage.title'
-                    defaultMessage='Cannot Load WAU Chat'
+                    defaultMessage='Cannot Load Silicon Chat'
                 />
             );
             break;
@@ -32,7 +32,7 @@ export default function ErrorTitle({type, title}) {
             errorTitle = (
                 <FormattedMessage
                     id='error.oauth_missing_code.title'
-                    defaultMessage='WAU Chat needs your help'
+                    defaultMessage='Silicon Chat needs your help'
                 />
             );
             break;

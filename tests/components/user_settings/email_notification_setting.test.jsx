@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -24,7 +24,7 @@ describe('components/user_settings/notifications/EmailNotificationSetting', () =
         saving: false,
         sendEmailNotifications: true,
         enableEmailBatching: false,
-        siteName: 'WAU Chat',
+        siteName: 'Silicon Chat',
     };
 
     test('should match snapshot', () => {

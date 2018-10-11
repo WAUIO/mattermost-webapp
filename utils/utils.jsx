@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import $ from 'jquery';
@@ -610,7 +610,7 @@ export function applyTheme(theme) {
         case 'Organization':
             dndIndicator = Constants.THEMES.organization.dndIndicator;
             break;
-        case 'WAU Chat Dark':
+        case 'Silicon Chat Dark':
             dndIndicator = Constants.THEMES.mattermostDark.dndIndicator;
             break;
         case 'Windows Dark':

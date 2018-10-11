@@ -1,4 +1,4 @@
-// Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
+// Copyright (c) 2015-present Silicon Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
 import React from 'react';
@@ -138,14 +138,14 @@ export default class PushSettings extends AdminSettings {
             pushServerHelpText = (
                 <FormattedHTMLMessage
                     id='admin.email.mhpnsHelp'
-                    defaultMessage='Download <a href="https://about.mattermost.com/mattermost-ios-app/" target="_blank">WAU Chat iOS app</a> from iTunes. Download <a href="https://about.mattermost.com/mattermost-android-app/" target="_blank">WAU Chat Android app</a> from Google Play. Learn more about the <a href="https://about.mattermost.com/default-hpns/" target="_blank">WAU Chat Hosted Push Notification Service</a>.'
+                    defaultMessage='Download <a href="https://about.mattermost.com/mattermost-ios-app/" target="_blank">Silicon Chat iOS app</a> from iTunes. Download <a href="https://about.mattermost.com/mattermost-android-app/" target="_blank">Silicon Chat Android app</a> from Google Play. Learn more about the <a href="https://about.mattermost.com/default-hpns/" target="_blank">Silicon Chat Hosted Push Notification Service</a>.'
                 />
             );
         } else if (this.state.pushNotificationServerType === PUSH_NOTIFICATIONS_MTPNS) {
             pushServerHelpText = (
                 <FormattedHTMLMessage
                     id='admin.email.mtpnsHelp'
-                    defaultMessage='Download <a href="https://about.mattermost.com/mattermost-ios-app/" target="_blank">WAU Chat iOS app</a> from iTunes. Download <a href="https://about.mattermost.com/mattermost-android-app/" target="_blank">WAU Chat Android app</a> from Google Play. Learn more about the <a href="https://about.mattermost.com/default-tpns/" target="_blank">WAU Chat Test Push Notification Service</a>.'
+                    defaultMessage='Download <a href="https://about.mattermost.com/mattermost-ios-app/" target="_blank">Silicon Chat iOS app</a> from iTunes. Download <a href="https://about.mattermost.com/mattermost-android-app/" target="_blank">Silicon Chat Android app</a> from Google Play. Learn more about the <a href="https://about.mattermost.com/default-tpns/" target="_blank">Silicon Chat Test Push Notification Service</a>.'
                 />
             );
         } else {
@@ -171,7 +171,7 @@ export default class PushSettings extends AdminSettings {
                         />
                         <FormattedHTMLMessage
                             id='admin.email.agreeHPNS'
-                            defaultMessage=' I understand and accept the WAU Chat Hosted Push Notification Service <a href="https://about.mattermost.com/hpns-terms/" target="_blank">Terms of Service</a> and <a href="https://about.mattermost.com/hpns-privacy/" target="_blank">Privacy Policy</a>.'
+                            defaultMessage=' I understand and accept the Silicon Chat Hosted Push Notification Service <a href="https://about.mattermost.com/hpns-terms/" target="_blank">Terms of Service</a> and <a href="https://about.mattermost.com/hpns-privacy/" target="_blank">Privacy Policy</a>.'
                         />
                     </div>
                 </div>
