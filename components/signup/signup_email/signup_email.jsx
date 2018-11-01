@@ -122,6 +122,9 @@ export default class SignupEmail extends React.Component {
     }
 
     handleSignupSuccess(user, data) {
+        if(typeof window.postMessage === "function"){
+            window.postMessage("signup.success")
+        }
         trackEvent('signup', 'signup_user_02_complete');
         loginById(
             data.id,
