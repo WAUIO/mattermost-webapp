@@ -880,7 +880,7 @@ export const Constants = {
             sidebarBg: '#f75959',
             sidebarText: '#ffffff',
             sidebarUnreadText: '#ffffff',
-            sidebarTextHoverBg: '#fe575d',
+            sidebarTextHoverBg: '#fc666b',
             sidebarTextActiveBorder: '#3f617a',
             sidebarTextActiveColor: '#ffffff',
             sidebarHeaderBg: '#165d74',
