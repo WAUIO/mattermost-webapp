@@ -122,8 +122,9 @@ export default class SignupEmail extends React.Component {
     }
 
     handleSignupSuccess(user, data) {
+        //post message to parent window to close when in webview mobile
         if (typeof window.postMessage === 'function') {
-            window.postMessage('signup.success');
+            window.postMessage('signup.success', '*');
         }
         trackEvent('signup', 'signup_user_02_complete');
         loginById(
