@@ -75,7 +75,7 @@ function appendOnLoadEvent(fn) {
     // Listen to post message events and if a cookie, set it and refresh it self
     bindEvent(window, 'message', (e) => {
         //check the message
-        if (e !== null && e.hasOwnProperty('data')) {
+        try {
             var messageObj = JSON.parse(e.data);
             if (
                 typeof messageObj === 'object' &&
@@ -91,7 +91,7 @@ function appendOnLoadEvent(fn) {
                 //reload self
                 self.location.reload();
             }
-        }
+        } catch (ex) {}
     });
     if (window.attachEvent) {
         window.attachEvent('onload', fn);
