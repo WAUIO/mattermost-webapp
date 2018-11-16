@@ -75,20 +75,22 @@ function appendOnLoadEvent(fn) {
     // Listen to post message events and if a cookie, set it and refresh it self
     bindEvent(window, 'message', (e) => {
         //check the message
-        var messageObj = JSON.parse(e.data);
-        if (
-            typeof messageObj === 'object' &&
-            messageObj.hasOwnProperty('referer') &&
-            messageObj.referer === 'Portal' &&
-            messageObj.hasOwnProperty('MMAUTHTOKEN') &&
-            messageObj.hasOwnProperty('MMUSERID')
-        ) {
-            //set the cookies
-            document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
-            document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
+        if (e !== null && e.hasOwnProperty('data')) {
+            var messageObj = JSON.parse(e.data);
+            if (
+                typeof messageObj === 'object' &&
+                messageObj.hasOwnProperty('referer') &&
+                messageObj.referer === 'Portal' &&
+                messageObj.hasOwnProperty('MMAUTHTOKEN') &&
+                messageObj.hasOwnProperty('MMUSERID')
+            ) {
+                //set the cookies
+                document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
+                document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
 
-            //reload self
-            self.location.reload();
+                //reload self
+                self.location.reload();
+            }
         }
     });
     if (window.attachEvent) {
