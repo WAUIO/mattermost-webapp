@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' cdn.segment.com/analytics.js/ 'unsafe-eval'">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' cdn.segment.com/analytics.js/ 'unsafe-eval' 'sha256-H/lsRamMBVhMKWW2C2MVOshTM8w5BMPwjvRiIx4ekqs='">
 
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0'>
@@ -75,6 +75,38 @@
             </div>
         </div>
     </div>
+    <script type='text/javascript' window.publicPath="/">
+        // addEventListener support for IE8
+    function bindEvent(element, eventName, eventHandler) {
+        if (element.addEventListener) {
+            element.addEventListener(eventName, eventHandler, false);
+        } else if (element.attachEvent) {
+            element.attachEvent('on' + eventName, eventHandler);
+        }
+    }
+    
+    // Listen to post message events and if a cookie, set it and refresh it self
+    bindEvent(window, 'message', (e) => {
+            //check the message
+            try {
+                var messageObj = JSON.parse(e.data);
+                if (
+                    typeof messageObj === 'object' &&
+                    messageObj.hasOwnProperty('referer') &&
+                    messageObj.referer === 'Portal' &&
+                    messageObj.hasOwnProperty('MMAUTHTOKEN') &&
+                    messageObj.hasOwnProperty('MMUSERID')
+                ) {
+                    //set the cookies
+                    document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
+                    document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
+    
+                    //reload self
+                    self.location.reload();
+                }
+            } catch (ex) {}
+        });
+    </script>
     <noscript>
         To use Wau Chat, please enable JavaScript.
     </noscript>

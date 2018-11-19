@@ -72,27 +72,6 @@ function renderRootComponent() {
  *
  */
 function appendOnLoadEvent(fn) {
-    // Listen to post message events and if a cookie, set it and refresh it self
-    bindEvent(window, 'message', (e) => {
-        //check the message
-        try {
-            var messageObj = JSON.parse(e.data);
-            if (
-                typeof messageObj === 'object' &&
-                messageObj.hasOwnProperty('referer') &&
-                messageObj.referer === 'Portal' &&
-                messageObj.hasOwnProperty('MMAUTHTOKEN') &&
-                messageObj.hasOwnProperty('MMUSERID')
-            ) {
-                //set the cookies
-                document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
-                document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
-
-                //reload self
-                self.location.reload();
-            }
-        } catch (ex) {}
-    });
     if (window.attachEvent) {
         window.attachEvent('onload', fn);
     } else if (window.onload) {
@@ -103,15 +82,6 @@ function appendOnLoadEvent(fn) {
         };
     } else {
         window.onload = fn;
-    }
-}
-
-// addEventListener support for IE8
-function bindEvent(element, eventName, eventHandler) {
-    if (element.addEventListener) {
-        element.addEventListener(eventName, eventHandler, false);
-    } else if (element.attachEvent) {
-        element.attachEvent('on' + eventName, eventHandler);
     }
 }
 
