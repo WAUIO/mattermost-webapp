@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' cdn.segment.com/analytics.js/ 'unsafe-eval' 'sha256-H/lsRamMBVhMKWW2C2MVOshTM8w5BMPwjvRiIx4ekqs='">
+    <!--meta http-equiv="Content-Security-Policy" content="script-src 'self' cdn.segment.com/analytics.js/ 'unsafe-eval' 'sha256-Gc6//9Qf8tHNhj/XNC9XMFGPVDizIa9oHCxbMxfe30A='">-->
 
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0'>
@@ -76,6 +76,9 @@
         </div>
     </div>
     <script type='text/javascript' window.publicPath="/">
+    if (window.parent !== null) {
+        window.parent.postMessage('WAUCHAT_READY', '*');
+    }
         // addEventListener support for IE8
     function bindEvent(element, eventName, eventHandler) {
         if (element.addEventListener) {
