@@ -77,7 +77,9 @@
     </div>
     <script type='text/javascript' window.publicPath="/">
     if (window.parent !== null) {
-        window.parent.postMessage('WAUCHAT_READY', '*');
+        window.onload = () => {
+            window.parent.postMessage('WAUCHAT_READY', '*');
+        }     
     }
         // addEventListener support for IE8
     function bindEvent(element, eventName, eventHandler) {
@@ -103,6 +105,7 @@
                     //set the cookies
                     document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
                     document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
+                    console.log("Credentials set");
     
                     //reload self
                     self.location.reload();
