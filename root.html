@@ -76,11 +76,11 @@
         </div>
     </div>
     <script type='text/javascript' nonce="4AEemGb0xJptoIGFP3Nd">
+    
     if (window.parent !== null) {
-        window.onload = () => {
-            window.parent.postMessage('WAUCHAT_READY', '*');
-        }     
-    }
+    window.parent.postMessage('WAUCHAT_READY', '*');
+    }     
+
         // addEventListener support for IE8
     function bindEvent(element, eventName, eventHandler) {
         if (element.addEventListener) {
