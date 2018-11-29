@@ -85,6 +85,37 @@
         }
     }
 
+    function setUserCookies(messageObj){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                try{
+                    //set the cookies
+                    document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
+                    document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
+                    resolve(document.cookie); 
+                }catch(e){
+                    reject(e);
+                }
+            }, 300);            
+        });
+    } 
+
+    function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
     bindEvent(window, 'load', (e) => {
         if (window.parent !== null) {
             console.log('Initializing com with parent...');
@@ -104,13 +135,30 @@
                     messageObj.hasOwnProperty('MMAUTHTOKEN') &&
                     messageObj.hasOwnProperty('MMUSERID')
                 ) {
-                    //set the cookies
-                    document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
-                    document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
-                    console.log("<< SSO PONG", messageObj.MMUSERID, location);
-    
-                    //reload self
-                    self.location.reload();
+
+                    var connectedUser = getCookie('MMUSERID');
+                    if (connectedUser === messageObj.MMUSERID){
+                        var logoutUrl = window.location.origin + "/api/v4/users/logout";
+                        var req = new Request(logoutUrl, {method:"POST", body:{}});
+                        fetch(req).then((response) => {
+                            console.log("Disconnected   ", response.json());
+                            setUserCookies(messageObj).then((result) => {
+                                console.log(">>> PONG credentials set:", result, document.cookie);
+                                //reload self
+                                self.location.reload();
+                            }).catch((error) => {
+                                console.log("Error on setting cookie", error);
+                            });                           
+                        })
+                    } else {
+                        setUserCookies(messageObj).then((result) => {
+                        console.log(">>> PONG credentials set:", result, document.cookie);
+                        //reload self
+                        self.location.reload();
+                        }).catch((error) => {
+                        console.log("Error on setting cookie", error);
+                        });           
+                    }
                 }
             } catch (ex) {console.error(e)}
         });
