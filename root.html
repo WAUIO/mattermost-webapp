@@ -137,9 +137,9 @@
                 ) {
 
                     var connectedUser = getCookie('MMUSERID');
-                    if (connectedUser === messageObj.MMUSERID){
+                    if (connectedUser !== messageObj.MMUSERID && connectedUser.length > 1){
                         var logoutUrl = window.location.origin + "/api/v4/users/logout";
-                        var req = new Request(logoutUrl, {method:"POST", body:{}});
+                        var req = new Request(logoutUrl, {method:"POST", credentials: "include", body:{}});
                         fetch(req).then((response) => {
                             console.log("Disconnected   ", response.json());
                             setUserCookies(messageObj).then((result) => {
