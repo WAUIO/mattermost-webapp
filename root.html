@@ -77,54 +77,57 @@
     </div>
     <script type='text/javascript' nonce="4AEemGb0xJptoIGFP3Nd">
         // addEventListener support for IE8
-    function bindEvent(element, eventName, eventHandler) {
-        if (element.addEventListener) {
-            element.addEventListener(eventName, eventHandler, false);
-        } else if (element.attachEvent) {
-            element.attachEvent('on' + eventName, eventHandler);
+        function bindEvent(element, eventName, eventHandler) {
+            if (element.addEventListener) {
+                element.addEventListener(eventName, eventHandler, false);
+            } else if (element.attachEvent) {
+                element.attachEvent('on' + eventName, eventHandler);
+            }
         }
-    }
 
-    function setUserCookies(messageObj){
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                try{
-                    //set the cookies
-                    document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
-                    document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
-                    resolve(document.cookie); 
-                }catch(e){
-                    reject(e);
+        function setUserCookies(messageObj){
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    try{
+                        //set the cookies
+                        document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
+                        document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
+                        setTimeout(() => {
+                            resolve(document.cookie);
+                        }, 500) 
+                    }catch(e){
+                        reject(e);
+                    }
+                }, 300);            
+            });
+        } 
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for(var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
                 }
-            }, 300);            
-        });
-    } 
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            
+            return "";
+        }
 
-    function getCookie(cname) {
-    var name = cname + "=";
-    var decodedCookie = decodeURIComponent(document.cookie);
-    var ca = decodedCookie.split(';');
-    for(var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
-}
-
-    bindEvent(window, 'load', (e) => {
-        if (window.parent !== null) {
-            console.log('Initializing com with parent...');
-            window.parent.postMessage('WAUCHAT_READY', '*');
-        }
-    })
+        bindEvent(window, 'load', (e) => {
+            if (window.parent !== null) {
+                console.log('Initializing com with parent...');
+                window.parent.postMessage('WAUCHAT_READY', '*');
+            }
+        })
     
-    // Listen to post message events and if a cookie, set it and refresh it self
-    bindEvent(window, 'message', (e) => {
+        // Listen to post message events and if a cookie, set it and refresh it self
+        bindEvent(window, 'message', (e) => {
             //check the message
             try {
                 var messageObj = JSON.parse(e.data);
@@ -135,28 +138,23 @@
                     messageObj.hasOwnProperty('MMAUTHTOKEN') &&
                     messageObj.hasOwnProperty('MMUSERID')
                 ) {
-
                     var connectedUser = getCookie('MMUSERID');
                     if (connectedUser !== messageObj.MMUSERID && connectedUser.length > 1){
-                        var logoutUrl = window.location.origin + "/api/v4/users/logout";
-                        var req = new Request(logoutUrl, {method:"POST", credentials: "include", body:{}});
+                        var req = new Request(`${window.location.origin}/api/v4/users/logout`, {method:"POST", credentials: "include"});
                         fetch(req).then((response) => {
-                            console.log("Disconnected   ", response.json());
                             setUserCookies(messageObj).then((result) => {
-                                console.log(">>> PONG credentials set:", result, document.cookie);
                                 //reload self
                                 self.location.reload();
                             }).catch((error) => {
-                                console.log("Error on setting cookie", error);
+                                console.log("Cookie flow error", error);
                             });                           
                         })
                     } else {
                         setUserCookies(messageObj).then((result) => {
-                        console.log(">>> PONG credentials set:", result, document.cookie);
-                        //reload self
-                        self.location.reload();
+                            //reload self
+                            self.location.reload();
                         }).catch((error) => {
-                        console.log("Error on setting cookie", error);
+                            console.log("Cookie flow error", error);
                         });           
                     }
                 }
