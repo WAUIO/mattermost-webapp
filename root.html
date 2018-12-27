@@ -87,18 +87,16 @@
 
         function setUserCookies(messageObj){
             return new Promise((resolve, reject) => {
-                setTimeout(() => {
                     try{
                         //set the cookies
                         document.cookie = `MMAUTHTOKEN=${messageObj.MMAUTHTOKEN}; path=/`;
                         document.cookie = `MMUSERID=${messageObj.MMUSERID}; path=/`;
                         setTimeout(() => {
                             resolve(document.cookie);
-                        }, 500) 
+                        }, 10) 
                     }catch(e){
                         reject(e);
-                    }
-                }, 300);            
+                    }                
             });
         } 
 
