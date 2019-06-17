@@ -2,63 +2,38 @@
 // See LICENSE.txt for license information.
 
 import {connect} from 'react-redux';
-import {getConfig, getLicense} from 'mattermost-redux/selectors/entities/general';
-import {getMyTeams} from 'mattermost-redux/selectors/entities/teams';
-import {haveITeamPermission, haveISystemPermission} from 'mattermost-redux/selectors/entities/roles';
-import {Permissions} from 'mattermost-redux/constants';
+import {bindActionCreators} from 'redux';
+
+import {getCurrentTeam} from 'mattermost-redux/selectors/entities/teams';
+import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
+import {getInt} from 'mattermost-redux/selectors/entities/preferences';
+
+import {openModal} from 'actions/views/modals';
+
+import {Preferences, TutorialSteps} from 'utils/constants.jsx';
+import * as Utils from 'utils/utils.jsx';
 
 import SidebarHeaderDropdown from './sidebar_header_dropdown.jsx';
 
 function mapStateToProps(state) {
-    const config = getConfig(state);
-    const license = getLicense(state);
-
-    const isLicensed = license.IsLicensed === 'true';
-
-    const appDownloadLink = config.AppDownloadLink;
-    const enableCommands = config.EnableCommands === 'true';
-    const enableCustomEmoji = config.EnableCustomEmoji === 'true';
-    const enableIncomingWebhooks = config.EnableIncomingWebhooks === 'true';
-    const enableOAuthServiceProvider = config.EnableOAuthServiceProvider === 'true';
-    const enableOnlyAdminIntegrations = config.EnableOnlyAdminIntegrations === 'true';
-    const enableOutgoingWebhooks = config.EnableOutgoingWebhooks === 'true';
-    const enableTeamCreation = config.EnableTeamCreation === 'true';
-    const enableUserCreation = config.EnableUserCreation === 'true';
-    const enableEmailInvitations = config.EnableEmailInvitations === 'true';
-    const experimentalPrimaryTeam = config.ExperimentalPrimaryTeam;
-    const helpLink = config.HelpLink;
-    const reportAProblemLink = config.ReportAProblemLink;
-    const restrictTeamInvite = config.RestrictTeamInvite;
-
-    let canCreateCustomEmoji = haveISystemPermission(state, {permission: Permissions.MANAGE_EMOJIS});
-    if (!canCreateCustomEmoji) {
-        for (const team of getMyTeams(state)) {
-            if (haveITeamPermission(state, {team: team.id, permission: Permissions.MANAGE_EMOJIS})) {
-                canCreateCustomEmoji = true;
-                break;
-            }
-        }
-    }
-
+    const currentTeam = getCurrentTeam(state);
+    const currentUser = getCurrentUser(state);
+    const showTutorialTip = getInt(state, Preferences.TUTORIAL_STEP, currentUser.id) === TutorialSteps.MENU_POPOVER && !Utils.isMobile();
     return {
-        isLicensed,
-        appDownloadLink,
-        enableCommands,
-        enableCustomEmoji,
-        enableIncomingWebhooks,
-        enableOAuthServiceProvider,
-        enableOnlyAdminIntegrations,
-        enableOutgoingWebhooks,
-        enableTeamCreation,
-        enableUserCreation,
-        enableEmailInvitations,
-        experimentalPrimaryTeam,
-        helpLink,
-        reportAProblemLink,
-        restrictTeamInvite,
-        pluginMenuItems: state.plugins.components.MainMenu,
-        canCreateCustomEmoji,
+        currentUser,
+        teamDescription: currentTeam.description,
+        teamDisplayName: currentTeam.display_name,
+        teamId: currentTeam.id,
+        showTutorialTip,
     };
 }
 
-export default connect(mapStateToProps)(SidebarHeaderDropdown);
+function mapDispatchToProps(dispatch) {
+    return {
+        actions: bindActionCreators({
+            openModal,
+        }, dispatch),
+    };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(SidebarHeaderDropdown);

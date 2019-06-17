@@ -5,10 +5,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {Posts} from 'mattermost-redux/constants';
 
-import AppDispatcher from 'dispatcher/app_dispatcher.jsx';
-import {ActionTypes} from 'utils/constants.jsx';
 import * as PostUtils from 'utils/post_utils.jsx';
-import * as Utils from 'utils/utils.jsx';
 import PostProfilePicture from 'components/post_profile_picture';
 import PostBody from 'components/post_view/post_body';
 import PostHeader from 'components/post_view/post_header';
@@ -22,19 +19,9 @@ export default class Post extends React.PureComponent {
         post: PropTypes.object.isRequired,
 
         /**
-         * The user who created the post
+         * The logged in user ID
          */
-        user: PropTypes.object,
-
-        /**
-         * The status of the poster
-         */
-        status: PropTypes.string,
-
-        /**
-         * The logged in user
-         */
-        currentUser: PropTypes.object.isRequired,
+        currentUserId: PropTypes.string.isRequired,
 
         /**
          * Set to center the post
@@ -54,7 +41,7 @@ export default class Post extends React.PureComponent {
         /**
          * Set to highlight the background of the post
          */
-        highlight: PropTypes.bool,
+        shouldHighlight: PropTypes.bool,
 
         /**
          * Set to render this post as if it was attached to the previous post
@@ -66,6 +53,11 @@ export default class Post extends React.PureComponent {
          */
         previousPostIsComment: PropTypes.bool,
 
+        /*
+         * Function called when the post options dropdown is opened
+         */
+        togglePostMenu: PropTypes.func,
+
         /**
          * Set to render this comment as a mention
          */
@@ -76,20 +68,9 @@ export default class Post extends React.PureComponent {
          */
         replyCount: PropTypes.number,
 
-        /**
-         * Set to mark the poster as in a webrtc call
-         */
-        isBusy: PropTypes.bool,
-
-        /**
-         * The post count used for selenium tests
-         */
-        lastPostCount: PropTypes.number,
-
-        /**
-         * Function to get the post list HTML element
-         */
-        getPostList: PropTypes.func.isRequired,
+        actions: PropTypes.shape({
+            selectPost: PropTypes.func.isRequired,
+        }).isRequired,
     }
 
     static defaultProps = {
@@ -118,14 +99,14 @@ export default class Post extends React.PureComponent {
             return;
         }
 
-        AppDispatcher.handleServerAction({
-            type: ActionTypes.RECEIVED_POST_SELECTED,
-            postId: Utils.getRootId(post),
-            channelId: post.channel_id,
-        });
+        this.props.actions.selectPost(post);
     }
 
     handleDropdownOpened = (opened) => {
+        if (this.props.togglePostMenu) {
+            this.props.togglePostMenu(opened);
+        }
+
         this.setState({
             dropdownOpened: opened,
         });
@@ -145,26 +126,26 @@ export default class Post extends React.PureComponent {
         return false;
     }
 
-    getClassName = (post, isSystemMessage, fromWebhook, fromAutoResponder) => {
+    getClassName = (post, isSystemMessage, fromWebhook, fromAutoResponder, fromBot) => {
         let className = 'post';
 
         if (post.failed || post.state === Posts.POST_DELETED) {
             className += ' post--hide-controls';
         }
 
-        if (this.props.highlight) {
+        if (this.props.shouldHighlight) {
             className += ' post--highlight';
         }
 
         let rootUser = '';
-        if (this.state.sameRoot) {
+        if (this.state.sameRoot && !fromBot) {
             rootUser = 'same--root';
         } else {
             rootUser = 'other--root';
         }
 
         let currentUserCss = '';
-        if (this.props.currentUser.id === post.user_id && !fromWebhook && !isSystemMessage) {
+        if (this.props.currentUserId === post.user_id && !fromWebhook && !isSystemMessage) {
             currentUserCss = 'current--user';
         }
 
@@ -191,7 +172,7 @@ export default class Post extends React.PureComponent {
         }
 
         if (fromAutoResponder) {
-            postType = 'post--comment';
+            postType = 'post--comment same--root';
         }
 
         if (this.props.compactDisplay) {
@@ -230,17 +211,16 @@ export default class Post extends React.PureComponent {
         const isSystemMessage = PostUtils.isSystemMessage(post);
         const fromAutoResponder = PostUtils.fromAutoResponder(post);
         const fromWebhook = post && post.props && post.props.from_webhook === 'true';
+        const fromBot = post && post.props && post.props.from_bot === 'true';
 
         let profilePic;
-        const hideProfilePicture = this.state.sameRoot && this.props.consecutivePostByUser && (!post.root_id && this.props.replyCount === 0);
+        const hideProfilePicture = this.state.sameRoot && this.props.consecutivePostByUser && (!post.root_id && this.props.replyCount === 0) && !fromBot;
         if (!hideProfilePicture) {
             profilePic = (
                 <PostProfilePicture
                     compactDisplay={this.props.compactDisplay}
-                    isBusy={this.props.isBusy}
                     post={post}
-                    status={this.props.status}
-                    user={this.props.user}
+                    userId={post.user_id}
                 />
             );
 
@@ -262,11 +242,15 @@ export default class Post extends React.PureComponent {
             <div
                 ref={this.getRef}
                 id={'post_' + post.id}
-                className={this.getClassName(post, isSystemMessage, fromWebhook, fromAutoResponder)}
+                className={this.getClassName(post, isSystemMessage, fromWebhook, fromAutoResponder, fromBot)}
                 onMouseOver={this.setHover}
                 onMouseLeave={this.unsetHover}
+                onTouchStart={this.setHover}
             >
-                <div className={'post__content ' + centerClass}>
+                <div
+                    id='postContent'
+                    className={'post__content ' + centerClass}
+                >
                     <div className='post__img'>
                         {profilePic}
                     </div>
@@ -275,23 +259,16 @@ export default class Post extends React.PureComponent {
                             post={post}
                             handleCommentClick={this.handleCommentClick}
                             handleDropdownOpened={this.handleDropdownOpened}
-                            user={this.props.user}
-                            currentUser={this.props.currentUser}
                             compactDisplay={this.props.compactDisplay}
-                            status={this.props.status}
-                            isBusy={this.props.isBusy}
-                            lastPostCount={this.props.lastPostCount}
                             isFirstReply={this.props.isFirstReply}
                             replyCount={this.props.replyCount}
                             showTimeWithoutHover={!hideProfilePicture}
-                            getPostList={this.props.getPostList}
                             hover={this.state.hover}
                         />
                         <PostBody
                             post={post}
                             handleCommentClick={this.handleCommentClick}
                             compactDisplay={this.props.compactDisplay}
-                            lastPostCount={this.props.lastPostCount}
                             isCommentMention={this.props.isCommentMention}
                             isFirstReply={this.props.isFirstReply}
                         />

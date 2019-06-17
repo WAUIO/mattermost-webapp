@@ -7,74 +7,67 @@ import React from 'react';
 import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
-import UserStore from 'stores/user_store.jsx';
-import * as Utils from 'utils/utils.jsx';
-import AuditTable from 'components/audit_table.jsx';
+import {isMobile} from 'utils/utils.jsx';
+import AuditTable from 'components/audit_table';
 import LoadingScreen from 'components/loading_screen.jsx';
 
-export default class AccessHistoryModal extends React.Component {
+export default class AccessHistoryModal extends React.PureComponent {
     static propTypes = {
+
+        /**
+         * Function that's called when modal is closed
+         */
         onHide: PropTypes.func.isRequired,
         actions: PropTypes.shape({
+
+            /**
+             * Function to fetch the user's audits
+             */
             getUserAudits: PropTypes.func.isRequired,
         }).isRequired,
+
+        /**
+         * The current user's audits
+         */
+        userAudits: PropTypes.array.isRequired,
+
+        /**
+         * The current user id
+         */
+        currentUserId: PropTypes.string.isRequired,
     }
 
     constructor(props) {
         super(props);
 
-        this.onAuditChange = this.onAuditChange.bind(this);
-        this.onShow = this.onShow.bind(this);
-        this.onHide = this.onHide.bind(this);
-
-        const state = this.getStateFromStoresForAudits();
-        state.moreInfo = [];
-        state.show = true;
-
-        this.state = state;
-    }
-
-    getStateFromStoresForAudits() {
-        return {
-            audits: UserStore.getAudits(),
+        this.state = {
+            show: true,
         };
     }
 
-    onShow() {
-        this.props.actions.getUserAudits(UserStore.getCurrentId(), 0, 200);
-        if (!Utils.isMobile()) {
+    onShow = () => {
+        this.props.actions.getUserAudits(this.props.currentUserId, 0, 200);
+        if (!isMobile()) {
             $('.modal-body').perfectScrollbar();
         }
     }
 
-    onHide() {
+    onHide = () => {
         this.setState({show: false});
     }
 
     componentDidMount() {
-        UserStore.addAuditsChangeListener(this.onAuditChange);
         this.onShow();
-    }
-
-    componentWillUnmount() {
-        UserStore.removeAuditsChangeListener(this.onAuditChange);
-    }
-
-    onAuditChange() {
-        const newState = this.getStateFromStoresForAudits();
-        if (!Utils.areObjectsEqual(newState.audits, this.state.audits)) {
-            this.setState(newState);
-        }
     }
 
     render() {
         let content;
-        if (this.state.audits.length === 0) {
+        if (this.props.userAudits.length === 0) {
             content = (<LoadingScreen/>);
         } else {
             content = (
                 <AuditTable
-                    audits={this.state.audits}
+                    audits={this.props.userAudits}
                     showIp={true}
                     showSession={true}
                 />
@@ -88,9 +81,14 @@ export default class AccessHistoryModal extends React.Component {
                 onHide={this.onHide}
                 onExited={this.props.onHide}
                 bsSize='large'
+                role='dialog'
+                aria-labelledby='accessHistoryModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='accessHistoryModalLabel'
+                    >
                         <FormattedMessage
                             id='access_history.title'
                             defaultMessage='Access History'
@@ -100,6 +98,18 @@ export default class AccessHistoryModal extends React.Component {
                 <Modal.Body ref='modalBody'>
                     {content}
                 </Modal.Body>
+                <Modal.Footer className='modal-footer--invisible'>
+                    <button
+                        id='closeModalButton'
+                        type='button'
+                        className='btn btn-link'
+                    >
+                        <FormattedMessage
+                            id='general_button.close'
+                            defaultMessage='Close'
+                        />
+                    </button>
+                </Modal.Footer>
             </Modal>
         );
     }

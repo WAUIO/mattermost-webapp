@@ -2,79 +2,71 @@
 // See LICENSE.txt for license information.
 
 import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
+
+import {getMorePostsForSearch} from 'mattermost-redux/actions/search';
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
+import {getConfig} from 'mattermost-redux/selectors/entities/general';
 import {getSearchMatches, getSearchResults} from 'mattermost-redux/selectors/entities/posts';
 import * as PreferenceSelectors from 'mattermost-redux/selectors/entities/preferences';
-import {getConfig} from 'mattermost-redux/selectors/entities/general';
+import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
+import {getCurrentSearchForCurrentTeam} from 'mattermost-redux/selectors/entities/search';
 
 import {
     getSearchResultsTerms,
     getIsSearchingTerm,
     getIsSearchingFlaggedPost,
     getIsSearchingPinnedPost,
+    getIsSearchGettingMore,
 } from 'selectors/rhs';
 import {Preferences} from 'utils/constants.jsx';
 
 import SearchResults from './search_results.jsx';
 
-const getCategory = PreferenceSelectors.makeGetCategory();
-
 function makeMapStateToProps() {
     let results;
     let posts;
-    let channels;
-    let flaggedPosts;
-    let isFlaggedByPostId;
 
     return function mapStateToProps(state) {
+        const config = getConfig(state);
+
+        const dataRetentionEnableMessageDeletion = config.DataRetentionEnableMessageDeletion === 'true';
+        const dataRetentionMessageRetentionDays = config.DataRetentionMessageRetentionDays;
+        const viewArchivedChannels = config.ExperimentalViewArchivedChannels === 'true';
+
         const newResults = getSearchResults(state);
 
         // Cache posts and channels
         if (newResults && newResults !== results) {
             results = newResults;
 
-            posts = results.filter((post) => Boolean(post));
-
-            channels = new Map();
-
-            const channelIds = posts.map((post) => post.channel_id);
-
-            for (const id of channelIds) {
-                if (channels.has(id)) {
-                    continue;
+            posts = [];
+            results.forEach((post) => {
+                if (!post) {
+                    return;
                 }
 
-                channels.set(id, getChannel(state, id));
-            }
+                const channel = getChannel(state, post.channel_id);
+                if (channel && channel.delete_at !== 0 && !viewArchivedChannels) {
+                    return;
+                }
+
+                posts.push(post);
+            });
         }
 
-        const newFlaggedPosts = getCategory(state, Preferences.CATEGORY_FLAGGED_POST);
-
-        // Cache flagged posts map
-        if (newFlaggedPosts !== flaggedPosts) {
-            flaggedPosts = newFlaggedPosts;
-
-            isFlaggedByPostId = new Map();
-
-            for (const pref of flaggedPosts) {
-                isFlaggedByPostId.set(pref.name, true);
-            }
-        }
-
-        const config = getConfig(state);
-
-        const dataRetentionEnableMessageDeletion = config.DataRetentionEnableMessageDeletion === 'true';
-        const dataRetentionMessageRetentionDays = config.DataRetentionMessageRetentionDays;
+        const currentSearch = getCurrentSearchForCurrentTeam(state) || {};
 
         return {
             results: posts,
             matches: getSearchMatches(state),
-            channels,
+            currentUser: getCurrentUser(state),
             searchTerms: getSearchResultsTerms(state),
-            isFlaggedByPostId,
             isSearchingTerm: getIsSearchingTerm(state),
             isSearchingFlaggedPost: getIsSearchingFlaggedPost(state),
             isSearchingPinnedPost: getIsSearchingPinnedPost(state),
+            isSearchGettingMore: getIsSearchGettingMore(state),
+            isSearchAtEnd: currentSearch.isEnd,
             compactDisplay: PreferenceSelectors.get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.MESSAGE_DISPLAY, Preferences.MESSAGE_DISPLAY_DEFAULT) === Preferences.MESSAGE_DISPLAY_COMPACT,
             dataRetentionEnableMessageDeletion,
             dataRetentionMessageRetentionDays,
@@ -82,4 +74,12 @@ function makeMapStateToProps() {
     };
 }
 
-export default connect(makeMapStateToProps)(SearchResults);
+function mapDispatchToProps(dispatch) {
+    return {
+        actions: bindActionCreators({
+            getMorePostsForSearch,
+        }, dispatch),
+    };
+}
+
+export default connect(makeMapStateToProps, mapDispatchToProps)(SearchResults);

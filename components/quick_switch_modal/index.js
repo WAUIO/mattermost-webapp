@@ -2,8 +2,9 @@
 // See LICENSE.txt for license information.
 
 import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
 
-import {goToChannel, goToChannelById, openDirectChannelToUser} from 'actions/channel_actions.jsx';
+import {joinChannelById, switchToChannel} from 'actions/views/channel';
 
 import QuickSwitchModal from './quick_switch_modal.jsx';
 
@@ -13,13 +14,12 @@ function mapStateToProps() {
     };
 }
 
-function mapDispatchToProps() {
+function mapDispatchToProps(dispatch) {
     return {
-        actions: {
-            goToChannel,
-            goToChannelById,
-            openDirectChannelToUser,
-        },
+        actions: bindActionCreators({
+            joinChannelById,
+            switchToChannel,
+        }, dispatch),
     };
 }
 

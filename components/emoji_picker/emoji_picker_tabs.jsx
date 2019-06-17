@@ -9,6 +9,8 @@ import GifPicker from 'components/gif_picker/gif_picker.jsx';
 import EmojiIcon from 'components/svg/emoji_icon';
 import GfycatIcon from 'components/svg/gfycat_icon';
 
+import EmojiPickerHeader from './components/emoji_picker_header';
+
 import EmojiPicker from './';
 
 export default class EmojiPickerTabs extends PureComponent {
@@ -18,6 +20,7 @@ export default class EmojiPickerTabs extends PureComponent {
         topOffset: PropTypes.number,
         placement: PropTypes.oneOf(['top', 'bottom', 'left']),
         customEmojis: PropTypes.object,
+        onEmojiClose: PropTypes.func.isRequired,
         onEmojiClick: PropTypes.func.isRequired,
         onGifClick: PropTypes.func,
         enableGifPicker: PropTypes.bool,
@@ -28,9 +31,33 @@ export default class EmojiPickerTabs extends PureComponent {
         topOffset: 0,
     };
 
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            emojiTabVisible: true,
+        };
+    }
+
+    handleEnterEmojiTab = () => {
+        this.setState({
+            emojiTabVisible: true,
+        });
+    };
+
+    handleExitEmojiTab = () => {
+        this.setState({
+            emojiTabVisible: false,
+        });
+    };
+
+    handleEmojiPickerClose = () => {
+        this.props.onEmojiClose();
+    }
+
     render() {
         let pickerStyle;
-        if (this.props.style && !(this.props.style.left === 0 || this.props.style.top === 0)) {
+        if (this.props.style && !(this.props.style.left === 0 && this.props.style.top === 0)) {
             if (this.props.placement === 'top' || this.props.placement === 'bottom') {
                 // Only take the top/bottom position passed by React Bootstrap since we want to be right-aligned
                 pickerStyle = {
@@ -41,10 +68,10 @@ export default class EmojiPickerTabs extends PureComponent {
             } else {
                 pickerStyle = {...this.props.style};
             }
-        }
 
-        if (pickerStyle && pickerStyle.top) {
-            pickerStyle.top += this.props.topOffset;
+            if (pickerStyle.top) {
+                pickerStyle.top += this.props.topOffset;
+            }
         }
 
         let pickerClass = 'emoji-picker';
@@ -61,17 +88,19 @@ export default class EmojiPickerTabs extends PureComponent {
                     className={pickerClass}
                     justified={true}
                 >
+                    <EmojiPickerHeader handleEmojiPickerClose={this.handleEmojiPickerClose}/>
                     <Tab
                         eventKey={1}
+                        onEnter={this.handleEnterEmojiTab}
+                        onExit={this.handleExitEmojiTab}
                         title={<EmojiIcon/>}
                     >
                         <EmojiPicker
                             style={this.props.style}
+                            onEmojiClose={this.props.onEmojiClose}
                             onEmojiClick={this.props.onEmojiClick}
-                            rightOffset={this.props.rightOffset}
-                            topOffset={this.props.topOffset}
-                            placement={this.props.placement}
                             customEmojis={this.props.customEmojis}
+                            visible={this.state.emojiTabVisible}
                         />
                     </Tab>
                     <Tab
@@ -82,8 +111,6 @@ export default class EmojiPickerTabs extends PureComponent {
                     >
                         <GifPicker
                             onGifClick={this.props.onGifClick}
-                            rightOffset={this.props.rightOffset}
-                            topOffset={this.props.topOffset}
                         />
                     </Tab>
                 </Tabs>
@@ -91,15 +118,15 @@ export default class EmojiPickerTabs extends PureComponent {
         }
         return (
             <div
+                id='emojiPicker'
                 style={pickerStyle}
-                className={pickerClass}
+                className={pickerClass + ' emoji-picker--single'}
             >
+                <EmojiPickerHeader handleEmojiPickerClose={this.handleEmojiPickerClose}/>
                 <EmojiPicker
                     style={this.props.style}
+                    onEmojiClose={this.props.onEmojiClose}
                     onEmojiClick={this.props.onEmojiClick}
-                    rightOffset={this.props.rightOffset}
-                    topOffset={this.props.topOffset}
-                    placement={this.props.placement}
                     customEmojis={this.props.customEmojis}
                 />
             </div>

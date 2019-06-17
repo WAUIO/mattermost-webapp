@@ -1,20 +1,22 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import twemoji from 'twemoji';
 import XRegExp from 'xregexp';
-
-import EmojiStore from 'stores/emoji_store.jsx';
+import {getEmojiImageUrl} from 'mattermost-redux/utils/emoji_utils';
+import emojiRegex from 'emoji-regex';
 
 import {formatWithRenderer} from 'utils/markdown';
-import RemoveMarkdown from 'utils/markdown/remove_markdown';
+import {getEmojiMap} from 'selectors/emojis';
+import store from 'stores/redux_store.jsx';
 
-import Constants from './constants.jsx';
 import * as Emoticons from './emoticons.jsx';
 import * as Markdown from './markdown';
 
-const removeMarkdown = new RemoveMarkdown();
 const punctuation = XRegExp.cache('[^\\pL\\d]');
+
+const AT_MENTION_PATTERN = /\B@([a-z0-9.\-_]+)/gi;
+const UNICODE_EMOJI_REGEX = emojiRegex();
+const htmlEmojiPattern = /^<p>\s*(?:<img class="emoticon"[^>]*>|<span data-emoticon[^>]*>[^<]*<\/span>\s*|<span class="emoticon emoticon--unicode">[^<]*<\/span>\s*)+<\/p>$/;
 
 // pattern to detect the existence of a Chinese, Japanese, or Korean character in a string
 // http://stackoverflow.com/questions/15033196/using-javascript-to-check-whether-a-string-contains-japanese-characters-includi
@@ -39,6 +41,8 @@ const cjkPattern = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-
 // - team - The current team.
 // - proxyImages - If specified, images are proxied. Defaults to false.
 // - autolinkedUrlSchemes - An array of url schemes that will be allowed for autolinking. Defaults to autolinking with any url scheme.
+// - renderer - a custom renderer object to use in the formatWithRenderer function. Defaults to empty.
+// - minimumHashtagLength - Minimum number of characters in a hashtag. Defaults to 3.
 export function formatText(text, inputOptions) {
     if (!text || typeof text !== 'string') {
         return '';
@@ -54,9 +58,8 @@ export function formatText(text, inputOptions) {
         options.searchPatterns = parseSearchTerms(options.searchTerm).map(convertSearchTermToRegex);
     }
 
-    if (options.removeMarkdown) {
-        output = formatWithRenderer(output, removeMarkdown);
-        output = sanitizeHtml(output);
+    if (options.renderer) {
+        output = formatWithRenderer(output, options.renderer);
         output = doFormatText(output, options);
     } else if (!('markdown' in options) || options.markdown) {
         // the markdown renderer will call doFormatText as necessary
@@ -69,6 +72,10 @@ export function formatText(text, inputOptions) {
     // replace newlines with spaces if necessary
     if (options.singleline) {
         output = replaceNewlines(output);
+    }
+
+    if (htmlEmojiPattern.test(output.trim())) {
+        output = '<span class="all-emoji">' + output.trim() + '</span>';
     }
 
     return output;
@@ -90,7 +97,7 @@ export function doFormatText(text, options) {
     }
 
     output = autolinkEmails(output, tokens);
-    output = autolinkHashtags(output, tokens);
+    output = autolinkHashtags(output, tokens, options.minimumHashtagLength);
 
     if (!('emoticons' in options) || options.emoticon) {
         output = Emoticons.handleEmoticons(output, tokens);
@@ -105,17 +112,8 @@ export function doFormatText(text, options) {
     }
 
     if (!('emoticons' in options) || options.emoticon) {
-        output = twemoji.parse(output, {
-            className: 'emoticon',
-            callback: (icon) => {
-                if (!EmojiStore.hasUnicode(icon)) {
-                    // just leave the unicode characters and hope the browser can handle it
-                    return null;
-                }
-
-                return EmojiStore.getEmojiImageUrl(EmojiStore.getUnicode(icon));
-            },
-        });
+        const emojiMap = getEmojiMap(store.getState());
+        output = handleUnicodeEmoji(output, emojiMap, UNICODE_EMOJI_REGEX);
     }
 
     // reinsert tokens with formatted versions of the important words and phrases
@@ -150,7 +148,7 @@ var reEmail = XRegExp.cache('(^|[^\\pL\\d])(' + emailStartPattern + '[\\pL\\d.\\
 function autolinkEmails(text, tokens) {
     function replaceEmailWithToken(fullMatch, prefix, email) {
         const index = tokens.size;
-        const alias = `$MM_EMAIL${index}`;
+        const alias = `$MM_EMAIL${index}$`;
 
         tokens.set(alias, {
             value: `<a class="theme" href="mailto:${email}">${email}</a>`,
@@ -169,7 +167,7 @@ function autolinkEmails(text, tokens) {
 export function autolinkAtMentions(text, tokens) {
     function replaceAtMentionWithToken(fullMatch, username) {
         const index = tokens.size;
-        const alias = `$MM_ATMENTION${index}`;
+        const alias = `$MM_ATMENTION${index}$`;
 
         tokens.set(alias, {
             value: `<span data-mention="${username}">@${username}</span>`,
@@ -180,7 +178,16 @@ export function autolinkAtMentions(text, tokens) {
     }
 
     let output = text;
-    output = output.replace(/\B@([a-z0-9.\-_]*)/gi, replaceAtMentionWithToken);
+
+    // handle @channel, @all, @here mentions first (purposely excludes trailing punctuation)
+    output = output.replace(/\B@(channel|all|here)\b/gi, replaceAtMentionWithToken);
+
+    // handle all other mentions (supports trailing punctuation)
+    let match = output.match(AT_MENTION_PATTERN);
+    while (match && match.length > 0) {
+        output = output.replace(AT_MENTION_PATTERN, replaceAtMentionWithToken);
+        match = output.match(AT_MENTION_PATTERN);
+    }
 
     return output;
 }
@@ -191,7 +198,7 @@ function autolinkChannelMentions(text, tokens, channelNamesMap, team) {
     }
     function addToken(channelName, mention, displayName) {
         const index = tokens.size;
-        const alias = `$MM_CHANNELMENTION${index}`;
+        const alias = `$MM_CHANNELMENTION${index}$`;
         let href = '#';
         if (team) {
             href = (window.basename || '') + '/' + team.name + '/channels/' + channelName;
@@ -242,6 +249,9 @@ function autolinkChannelMentions(text, tokens, channelNamesMap, team) {
 }
 
 export function escapeRegex(text) {
+    if (text == null) {
+        return '';
+    }
     return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
@@ -276,10 +286,10 @@ function highlightCurrentMentions(text, tokens, mentionKeys = []) {
 
         if (mentionKeys.findIndex((key) => key.key.toLowerCase() === tokenTextLower) !== -1) {
             const index = tokens.size + newTokens.size;
-            const newAlias = `$MM_SELFMENTION${index}`;
+            const newAlias = `$MM_SELFMENTION${index}$`;
 
             newTokens.set(newAlias, {
-                value: `<span class='mention--highlight'>${alias}</span>`,
+                value: `<span class="mention--highlight">${alias}</span>`,
                 originalText: token.originalText,
             });
             output = output.replace(alias, newAlias);
@@ -294,10 +304,10 @@ function highlightCurrentMentions(text, tokens, mentionKeys = []) {
     // look for self mentions in the text
     function replaceCurrentMentionWithToken(fullMatch, prefix, mention, suffix = '') {
         const index = tokens.size;
-        const alias = `$MM_SELFMENTION${index}`;
+        const alias = `$MM_SELFMENTION${index}$`;
 
         tokens.set(alias, {
-            value: `<span class='mention--highlight'>${mention}</span>`,
+            value: `<span class="mention--highlight">${mention}</span>`,
             originalText: mention,
         });
 
@@ -314,22 +324,27 @@ function highlightCurrentMentions(text, tokens, mentionKeys = []) {
             flags += 'i';
         }
 
-        const pattern = new RegExp(`(^|\\W)(${escapeRegex(mention.key)})(\\b|_+\\b)`, flags);
-
+        let pattern;
+        if (cjkPattern.test(mention.key)) {
+            // In the case of CJK mention key, even if there's no delimiters (such as spaces) at both ends of a word, it is recognized as a mention key
+            pattern = new RegExp(`()(${escapeRegex(mention.key)})()`, flags);
+        } else {
+            pattern = new RegExp(`(^|\\W)(${escapeRegex(mention.key)})(\\b|_+\\b)`, flags);
+        }
         output = output.replace(pattern, replaceCurrentMentionWithToken);
     }
 
     return output;
 }
 
-function autolinkHashtags(text, tokens) {
+function autolinkHashtags(text, tokens, minimumHashtagLength = 3) {
     let output = text;
 
     var newTokens = new Map();
     for (const [alias, token] of tokens) {
         if (token.originalText.lastIndexOf('#', 0) === 0) {
             const index = tokens.size + newTokens.size;
-            const newAlias = `$MM_HASHTAG${index}`;
+            const newAlias = `$MM_HASHTAG${index}$`;
 
             newTokens.set(newAlias, {
                 value: `<a class='mention-link' href='#' data-hashtag='${token.originalText}'>${token.originalText}</a>`,
@@ -349,9 +364,9 @@ function autolinkHashtags(text, tokens) {
     // look for hashtags in the text
     function replaceHashtagWithToken(fullMatch, prefix, originalText) {
         const index = tokens.size;
-        const alias = `$MM_HASHTAG${index}`;
+        const alias = `$MM_HASHTAG${index}$`;
 
-        if (text.length < Constants.MIN_HASHTAG_LINK_LENGTH + 1) {
+        if (originalText.length < minimumHashtagLength + 1) {
             // too short to be a hashtag
             return fullMatch;
         }
@@ -380,10 +395,13 @@ function parseSearchTerms(searchTerm) {
         let captured;
 
         // check for a quoted string
-        captured = (/^"(.*?)"/).exec(termString);
+        captured = (/^"([^"]*)"/).exec(termString);
         if (captured) {
             termString = termString.substring(captured[0].length);
-            terms.push(captured[1]);
+
+            if (captured[1].length > 0) {
+                terms.push(captured[1]);
+            }
             continue;
         }
 
@@ -459,10 +477,10 @@ export function highlightSearchTerms(text, tokens, searchPatterns) {
 
     function replaceSearchTermWithToken(match, prefix, word) {
         const index = tokens.size;
-        const alias = `$MM_SEARCHTERM${index}`;
+        const alias = `$MM_SEARCHTERM${index}$`;
 
         tokens.set(alias, {
-            value: `<span class='search-highlight'>${word}</span>`,
+            value: `<span class="search-highlight">${word}</span>`,
             originalText: word,
         });
 
@@ -484,15 +502,15 @@ export function highlightSearchTerms(text, tokens, searchPatterns) {
                     term = term.substr(1);
                 }
 
-                if (alias.startsWith('$MM_HASHTAG') && originalText !== term) {
+                if (alias.startsWith('$MM_HASHTAG') && alias.endsWith('$') && originalText.toLowerCase() !== term.toLowerCase()) {
                     continue;
                 }
 
                 const index = tokens.size + newTokens.size;
-                const newAlias = `$MM_SEARCHTERM${index}`;
+                const newAlias = `$MM_SEARCHTERM${index}$`;
 
                 newTokens.set(newAlias, {
-                    value: `<span class='search-highlight'>${alias}</span>`,
+                    value: `<span class="search-highlight">${alias}</span>`,
                     originalText: token.originalText,
                 });
 
@@ -532,4 +550,24 @@ export function replaceTokens(text, tokens) {
 
 function replaceNewlines(text) {
     return text.replace(/\n/g, ' ');
+}
+
+export function handleUnicodeEmoji(text, supportedEmoji, searchPattern) {
+    let output = text;
+
+    // replace all occurances of unicode emoji with additional markup
+    output = output.replace(searchPattern, (emoji) => {
+        // convert unicode character to hex string
+        const emojiCode = emoji.codePointAt(0).toString(16);
+
+        // convert emoji to image if supported, or wrap in span to apply appropriate formatting
+        if (supportedEmoji.hasUnicode(emojiCode)) {
+            // build image tag to replace supported unicode emoji
+            return `<img class="emoticon" draggable="false" alt="${emoji}" src="${getEmojiImageUrl(supportedEmoji.getUnicode(emojiCode))}">`;
+        }
+
+        // wrap unsupported unicode emoji in span to style as needed
+        return `<span class="emoticon emoticon--unicode">${emoji}</span>`;
+    });
+    return output;
 }

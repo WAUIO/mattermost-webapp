@@ -4,7 +4,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {Modal} from 'react-bootstrap';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 
 import {browserHistory} from 'utils/browser_history';
 import Constants from 'utils/constants.jsx';
@@ -29,6 +29,7 @@ export default class DeleteChannelModal extends React.PureComponent {
         currentTeamDetails: PropTypes.object.isRequired,
 
         canViewArchivedChannels: PropTypes.bool,
+        penultimateViewedChannelName: PropTypes.string.isRequired,
 
         actions: PropTypes.shape({
 
@@ -52,7 +53,10 @@ export default class DeleteChannelModal extends React.PureComponent {
         if (this.props.channel.id.length !== Constants.CHANNEL_ID_LENGTH) {
             return;
         }
-        browserHistory.push('/' + this.props.currentTeamDetails.name + '/channels/' + Constants.DEFAULT_CHANNEL);
+        if (!this.props.canViewArchivedChannels) {
+            const {penultimateViewedChannelName} = this.props;
+            browserHistory.push('/' + this.props.currentTeamDetails.name + '/channels/' + penultimateViewedChannelName);
+        }
         this.props.actions.deleteChannel(this.props.channel.id);
         this.onHide();
     }
@@ -68,21 +72,26 @@ export default class DeleteChannelModal extends React.PureComponent {
                 show={this.state.show}
                 onHide={this.onHide}
                 onExited={this.props.onHide}
+                role='dialog'
+                aria-labelledby='deleteChannelModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <h4 className='modal-title'>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='deleteChannelModalLabel'
+                    >
                         <FormattedMessage
                             id='delete_channel.confirm'
                             defaultMessage='Confirm ARCHIVE Channel'
                         />
-                    </h4>
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div className='alert alert-danger'>
                         {!canViewArchivedChannels &&
-                            <FormattedHTMLMessage
+                            <FormattedMarkdownMessage
                                 id='delete_channel.question'
-                                defaultMessage='This will archive the channel from the team and make its contents inaccessible for all users. <br /><br />Are you sure you wish to archive the <strong>{display_name}</strong> channel?'
+                                defaultMessage='This will archive the channel from the team and make its contents inaccessible for all users. \n \nAre you sure you wish to archive the **{display_name}** channel?'
                                 values={{
                                     display_name: this.props.channel.display_name,
                                 }}
@@ -100,7 +109,7 @@ export default class DeleteChannelModal extends React.PureComponent {
                 <Modal.Footer>
                     <button
                         type='button'
-                        className='btn btn-default'
+                        className='btn btn-link'
                         onClick={this.onHide}
                     >
                         <FormattedMessage

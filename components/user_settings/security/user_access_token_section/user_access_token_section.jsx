@@ -15,6 +15,9 @@ import SettingItemMax from 'components/setting_item_max.jsx';
 import SettingItemMin from 'components/setting_item_min.jsx';
 import SaveButton from 'components/save_button.jsx';
 
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
+import WarningIcon from 'components/icon/warning_icon';
+
 const SECTION_TOKENS = 'tokens';
 const TOKEN_CREATING = 'creating';
 const TOKEN_CREATED = 'created';
@@ -225,9 +228,9 @@ export default class UserAccessTokenSection extends React.Component {
             ),
             confirmMessage: () => (
                 <div className='alert alert-danger'>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='user.settings.tokens.confirmDeleteMessage'
-                        defaultMessage='Any integrations using this token will no longer be able to access the Mattermost API. You cannot undo this action. <br /><br />Are you sure want to delete the {description} token?'
+                        defaultMessage='Any integrations using this token will no longer be able to access the Mattermost API. You cannot undo this action. \n \nAre you sure want to delete the **{description}** token?'
                         values={{
                             description: token.description,
                         }}
@@ -310,7 +313,7 @@ export default class UserAccessTokenSection extends React.Component {
                     >
                         <FormattedMessage
                             id='user.settings.tokens.deactivate'
-                            defaultMessage='Deactivate'
+                            defaultMessage='Disable'
                         />
                     </a>);
             } else {
@@ -318,7 +321,7 @@ export default class UserAccessTokenSection extends React.Component {
                     <span className='has-error setting-box__inline-error'>
                         <FormattedMessage
                             id='user.settings.tokens.deactivatedWarning'
-                            defaultMessage='(Inactive)'
+                            defaultMessage='(Disabled)'
                         />
                     </span>
                 );
@@ -333,7 +336,7 @@ export default class UserAccessTokenSection extends React.Component {
                     >
                         <FormattedMessage
                             id='user.settings.tokens.activate'
-                            defaultMessage='Activate'
+                            defaultMessage='Enable'
                         />
                     </a>
                 );
@@ -396,18 +399,18 @@ export default class UserAccessTokenSection extends React.Component {
         if (isMobile()) {
             extraInfo = (
                 <span>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='user.settings.tokens.description_mobile'
-                        defaultMessage='<a href="https://about.mattermost.com/default-user-access-tokens" target="_blank">Personal access tokens</a> function similarly to session tokens and can be used by integrations to <a href="https://about.mattermost.com/default-api-authentication" target="_blank">authenticate against the REST API</a>. Create new tokens on your desktop.'
+                        defaultMessage='[Personal access tokens](!https://about.mattermost.com/default-user-access-tokens) function similarly to session tokens and can be used by integrations to [authenticate against the REST API](!https://about.mattermost.com/default-api-authentication). Create new tokens on your desktop.'
                     />
                 </span>
             );
         } else {
             extraInfo = (
                 <span>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='user.settings.tokens.description'
-                        defaultMessage='<a href="https://about.mattermost.com/default-user-access-tokens" target="_blank">Personal access tokens</a> function similarly to session tokens and can be used by integrations to <a href="https://about.mattermost.com/default-api-authentication" target="_blank">authenticate against the REST API</a>.'
+                        defaultMessage='[Personal access tokens](!https://about.mattermost.com/default-user-access-tokens) function similarly to session tokens and can be used by integrations to [authenticate against the REST API](!https://about.mattermost.com/default-api-authentication).'
                     />
                 </span>
             );
@@ -462,7 +465,7 @@ export default class UserAccessTokenSection extends React.Component {
                             onClick={this.confirmCreateToken}
                         />
                         <button
-                            className='btn btn-default'
+                            className='btn btn-link'
                             onClick={this.stopCreatingToken}
                         >
                             <FormattedMessage
@@ -482,10 +485,7 @@ export default class UserAccessTokenSection extends React.Component {
                 <div
                     className='alert alert-warning'
                 >
-                    <i
-                        className='fa fa-warning margin-right'
-                        title={Utils.localizeMessage('generic_icons.warning', 'Warning Icon')}
-                    />
+                    <WarningIcon additionalClassName='margin-right'/>
                     <FormattedMessage
                         id='user.settings.tokens.copy'
                         defaultMessage="Please copy the access token below. You won't be able to see it again!"

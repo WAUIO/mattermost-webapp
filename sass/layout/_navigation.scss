@@ -28,6 +28,28 @@
         margin: 0 5px 0 2px;
     }
 
+    .navbar-header {
+        display: flex;
+    }
+
+    .flex-parent--center {
+        display: flex;
+        justify-content: center;
+    }
+
+    .browser--ie & {
+        .navbar-default {
+            .navbar-brand {
+                overflow: visible;
+                padding: 1px;
+
+                .heading {
+                    max-width: 100px;
+                }
+            }
+        }
+    }
+
     .navbar-default {
         background: $primary-color;
         border: none;
@@ -94,71 +116,54 @@
                 }
             }
 
+            &.icon__mute {
+                width: 30px;
+                padding: 0;
+                opacity: .6;
+                font-size: 15px;
+            }
+
             .icon--white {
                 color: $white;
             }
         }
 
         .navbar-brand {
-            float: none;
+            flex: 1;
             font-size: 16px;
             height: 50px;
             line-height: 50px;
-            padding: 0 .5em;
+            overflow: hidden;
+            padding: 0;
+            display: flex;
+
+            .dropdown, .MenuWrapper {
+                max-width: calc(100% - 40px);
+            }
 
             .heading {
-                display: inline-block;
-                font-weight: 600;
-                line-height: 50px;
-                margin-right: 5px;
-                max-width: calc(100% - 240px);
+                white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                vertical-align: top;
-                white-space: nowrap;
+                width: auto;
             }
 
             .header-dropdown__icon {
-                margin-left: 0;
-                top: 2px;
+                margin-left: 6px;
             }
 
-            .dropdown-toggle {
-                color: $white;
+            .dropdown-toggle, .MenuWrapper > a {
+                align-items: center;
+                color: inherit;
+                display: flex;
+                overflow: hidden;
+                text-decoration: none;
             }
 
             .description {
-                color: $white;
+                color: inherit;
                 display: inline-block;
                 margin-right: 1em;
-
-                &.webrtc__button {
-                    @include border-radius(50px);
-                    cursor: pointer;
-                    font-size: 14px;
-                    font-weight: 600;
-                    height: 32px;
-                    line-height: 32px;
-                    margin: 9px 10px 0 0;
-                    padding: 0 10px;
-                    position: relative;
-                    text-align: center;
-                    vertical-align: top;
-                    width: auto;
-
-                    a {
-                        color: inherit;
-                        text-decoration: none;
-                    }
-
-                    &.offline {
-                        @include opacity(.5);
-                    }
-
-                    svg {
-                        position: relative;
-                    }
-                }
             }
         }
     }

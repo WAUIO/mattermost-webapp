@@ -6,7 +6,9 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
 import {localizeMessage} from 'utils/utils.jsx';
+import {t} from 'utils/i18n.jsx';
 import SaveButton from 'components/save_button.jsx';
+import LocalizedInput from 'components/localized_input/localized_input';
 
 export default class LoginMfa extends React.PureComponent {
     static propTypes = {
@@ -84,11 +86,11 @@ export default class LoginMfa extends React.PureComponent {
                         {serverError}
                     </div>
                     <div className={'form-group' + errorClass}>
-                        <input
+                        <LocalizedInput
                             type='text'
                             className='form-control'
                             name='token'
-                            placeholder={localizeMessage('login_mfa.token', 'MFA Token')}
+                            placeholder={{id: t('login_mfa.token'), defaultMessage: 'MFA Token'}}
                             spellCheck='false'
                             autoComplete='off'
                             autoFocus={true}

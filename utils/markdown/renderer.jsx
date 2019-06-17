@@ -143,14 +143,16 @@ export default class Renderer extends marked.Renderer {
     link(href, title, text, isUrl) {
         let outHref = href;
 
-        const scheme = getScheme(href);
-        if (!scheme) {
-            outHref = `http://${outHref}`;
-        } else if (isUrl && this.formattingOptions.autolinkedUrlSchemes) {
-            const isValidUrl = this.formattingOptions.autolinkedUrlSchemes.indexOf(scheme) !== -1;
+        if (!href.startsWith('/')) {
+            const scheme = getScheme(href);
+            if (!scheme) {
+                outHref = `http://${outHref}`;
+            } else if (isUrl && this.formattingOptions.autolinkedUrlSchemes) {
+                const isValidUrl = this.formattingOptions.autolinkedUrlSchemes.indexOf(scheme.toLowerCase()) !== -1;
 
-            if (!isValidUrl) {
-                return text;
+                if (!isValidUrl) {
+                    return text;
+                }
             }
         }
 
@@ -173,14 +175,11 @@ export default class Renderer extends marked.Renderer {
 
         // special case for team invite links, channel links, and permalinks that are inside the app
         let internalLink = false;
-        if (this.formattingOptions.siteURL) {
-            const pattern = new RegExp('^' + TextFormatting.escapeRegex(this.formattingOptions.siteURL) + '\\/(?:signup_user_complete|admin_console|[^\\/]+\\/(?:pl|channels|messages))\\/');
-
-            internalLink = pattern.test(outHref);
-        }
+        const pattern = new RegExp('^(' + TextFormatting.escapeRegex(this.formattingOptions.siteURL) + ')?\\/(?:signup_user_complete|admin_console|[^\\/]+\\/(?:pl|channels|messages))\\/');
+        internalLink = pattern.test(outHref);
 
         if (internalLink) {
-            output += ' data-link="' + outHref.substring(this.formattingOptions.siteURL.length) + '"';
+            output += ' data-link="' + outHref.replace(this.formattingOptions.siteURL, '') + '"';
         } else {
             output += ' target="_blank"';
         }
@@ -205,6 +204,14 @@ export default class Renderer extends marked.Renderer {
 
     table(header, body) {
         return `<div class="table-responsive"><table class="markdown__table"><thead>${header}</thead><tbody>${body}</tbody></table></div>`;
+    }
+
+    tablerow(content) {
+        return `<tr>${content}</tr>`;
+    }
+
+    tablecell(content, flags) {
+        return marked.Renderer.prototype.tablecell(content, flags).trim();
     }
 
     listitem(text, bullet) {

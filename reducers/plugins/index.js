@@ -136,7 +136,8 @@ function components(state = {}, action) {
     case ActionTypes.RECEIVED_PLUGIN_COMPONENT: {
         if (action.name && action.data) {
             const nextState = {...state};
-            const nextArray = nextState[action.name] || [];
+            const currentArray = nextState[action.name] || [];
+            const nextArray = [...currentArray];
             nextArray.sort(sortComponents);
             nextState[action.name] = [...nextArray, action.data];
             return nextState;
@@ -170,7 +171,7 @@ function postTypes(state = {}, action) {
         }
         return state;
     }
-    case ActionTypes.REMOVED_PLUGIN_COMPONENT:
+    case ActionTypes.REMOVED_PLUGIN_POST_COMPONENT:
         return removePostPluginComponent(state, action);
     case ActionTypes.RECEIVED_WEBAPP_PLUGIN:
     case ActionTypes.REMOVED_WEBAPP_PLUGIN:

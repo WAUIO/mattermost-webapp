@@ -11,6 +11,8 @@ import {changeOpacity, makeStyleFromTheme} from 'mattermost-redux/utils/theme_ut
 
 import GifSearchIcon from 'components/svg/gif_search_icon';
 import GifSearchClearIcon from 'components/svg/gif_search_clear_icon';
+import LocalizedInput from 'components/localized_input/localized_input';
+import {t} from 'utils/i18n.jsx';
 
 import './SearchBar.scss';
 
@@ -201,11 +203,11 @@ export class SearchBar extends Component {
                         className='search-input-bg'
                         style={style.inputBackground}
                     />
-                    <input
+                    <LocalizedInput
                         className='search-input'
                         name='searchText'
                         autoFocus={true}
-                        placeholder={'Search Gfycat'}
+                        placeholder={{id: t('gif_picker.gfycat'), defaultMessage: 'Search Gfycat'}}
                         onChange={this.handleChange}
                         autoComplete='off'
                         autoCapitalize='off'

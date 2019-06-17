@@ -5,10 +5,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import {browserHistory} from 'utils/browser_history';
+import {t} from 'utils/i18n';
 import AbstractIncomingWebhook from 'components/integrations/abstract_incoming_webhook.jsx';
 
-const HEADER = {id: 'integrations.add', defaultMessage: 'Add'};
-const FOOTER = {id: 'add_incoming_webhook.save', defaultMessage: 'Save'};
+const HEADER = {id: t('integrations.add'), defaultMessage: 'Add'};
+const FOOTER = {id: t('add_incoming_webhook.save'), defaultMessage: 'Save'};
+const LOADING = {id: t('add_incoming_webhook.saving'), defaultMessage: 'Saving...'};
 
 export default class AddIncomingWebhook extends React.PureComponent {
     static propTypes = {
@@ -70,6 +72,7 @@ export default class AddIncomingWebhook extends React.PureComponent {
                 team={this.props.team}
                 header={HEADER}
                 footer={FOOTER}
+                loading={LOADING}
                 enablePostUsernameOverride={this.props.enablePostUsernameOverride}
                 enablePostIconOverride={this.props.enablePostIconOverride}
                 action={this.addIncomingHook}

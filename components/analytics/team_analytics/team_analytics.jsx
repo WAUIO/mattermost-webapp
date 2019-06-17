@@ -3,11 +3,12 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedDate, FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedDate, FormattedMessage} from 'react-intl';
 import {General} from 'mattermost-redux/constants';
 
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
+
 import * as AdminActions from 'actions/admin_actions.jsx';
-import AnalyticsStore from 'stores/analytics_store.jsx';
 import BrowserStore from 'stores/browser_store.jsx';
 import {StatTypes} from 'utils/constants.jsx';
 import Banner from 'components/admin_console/banner.jsx';
@@ -39,6 +40,7 @@ export default class TeamAnalytics extends React.Component {
          * The locale of the current user
           */
         locale: PropTypes.string.isRequired,
+        stats: PropTypes.object.isRequired,
 
         actions: PropTypes.shape({
 
@@ -57,19 +59,14 @@ export default class TeamAnalytics extends React.Component {
     constructor(props) {
         super(props);
 
-        const teamId = props.initialTeam ? props.initialTeam.id : '';
-
         this.state = {
             team: props.initialTeam,
-            stats: AnalyticsStore.getAllTeam(teamId),
             recentlyActiveUsers: [],
             newUsers: [],
         };
     }
 
     componentDidMount() {
-        AnalyticsStore.addChangeListener(this.onChange);
-
         if (this.state.team) {
             this.getData(this.state.team.id);
         }
@@ -96,17 +93,6 @@ export default class TeamAnalytics extends React.Component {
         });
     }
 
-    componentWillUnmount() {
-        AnalyticsStore.removeChangeListener(this.onChange);
-    }
-
-    onChange = () => {
-        const teamId = this.state.team ? this.state.team.id : '';
-        this.setState({
-            stats: AnalyticsStore.getAllTeam(teamId),
-        });
-    }
-
     handleTeamChange = (e) => {
         const teamId = e.target.value;
 
@@ -125,7 +111,7 @@ export default class TeamAnalytics extends React.Component {
     }
 
     render() {
-        if (this.props.teams.length === 0 || !this.state.team || !this.state.stats) {
+        if (this.props.teams.length === 0 || !this.state.team || !this.props.stats[this.state.team.id]) {
             return <LoadingScreen/>;
         }
 
@@ -142,7 +128,7 @@ export default class TeamAnalytics extends React.Component {
             );
         }
 
-        const stats = this.state.stats;
+        const stats = this.props.stats[this.state.team.id];
         const postCountsDay = formatPostsPerDayData(stats[StatTypes.POST_PER_DAY]);
         const userCountsWithPostsDay = formatUsersWithPostsPerDayData(stats[StatTypes.USERS_WITH_POSTS_PER_DAY]);
 
@@ -164,9 +150,9 @@ export default class TeamAnalytics extends React.Component {
             banner = (
                 <div className='banner'>
                     <div className='banner__content'>
-                        <FormattedHTMLMessage
+                        <FormattedMarkdownMessage
                             id='analytics.system.infoAndSkippedIntensiveQueries'
-                            defaultMessage="Only data for the chosen team is calculated. Excludes posts made in direct message channels, which are not tied to a team. <br><br> Some statistics have been omitted because they put too much load on the system to calculate. See <a href='https://docs.mattermost.com/administration/statistics.html' target='_blank'>https://docs.mattermost.com/administration/statistics.html</a> for more details."
+                            defaultMessage='Only data for the chosen team is calculated. Excludes posts made in direct message channels, which are not tied to a team. \n \n Some statistics have been omitted because they put too much load on the system to calculate. See [https://docs.mattermost.com/administration/statistics.html](!https://docs.mattermost.com/administration/statistics.html) for more details.'
                         />
                     </div>
                 </div>
@@ -246,17 +232,15 @@ export default class TeamAnalytics extends React.Component {
 
         return (
             <div className='wrapper--fixed team_statistics'>
-                <div className='admin-console-header team-statistics__header-row'>
+                <div className='admin-console__header team-statistics__header-row'>
                     <div className='team-statistics__header'>
-                        <h3 className='admin-console-header'>
-                            <FormattedMessage
-                                id='analytics.team.title'
-                                defaultMessage='Team Statistics for {team}'
-                                values={{
-                                    team: this.state.team.display_name,
-                                }}
-                            />
-                        </h3>
+                        <FormattedMarkdownMessage
+                            id='analytics.team.title'
+                            defaultMessage='Team Statistics for {team}'
+                            values={{
+                                team: this.state.team.display_name,
+                            }}
+                        />
                     </div>
                     <div className='team-statistics__team-filter'>
                         <select
@@ -268,61 +252,66 @@ export default class TeamAnalytics extends React.Component {
                         </select>
                     </div>
                 </div>
-                {banner}
-                <div className='row'>
-                    <StatisticCount
-                        title={
-                            <FormattedMessage
-                                id='analytics.team.totalUsers'
-                                defaultMessage='Total Active Users'
+
+                <div className='admin-console__wrapper'>
+                    <div className='admin-console__content'>
+                        {banner}
+                        <div className='row'>
+                            <StatisticCount
+                                title={
+                                    <FormattedMessage
+                                        id='analytics.team.totalUsers'
+                                        defaultMessage='Total Active Users'
+                                    />
+                                }
+                                icon='fa-users'
+                                count={stats[StatTypes.TOTAL_USERS]}
                             />
-                        }
-                        icon='fa-user'
-                        count={stats[StatTypes.TOTAL_USERS]}
-                    />
-                    <StatisticCount
-                        title={
-                            <FormattedMessage
-                                id='analytics.team.publicChannels'
-                                defaultMessage='Public Channels'
+                            <StatisticCount
+                                title={
+                                    <FormattedMessage
+                                        id='analytics.team.publicChannels'
+                                        defaultMessage='Public Channels'
+                                    />
+                                }
+                                icon='fa-globe'
+                                count={stats[StatTypes.TOTAL_PUBLIC_CHANNELS]}
                             />
-                        }
-                        icon='fa-users'
-                        count={stats[StatTypes.TOTAL_PUBLIC_CHANNELS]}
-                    />
-                    <StatisticCount
-                        title={
-                            <FormattedMessage
-                                id='analytics.team.privateGroups'
-                                defaultMessage='Private Channels'
+                            <StatisticCount
+                                title={
+                                    <FormattedMessage
+                                        id='analytics.team.privateGroups'
+                                        defaultMessage='Private Channels'
+                                    />
+                                }
+                                icon='fa-lock'
+                                count={stats[StatTypes.TOTAL_PRIVATE_GROUPS]}
                             />
-                        }
-                        icon='fa-globe'
-                        count={stats[StatTypes.TOTAL_PRIVATE_GROUPS]}
-                    />
-                    {totalPostsCount}
-                </div>
-                {postTotalGraph}
-                {userActiveGraph}
-                <div className='row'>
-                    <TableChart
-                        title={
-                            <FormattedMessage
-                                id='analytics.team.recentUsers'
-                                defaultMessage='Recent Active Users'
+                            {totalPostsCount}
+                        </div>
+                        {postTotalGraph}
+                        {userActiveGraph}
+                        <div className='row'>
+                            <TableChart
+                                title={
+                                    <FormattedMessage
+                                        id='analytics.team.recentUsers'
+                                        defaultMessage='Recent Active Users'
+                                    />
+                                }
+                                data={recentActiveUsers}
                             />
-                        }
-                        data={recentActiveUsers}
-                    />
-                    <TableChart
-                        title={
-                            <FormattedMessage
-                                id='analytics.team.newlyCreated'
-                                defaultMessage='Newly Created Users'
+                            <TableChart
+                                title={
+                                    <FormattedMessage
+                                        id='analytics.team.newlyCreated'
+                                        defaultMessage='Newly Created Users'
+                                    />
+                                }
+                                data={newlyCreatedUsers}
                             />
-                        }
-                        data={newlyCreatedUsers}
-                    />
+                        </div>
+                    </div>
                 </div>
             </div>
         );

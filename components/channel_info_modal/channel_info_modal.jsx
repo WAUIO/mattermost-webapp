@@ -40,8 +40,6 @@ export default class ChannelInfoModal extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        this.onHide = this.onHide.bind(this);
-
         this.state = {show: true};
 
         this.getHeaderMarkdownOptions = memoizeResult((channelNamesMap) => (
@@ -49,7 +47,7 @@ export default class ChannelInfoModal extends React.PureComponent {
         ));
     }
 
-    onHide() {
+    onHide = () => {
         this.setState({show: false});
     }
 
@@ -141,9 +139,14 @@ export default class ChannelInfoModal extends React.PureComponent {
                 show={this.state.show}
                 onHide={this.onHide}
                 onExited={this.props.onHide}
+                role='dialog'
+                aria-labelledby='channelInfoModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='channelInfoModalLabel'
+                    >
                         <FormattedMessage
                             id='channel_info.about'
                             defaultMessage='About'

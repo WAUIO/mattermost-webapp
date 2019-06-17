@@ -10,6 +10,7 @@ import {browserHistory} from 'utils/browser_history';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 import * as UserAgent from 'utils/user_agent.jsx';
+import {t} from 'utils/i18n';
 import SuggestionBox from 'components/suggestion/suggestion_box.jsx';
 import SuggestionList from 'components/suggestion/suggestion_list.jsx';
 import SwitchChannelProvider from 'components/suggestion/switch_channel_provider.jsx';
@@ -22,16 +23,6 @@ export default class QuickSwitchModal extends React.PureComponent {
     static propTypes = {
 
         /**
-         * The mode to start in when showing the modal, either 'channel' or 'team'
-         */
-        initialMode: PropTypes.string.isRequired,
-
-        /**
-         * Set to show the modal
-         */
-        show: PropTypes.bool.isRequired,
-
-        /**
          * The function called to hide the modal
          */
         onHide: PropTypes.func.isRequired,
@@ -42,31 +33,14 @@ export default class QuickSwitchModal extends React.PureComponent {
         showTeamSwitcher: PropTypes.bool,
 
         actions: PropTypes.shape({
-            goToChannel: PropTypes.func.isRequired,
-            goToChannelById: PropTypes.func.isRequired,
-            openDirectChannelToUser: PropTypes.func.isRequired,
+            joinChannelById: PropTypes.func.isRequired,
+            switchToChannel: PropTypes.func.isRequired,
         }).isRequired,
-    }
-
-    static defaultProps = {
-        initialMode: CHANNEL_MODE,
-    }
+    };
 
     constructor(props) {
         super(props);
 
-        this.onChange = this.onChange.bind(this);
-        this.onShow = this.onShow.bind(this);
-        this.onHide = this.onHide.bind(this);
-        this.onExited = this.onExited.bind(this);
-        this.handleKeyDown = this.handleKeyDown.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.switchToChannel = this.switchToChannel.bind(this);
-        this.switchMode = this.switchMode.bind(this);
-        this.focusTextbox = this.focusTextbox.bind(this);
-
-        this.enableChannelProvider = this.enableChannelProvider.bind(this);
-        this.enableTeamProvider = this.enableTeamProvider.bind(this);
         this.channelProviders = [new SwitchChannelProvider()];
         this.teamProviders = [new SwitchTeamProvider()];
 
@@ -74,17 +48,11 @@ export default class QuickSwitchModal extends React.PureComponent {
 
         this.state = {
             text: '',
-            mode: props.initialMode,
+            mode: CHANNEL_MODE,
         };
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line camelcase
-        if (!this.props.show && nextProps.show) {
-            this.setState({mode: nextProps.initialMode, text: ''});
-        }
-    }
-
-    focusTextbox() {
+    focusTextbox = () => {
         if (this.switchBox == null) {
             return;
         }
@@ -94,27 +62,28 @@ export default class QuickSwitchModal extends React.PureComponent {
             textbox.focus();
             Utils.placeCaretAtEnd(textbox);
         }
-    }
+    };
 
     setSwitchBoxRef = (input) => {
         this.switchBox = input;
         this.focusTextbox();
-    }
+    };
 
-    onShow() {
+    onShow = () => {
         this.setState({
             text: '',
         });
-    }
+    };
 
-    onHide() {
+    onHide = () => {
+        this.focusPostTextbox();
         this.setState({
             text: '',
         });
         this.props.onHide();
-    }
+    };
 
-    onExited() {
+    focusPostTextbox = () => {
         if (!UserAgent.isMobile()) {
             setTimeout(() => {
                 const textbox = document.querySelector('#post_textbox');
@@ -123,76 +92,53 @@ export default class QuickSwitchModal extends React.PureComponent {
                 }
             });
         }
-    }
+    };
 
-    onChange(e) {
+    onChange = (e) => {
         this.setState({text: e.target.value});
-    }
+    };
 
-    handleKeyDown(e) {
+    handleKeyDown = (e) => {
         if (Utils.isKeyPressed(e, Constants.KeyCodes.TAB)) {
             e.preventDefault();
             this.switchMode();
         }
-    }
+    };
 
-    handleSubmit(selected) {
-        let channel = null;
-
+    handleSubmit = async (selected) => {
         if (!selected) {
             return;
         }
 
         if (this.state.mode === CHANNEL_MODE) {
+            const {joinChannelById, switchToChannel} = this.props.actions;
             const selectedChannel = selected.channel;
-            if (selectedChannel.type === Constants.DM_CHANNEL) {
-                this.props.actions.openDirectChannelToUser(
-                    selectedChannel.userId,
-                    (ch) => {
-                        channel = ch;
-                        this.switchToChannel(channel);
-                    },
-                    () => {
-                        channel = null;
-                        this.switchToChannel(channel);
-                    }
-                );
-            } else if (selectedChannel.type === Constants.GM_CHANNEL) {
-                this.switchToChannelById(selectedChannel.id);
-            } else {
-                this.switchToChannel(selectedChannel);
+
+            if (selected.type === Constants.MENTION_MORE_CHANNELS && selectedChannel.type === Constants.OPEN_CHANNEL) {
+                await joinChannelById(selectedChannel.id);
             }
+            switchToChannel(selectedChannel).then((result) => {
+                if (result.data) {
+                    this.onHide();
+                }
+            });
         } else {
             browserHistory.push('/' + selected.name);
             this.onHide();
         }
-    }
+    };
 
-    switchToChannel(channel) {
-        if (channel != null) {
-            this.props.actions.goToChannel(channel);
-            this.onHide();
-        }
-    }
-
-    switchToChannelById(channelId) {
-        if (channelId) {
-            this.props.actions.goToChannelById(channelId);
-            this.onHide();
-        }
-    }
-
-    enableChannelProvider() {
+    enableChannelProvider = () => {
         this.channelProviders[0].disableDispatches = false;
         this.teamProviders[0].disableDispatches = true;
-    }
+    };
 
-    enableTeamProvider() {
+    enableTeamProvider = () => {
         this.teamProviders[0].disableDispatches = false;
         this.channelProviders[0].disableDispatches = true;
-    }
+    };
 
-    switchMode() {
+    switchMode = () => {
         if (this.state.mode === CHANNEL_MODE && this.props.showTeamSwitcher) {
             this.enableTeamProvider();
             this.setState({mode: TEAM_MODE});
@@ -200,7 +146,7 @@ export default class QuickSwitchModal extends React.PureComponent {
             this.enableChannelProvider();
             this.setState({mode: CHANNEL_MODE});
         }
-    }
+    };
 
     handleOnClick = (e) => {
         e.preventDefault();
@@ -215,17 +161,17 @@ export default class QuickSwitchModal extends React.PureComponent {
         let header;
         let renderDividers = true;
 
-        let channelShortcut = 'quick_switch_modal.channelsShortcut.windows';
+        let channelShortcut = t('quick_switch_modal.channelsShortcut.windows');
         let defaultChannelShortcut = 'CTRL+K';
         if (Utils.isMac()) {
-            channelShortcut = 'quick_switch_modal.channelsShortcut.mac';
+            channelShortcut = t('quick_switch_modal.channelsShortcut.mac');
             defaultChannelShortcut = 'CMD+K';
         }
 
-        let teamShortcut = 'quick_switch_modal.teamsShortcut.windows';
+        let teamShortcut = t('quick_switch_modal.teamsShortcut.windows');
         let defaultTeamShortcut = 'CTRL+ALT+K';
         if (Utils.isMac()) {
-            teamShortcut = 'quick_switch_modal.teamsShortcut.mac';
+            teamShortcut = t('quick_switch_modal.teamsShortcut.mac');
             defaultTeamShortcut = 'CMD+ALT+K';
         }
 
@@ -310,17 +256,27 @@ export default class QuickSwitchModal extends React.PureComponent {
             <Modal
                 dialogClassName='channel-switch-modal modal--overflow'
                 ref='modal'
-                show={this.props.show}
+                show={true}
                 onHide={this.onHide}
-                onExited={this.onExited}
+                enforceFocus={false}
+                restoreFocus={false}
+                role='dialog'
+                aria-labelledby='quickSwitchModalLabel'
             >
-                <Modal.Header closeButton={true}/>
+                <Modal.Header
+                    id='quickSwitchModalLabel'
+                    closeButton={true}
+                />
                 <Modal.Body>
                     {header}
-                    <div className='modal__hint'>
+                    <div
+                        id='quickSwitchHint'
+                        className='modal__hint'
+                    >
                         {help}
                     </div>
                     <SuggestionBox
+                        id='quickSwitchInput'
                         ref={this.setSwitchBoxRef}
                         className='form-control focused'
                         onChange={this.onChange}
@@ -332,6 +288,7 @@ export default class QuickSwitchModal extends React.PureComponent {
                         providers={providers}
                         listStyle='bottom'
                         completeOnTab={false}
+                        spellCheck='false'
                         renderDividers={renderDividers}
                         delayInputUpdate={true}
                         openWhenEmpty={true}

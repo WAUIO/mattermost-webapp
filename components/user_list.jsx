@@ -8,7 +8,7 @@ import {FormattedMessage} from 'react-intl';
 import Constants from 'utils/constants.jsx';
 import LoadingScreen from 'components/loading_screen.jsx';
 
-import UserListRow from './user_list_row.jsx';
+import UserListRow from './user_list_row';
 
 export default class UserList extends React.Component {
     constructor(props) {
@@ -40,6 +40,8 @@ export default class UserList extends React.Component {
                         actions={this.props.actions}
                         actionProps={this.props.actionProps}
                         actionUserProps={this.props.actionUserProps[user.id]}
+                        index={index}
+                        totalUsers={users.length}
                         userCount={(index >= 0 && index < Constants.TEST_ID_COUNT) ? index : -1}
                     />
                 );

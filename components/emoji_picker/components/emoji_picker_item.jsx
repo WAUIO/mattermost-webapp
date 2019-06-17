@@ -4,8 +4,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import debounce from 'lodash/debounce';
+import {getEmojiImageUrl} from 'mattermost-redux/utils/emoji_utils';
 
-import EmojiStore from 'stores/emoji_store.jsx';
 import imgTrans from 'images/img_trans.gif';
 
 const SCROLLING_ADDITIONAL_VISUAL_SPACING = 10; // to make give the emoji some visual 'breathing room'
@@ -74,17 +74,20 @@ export default class EmojiPickerItem extends React.Component {
         if (emoji.category && emoji.batch) {
             image = (
                 <img
+                    alt={'emoji image'}
                     onMouseOver={this.handleMouseOverThrottle}
                     src={imgTrans}
                     className={spriteClassName}
                     onClick={this.handleClick}
+                    id={'emoji-' + emoji.filename}
                 />
             );
         } else {
             image = (
                 <img
+                    alt={'custom emoji image'}
                     onMouseOver={this.handleMouseOver}
-                    src={EmojiStore.getEmojiImageUrl(emoji)}
+                    src={getEmojiImageUrl(emoji)}
                     className={'emoji-category--custom'}
                     onClick={this.handleClick}
                 />

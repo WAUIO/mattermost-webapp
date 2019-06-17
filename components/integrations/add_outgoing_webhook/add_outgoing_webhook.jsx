@@ -5,10 +5,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import {browserHistory} from 'utils/browser_history';
+import {t} from 'utils/i18n';
 import AbstractOutgoingWebhook from 'components/integrations/abstract_outgoing_webhook.jsx';
 
-const HEADER = {id: 'integrations.add', defaultMessage: 'Add'};
-const FOOTER = {id: 'add_outgoing_webhook.save', defaultMessage: 'Save'};
+const HEADER = {id: t('integrations.add'), defaultMessage: 'Add'};
+const FOOTER = {id: t('add_outgoing_webhook.save'), defaultMessage: 'Save'};
+const LOADING = {id: t('add_outgoing_webhook.saving'), defaultMessage: 'Saving...'};
 
 export default class AddOutgoingWebhook extends React.PureComponent {
     static propTypes = {
@@ -70,6 +72,7 @@ export default class AddOutgoingWebhook extends React.PureComponent {
                 team={this.props.team}
                 header={HEADER}
                 footer={FOOTER}
+                loading={LOADING}
                 renderExtra={''}
                 action={this.addOutgoingHook}
                 serverError={this.state.serverError}

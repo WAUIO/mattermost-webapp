@@ -7,8 +7,30 @@ import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 
 import {getSiteURL} from 'utils/url.jsx';
+import {t} from 'utils/i18n';
+
+import CopyText from 'components/copy_text.jsx';
 
 import DeleteIntegration from './delete_integration.jsx';
+
+export function matchesFilter(incomingWebhook, channel, filter) {
+    if (!filter) {
+        return true;
+    }
+
+    if (incomingWebhook.display_name.toLowerCase().indexOf(filter) !== -1 ||
+        incomingWebhook.description.toLowerCase().indexOf(filter) !== -1) {
+        return true;
+    }
+
+    if (incomingWebhook.channel_id) {
+        if (channel && channel.name.toLowerCase().indexOf(filter) !== -1) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 export default class InstalledIncomingWebhook extends React.PureComponent {
     static propTypes = {
@@ -59,31 +81,12 @@ export default class InstalledIncomingWebhook extends React.PureComponent {
         this.props.onDelete(this.props.incomingWebhook);
     }
 
-    static matchesFilter(incomingWebhook, channel, filter) {
-        if (!filter) {
-            return true;
-        }
-
-        if (incomingWebhook.display_name.toLowerCase().indexOf(filter) !== -1 ||
-            incomingWebhook.description.toLowerCase().indexOf(filter) !== -1) {
-            return true;
-        }
-
-        if (incomingWebhook.channel_id) {
-            if (channel && channel.name.toLowerCase().indexOf(filter) !== -1) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     render() {
         const incomingWebhook = this.props.incomingWebhook;
         const channel = this.props.channel;
         const filter = this.props.filter ? this.props.filter.toLowerCase() : '';
 
-        if (!InstalledIncomingWebhook.matchesFilter(incomingWebhook, channel, filter)) {
+        if (!matchesFilter(incomingWebhook, channel, filter)) {
             return null;
         }
 
@@ -124,12 +127,14 @@ export default class InstalledIncomingWebhook extends React.PureComponent {
                     </Link>
                     {' - '}
                     <DeleteIntegration
-                        messageId='installed_incoming_webhooks.delete.confirm'
+                        messageId={t('installed_incoming_webhooks.delete.confirm')}
                         onDelete={this.handleDelete}
                     />
                 </div>
             );
         }
+
+        const incomingWebhookId = getSiteURL() + '/hooks/' + incomingWebhook.id;
 
         return (
             <div className='backstage-list__item'>
@@ -146,9 +151,14 @@ export default class InstalledIncomingWebhook extends React.PureComponent {
                                 id='installed_integrations.url'
                                 defaultMessage='URL: {url}'
                                 values={{
-                                    url: getSiteURL() + '/hooks/' + incomingWebhook.id,
+                                    url: incomingWebhookId,
                                 }}
                             />
+                            <span>
+                                <CopyText
+                                    value={incomingWebhookId}
+                                />
+                            </span>
                         </span>
                     </div>
                     <div className='item-details__row'>

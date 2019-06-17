@@ -3,12 +3,10 @@
 
 import React from 'react';
 import * as Selectors from 'mattermost-redux/selectors/entities/teams';
+import {FormattedMessage} from 'react-intl';
 
-import AppDispatcher from 'dispatcher/app_dispatcher.jsx';
-import LocalizationStore from 'stores/localization_store.jsx';
+import {getCurrentLocale} from 'selectors/i18n';
 import store from 'stores/redux_store.jsx';
-import {ActionTypes} from 'utils/constants.jsx';
-import {localizeMessage} from 'utils/utils.jsx';
 
 import Provider from './provider.jsx';
 import Suggestion from './suggestion.jsx';
@@ -31,10 +29,17 @@ class SwitchTeamSuggestion extends Suggestion {
                 {...Suggestion.baseProps}
             >
                 <div className='status'>
-                    <i
-                        className='fa fa-group'
-                        title={localizeMessage('general_tab.teamIcon', 'Team Icon')}
-                    />
+                    <FormattedMessage
+                        id='general_tab.teamIcon'
+                        defaultMessage='Team Icon'
+                    >
+                        {(title) => (
+                            <i
+                                className='fa fa-group'
+                                title={title}
+                            />
+                        )}
+                    </FormattedMessage>
                 </div>
                 {item.display_name}
             </div>
@@ -51,7 +56,7 @@ function quickSwitchSorter(a, b) {
     const bStartsWith = bDisplayName.startsWith(prefix);
 
     if (aStartsWith && bStartsWith) {
-        const locale = LocalizationStore.getLocale();
+        const locale = getCurrentLocale(getState());
 
         if (aDisplayName !== bDisplayName) {
             return aDisplayName.localeCompare(bDisplayName, locale, {numeric: true});
@@ -66,10 +71,10 @@ function quickSwitchSorter(a, b) {
 }
 
 export default class SwitchTeamProvider extends Provider {
-    handlePretextChanged(suggestionId, teamPrefix) {
+    handlePretextChanged(teamPrefix, resultsCallback) {
         if (teamPrefix) {
             prefix = teamPrefix;
-            this.startNewRequest(suggestionId, teamPrefix);
+            this.startNewRequest(teamPrefix);
 
             const allTeams = Selectors.getMyTeams(getState());
 
@@ -82,16 +87,12 @@ export default class SwitchTeamProvider extends Provider {
                 sort(quickSwitchSorter).
                 map((team) => team.name);
 
-            setTimeout(() => {
-                AppDispatcher.handleServerAction({
-                    type: ActionTypes.SUGGESTION_RECEIVED_SUGGESTIONS,
-                    id: suggestionId,
-                    matchedPretext: teamPrefix,
-                    terms: teamNames,
-                    items: teams,
-                    component: SwitchTeamSuggestion,
-                });
-            }, 0);
+            resultsCallback({
+                matchedPretext: teamPrefix,
+                terms: teamNames,
+                items: teams,
+                component: SwitchTeamSuggestion,
+            });
 
             return true;
         }

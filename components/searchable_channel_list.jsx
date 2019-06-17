@@ -8,11 +8,13 @@ import ReactDOM from 'react-dom';
 import {FormattedMessage} from 'react-intl';
 
 import LoadingScreen from 'components/loading_screen';
+import LoadingWrapper from 'components/widgets/loading/loading_wrapper.jsx';
 import QuickInput from 'components/quick_input';
 import * as UserAgent from 'utils/user_agent.jsx';
 import {localizeMessage} from 'utils/utils.jsx';
+import LocalizedInput from 'components/localized_input/localized_input';
 
-import loadingGif from 'images/load.gif';
+import {t} from 'utils/i18n';
 
 const NEXT_BUTTON_TIMEOUT_MILLISECONDS = 500;
 
@@ -36,7 +38,7 @@ export default class SearchableChannelList extends React.Component {
 
     componentDidMount() {
         // only focus the search box on desktop so that we don't cause the keyboard to open on mobile
-        if (!UserAgent.isMobile()) {
+        if (!UserAgent.isMobile() && this.refs.filter) {
             this.refs.filter.focus();
         }
     }
@@ -64,29 +66,6 @@ export default class SearchableChannelList extends React.Component {
     }
 
     createChannelRow(channel) {
-        let joinButton;
-        if (this.state.joiningChannel === channel.id) {
-            joinButton = (
-                <img
-                    className='join-channel-loading-gif'
-                    src={loadingGif}
-                />
-            );
-        } else {
-            joinButton = (
-                <button
-                    onClick={this.handleJoin.bind(this, channel)}
-                    className='btn btn-primary'
-                    disabled={this.state.joiningChannel !== '' && this.state.joiningChannel !== channel.id}
-                >
-                    <FormattedMessage
-                        id='more_channels.join'
-                        defaultMessage='Join'
-                    />
-                </button>
-            );
-        }
-
         return (
             <div
                 className='more-modal__row'
@@ -97,7 +76,21 @@ export default class SearchableChannelList extends React.Component {
                     <p className='more-modal__description'>{channel.purpose}</p>
                 </div>
                 <div className='more-modal__actions'>
-                    {joinButton}
+                    <button
+                        onClick={this.handleJoin.bind(this, channel)}
+                        className='btn btn-primary'
+                        disabled={this.state.joiningChannel}
+                    >
+                        <LoadingWrapper
+                            loading={this.state.joiningChannel === channel.id}
+                            text={localizeMessage('more_channels.joining', 'Joining...')}
+                        >
+                            <FormattedMessage
+                                id='more_channels.join'
+                                defaultMessage='Join'
+                            />
+                        </LoadingWrapper>
+                    </button>
                 </div>
             </div>
         );
@@ -131,8 +124,8 @@ export default class SearchableChannelList extends React.Component {
         let nextButton;
         let previousButton;
 
-        if (channels == null) {
-            listContent = <LoadingScreen/>;
+        if (this.props.loading && channels.length === 0) {
+            listContent = <LoadingScreen style={{marginTop: '50%'}}/>;
         } else if (channels.length === 0) {
             listContent = (
                 <div className='no-channel-message'>
@@ -154,7 +147,7 @@ export default class SearchableChannelList extends React.Component {
             if (channelsToDisplay.length >= this.props.channelsPerPage && pageEnd < this.props.channels.length) {
                 nextButton = (
                     <button
-                        className='btn btn-default filter-control filter-control__next'
+                        className='btn btn-link filter-control filter-control__next'
                         onClick={this.nextPage}
                         disabled={this.state.nextDisabled}
                     >
@@ -169,7 +162,7 @@ export default class SearchableChannelList extends React.Component {
             if (this.state.page > 0) {
                 previousButton = (
                     <button
-                        className='btn btn-default filter-control filter-control__prev'
+                        className='btn btn-link filter-control filter-control__prev'
                         onClick={this.previousPage}
                     >
                         <FormattedMessage
@@ -181,19 +174,44 @@ export default class SearchableChannelList extends React.Component {
             }
         }
 
-        return (
-            <div className='filtered-user-list'>
-                <div className='filter-row'>
-                    <div className='col-sm-12'>
+        let input = (
+            <div className='filter-row filter-row--full'>
+                <div className='col-sm-12'>
+                    <QuickInput
+                        id='searchChannelsTextbox'
+                        ref='filter'
+                        className='form-control filter-textbox'
+                        placeholder={{id: t('filtered_channels_list.search'), defaultMessage: 'Search channels'}}
+                        inputComponent={LocalizedInput}
+                        onInput={this.doSearch}
+                    />
+                </div>
+            </div>
+        );
+
+        if (this.props.createChannelButton) {
+            input = (
+                <div className='channel_search'>
+                    <div className='search_input'>
                         <QuickInput
                             id='searchChannelsTextbox'
                             ref='filter'
                             className='form-control filter-textbox'
-                            placeholder={localizeMessage('filtered_channels_list.search', 'Search channels')}
+                            placeholder={{id: t('filtered_channels_list.search'), defaultMessage: 'Search channels'}}
+                            inputComponent={LocalizedInput}
                             onInput={this.doSearch}
                         />
                     </div>
+                    <div className='create_button'>
+                        {this.props.createChannelButton}
+                    </div>
                 </div>
+            );
+        }
+
+        return (
+            <div className='filtered-user-list'>
+                {input}
                 <div
                     ref='channelList'
                     className='more-modal__list'
@@ -224,4 +242,6 @@ SearchableChannelList.propTypes = {
     search: PropTypes.func.isRequired,
     handleJoin: PropTypes.func.isRequired,
     noResultsText: PropTypes.object,
+    loading: PropTypes.bool,
+    createChannelButton: PropTypes.element,
 };

@@ -6,12 +6,14 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
 import {browserHistory} from 'utils/browser_history';
+import {t} from 'utils/i18n';
 import LoadingScreen from 'components/loading_screen.jsx';
 import ConfirmModal from 'components/confirm_modal.jsx';
 import AbstractCommand from '../abstract_command.jsx';
 
-const HEADER = {id: 'integrations.edit', defaultMessage: 'Edit'};
-const FOOTER = {id: 'edit_command.save', defaultMessage: 'Update'};
+const HEADER = {id: t('integrations.edit'), defaultMessage: 'Edit'};
+const FOOTER = {id: t('edit_command.update'), defaultMessage: 'Update'};
+const LOADING = {id: t('edit_command.updating'), defaultMessage: 'Updating...'};
 
 export default class EditCommand extends React.PureComponent {
     static propTypes = {
@@ -157,6 +159,7 @@ export default class EditCommand extends React.PureComponent {
                 team={this.props.team}
                 header={HEADER}
                 footer={FOOTER}
+                loading={LOADING}
                 renderExtra={this.renderExtra()}
                 action={this.editCommand}
                 serverError={this.state.serverError}

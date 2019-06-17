@@ -107,6 +107,32 @@
             height: 128px;
             width: 128px;
         }
+        .profile-img__container {
+            height: 128px;
+            position: relative;
+            width: 128px;
+        }
+
+        .profile-img__remove {
+            @include border-radius(50%);
+            @include single-transition(all, .15s, ease);
+            background: $black;
+            color: $white;
+            height: 26px;
+            position: absolute;
+            right: 8px;
+            text-decoration: none;
+            top: 4px;
+            width: 26px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            span {
+                font-size: 22px;
+            }
+        }
+
 
         .team-img-preview,
         .team-img__container {
@@ -199,7 +225,7 @@
 
                 .section-min {
                     padding: 1em 0;
-                    margin-bottom: 0;
+                    margin: 0;
                     cursor: pointer;
                     position: relative;
                     @include clearfix;
@@ -386,12 +412,6 @@
                         display: none;
                         font-size: 12px;
                         margin-right: 5px;
-
-                        &.fa-chevron-down {
-                            margin-right: 0;
-                            position: relative;
-                            top: -1px;
-                        }
                     }
                 }
 
@@ -447,6 +467,14 @@
                     margin-top: 20px;
                 }
 
+                .fa-wrapper {
+                    margin: 0 5px;
+                }
+
+                .resend-verification-wrapper:before {
+                    content: "\00a0 ";
+                }
+
                 .mentions-input {
                     margin-top: 10px;
                 }
@@ -470,6 +498,11 @@
                     padding: 4px 10px;
                 }
             }
+        }
+        .disabledMessage {
+            background-color: rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-top: 10px;
         }
     }
 
@@ -572,14 +605,13 @@
 .member-role,
 .member-drop {
     .fa {
-        @include opacity(.5);
-        font-size: 12px;
-        margin-right: 5px;
+        font-size: 16px;
+        margin: 0 0 0 4px;
     }
 
     .member-menu {
-        right: 110%;
-        top: -50%;
+        right: 0;
+        top: 24px;
     }
 }
 

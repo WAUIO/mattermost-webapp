@@ -4,118 +4,59 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {postListScrollChange} from 'actions/global_actions.jsx';
+import SizeAwareImage from 'components/size_aware_image';
+import ViewImageModal from 'components/view_image';
+
 import * as PostUtils from 'utils/post_utils.jsx';
 
-export default class PostImageEmbed extends React.PureComponent {
+export default class PostImage extends React.PureComponent {
     static propTypes = {
-
-        /**
-         * The link to load the image from
-         */
-        link: PropTypes.string.isRequired,
-
-        /**
-         * Function to call when image is loaded
-         */
-        onLinkLoaded: PropTypes.func,
-
-        /**
-         * The function to call if image load fails
-         */
-        onLinkLoadError: PropTypes.func,
-
-        /**
-         * The function to call if image is clicked
-         */
-        handleImageClick: PropTypes.func,
-
-        /**
-         * If an image proxy is enabled.
-         */
         hasImageProxy: PropTypes.bool.isRequired,
+        imageMetadata: PropTypes.object.isRequired,
+        link: PropTypes.string.isRequired,
+        post: PropTypes.object.isRequired,
     }
 
     constructor(props) {
         super(props);
 
-        this.handleLoadComplete = this.handleLoadComplete.bind(this);
-        this.handleLoadError = this.handleLoadError.bind(this);
-
         this.state = {
-            loaded: false,
-            errored: false,
+            showModal: false,
         };
     }
 
-    UNSAFE_componentWillMount() { // eslint-disable-line camelcase
-        this.loadImg(this.props.link);
-    }
-
-    UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line camelcase
-        if (nextProps.link !== this.props.link) {
-            this.setState({
-                loaded: false,
-                errored: false,
-            });
-        }
-    }
-
-    componentDidUpdate(prevProps) {
-        if (!this.state.loaded && prevProps.link !== this.props.link) {
-            this.loadImg(this.props.link);
-        }
-    }
-
-    loadImg(src) {
-        const img = new Image();
-        img.onload = this.handleLoadComplete;
-        img.onerror = this.handleLoadError;
-        img.src = PostUtils.getImageSrc(src, this.props.hasImageProxy);
-    }
-
-    handleLoadComplete() {
-        this.setState({
-            loaded: true,
-            errored: false,
-        });
-
-        postListScrollChange();
-
-        if (this.props.onLinkLoaded) {
-            this.props.onLinkLoaded();
-        }
-    }
-
-    handleLoadError() {
-        this.setState({
-            errored: true,
-            loaded: true,
-        });
-        if (this.props.onLinkLoadError) {
-            this.props.onLinkLoadError();
-        }
-    }
-
-    onImageClick = (e) => {
+    showModal = (e) => {
         e.preventDefault();
-        this.props.handleImageClick();
-    };
+
+        this.setState({showModal: true});
+    }
+
+    hideModal = () => {
+        this.setState({showModal: false});
+    }
 
     render() {
-        if (this.state.errored || !this.state.loaded) {
-            // scroll pop could be improved with a placeholder when !this.state.loaded
-            return null;
-        }
+        const link = PostUtils.getImageSrc(this.props.link, this.props.hasImageProxy);
 
         return (
-            <div
-                className='post__embed-container'
-            >
-                <img
-                    onClick={this.onImageClick}
-                    className='img-div cursor--pointer'
-                    src={PostUtils.getImageSrc(this.props.link, this.props.hasImageProxy)}
+            <div className='post__embed-container'>
+                <SizeAwareImage
+                    className='img-div attachment__image cursor--pointer'
+                    src={link}
+                    dimensions={this.props.imageMetadata}
+                    showLoader={true}
+                    onClick={this.showModal}
+                />
+                <ViewImageModal
+                    show={this.state.showModal}
+                    onModalDismissed={this.hideModal}
+                    post={this.props.post}
+                    startIndex={0}
+                    fileInfos={[{
+                        has_preview_image: false,
+                        link,
+                        extension: this.props.imageMetadata.format,
+                    }]}
                 />
             </div>
         );

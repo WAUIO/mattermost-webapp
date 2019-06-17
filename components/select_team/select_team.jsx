@@ -6,14 +6,12 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 
-import {General, Permissions} from 'mattermost-redux/constants';
+import {Permissions} from 'mattermost-redux/constants';
 
 import {emitUserLoggedOutEvent} from 'actions/global_actions.jsx';
-import {addUserToTeamFromInvite} from 'actions/team_actions.jsx';
 
-import {mappingValueFromRoles} from 'utils/policy_roles_adapter';
 import * as UserAgent from 'utils/user_agent.jsx';
-import * as Utils from 'utils/utils.jsx';
+import Constants from 'utils/constants.jsx';
 
 import logoImage from 'images/logo.png';
 
@@ -22,24 +20,35 @@ import BackButton from 'components/common/back_button.jsx';
 import LoadingScreen from 'components/loading_screen.jsx';
 import SystemPermissionGate from 'components/permissions_gates/system_permission_gate';
 import SiteNameAndDescription from 'components/common/site_name_and_description';
+import LogoutIcon from 'components/icon/logout_icon';
+
+import FormattedMarkdownMessage from 'components/formatted_markdown_message';
 
 import SelectTeamItem from './components/select_team_item.jsx';
 
 const TEAMS_PER_PAGE = 200;
+const TEAM_MEMBERSHIP_DENIAL_ERROR_ID = 'api.team.add_members.user_denied';
 
 export default class SelectTeam extends React.Component {
     static propTypes = {
+        currentUserId: PropTypes.string.isRequired,
         currentUserRoles: PropTypes.string,
         customDescriptionText: PropTypes.string,
         isMemberOfTeam: PropTypes.bool.isRequired,
-        joinableTeams: PropTypes.array,
-        roles: PropTypes.object.isRequired,
+        listableTeams: PropTypes.array,
         siteName: PropTypes.string,
+        canCreateTeams: PropTypes.bool.isRequired,
+        canManageSystem: PropTypes.bool.isRequired,
+        canJoinPublicTeams: PropTypes.bool.isRequired,
+        canJoinPrivateTeams: PropTypes.bool.isRequired,
+        history: PropTypes.object,
+        siteURL: PropTypes.string,
         actions: PropTypes.shape({
             getTeams: PropTypes.func.isRequired,
             loadRolesIfNeeded: PropTypes.func.isRequired,
+            addUserToTeam: PropTypes.func.isRequired,
         }).isRequired,
-    }
+    };
 
     constructor(props) {
         super(props);
@@ -57,57 +66,52 @@ export default class SelectTeam extends React.Component {
     UNSAFE_componentWillMount() { // eslint-disable-line camelcase
         const {
             actions,
-            roles,
+            currentUserRoles,
         } = this.props;
 
-        actions.loadRolesIfNeeded([General.SYSTEM_ADMIN_ROLE, General.SYSTEM_USER_ROLE]);
-
-        if (
-            roles.system_admin &&
-            roles.system_user
-        ) {
-            this.loadPoliciesIntoState(roles);
-        }
+        actions.loadRolesIfNeeded(currentUserRoles.split(' '));
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line camelcase
-        if (
-            !this.state.loaded &&
-            nextProps.roles.system_admin &&
-            nextProps.roles.system_user
-        ) {
-            this.loadPoliciesIntoState(nextProps.roles);
-        }
-    }
-
-    loadPoliciesIntoState = (roles) => {
-        // Purposely parsing boolean from string 'true' or 'false'
-        // because the string comes from the policy roles adapter mapping.
-        const enableTeamCreation = (mappingValueFromRoles('enableTeamCreation', roles) === 'true');
-
-        this.setState({enableTeamCreation, loaded: true});
-    }
-
-    handleTeamClick = (team) => {
+    handleTeamClick = async (team) => {
+        const {siteURL, currentUserRoles} = this.props;
         this.setState({loadingTeamId: team.id});
 
-        addUserToTeamFromInvite('', team.invite_id,
-            () => {
-                this.props.history.push(`/${team.name}/channels/town-square`);
-            },
-            (error) => {
-                this.setState({
-                    error,
-                    loadingTeamId: '',
-                });
+        const {data, error} = await this.props.actions.addUserToTeam(team.id, this.props.currentUserId);
+        if (data) {
+            this.props.history.push(`/${team.name}/channels/${Constants.DEFAULT_CHANNEL}`);
+        } else if (error) {
+            let errorMsg = error.message;
+
+            if (error.server_error_id === TEAM_MEMBERSHIP_DENIAL_ERROR_ID) {
+                if (currentUserRoles.includes(Constants.PERMISSIONS_SYSTEM_ADMIN)) {
+                    errorMsg = (
+                        <FormattedMarkdownMessage
+                            id='join_team_group_constrained_denied_admin'
+                            defaultMessage={`You need to be a member of a linked group to join this team. You can add a group to this team [here](${siteURL}/admin_console/user_management/groups).`}
+                            values={{siteURL}}
+                        />
+                    );
+                } else {
+                    errorMsg = (
+                        <FormattedMarkdownMessage
+                            id='join_team_group_constrained_denied'
+                            defaultMessage='You need to be a member of a linked group to join this team.'
+                        />
+                    );
+                }
             }
-        );
+
+            this.setState({
+                error: errorMsg,
+                loadingTeamId: '',
+            });
+        }
     };
 
     handleLogoutClick = (e) => {
         e.preventDefault();
         emitUserLoggedOutEvent('/login');
-    }
+    };
 
     clearError = (e) => {
         e.preventDefault();
@@ -119,15 +123,15 @@ export default class SelectTeam extends React.Component {
 
     render() {
         const {
-            currentUserRoles,
+            canManageSystem,
             customDescriptionText,
             isMemberOfTeam,
-            joinableTeams,
+            listableTeams,
             siteName,
+            canCreateTeams,
+            canJoinPublicTeams,
+            canJoinPrivateTeams,
         } = this.props;
-        const {enableTeamCreation} = this.state;
-
-        const isSystemAdmin = Utils.isSystemAdmin(currentUserRoles);
 
         let openContent;
         if (this.state.loadingTeamId) {
@@ -136,25 +140,29 @@ export default class SelectTeam extends React.Component {
             openContent = (
                 <div className='signup__content'>
                     <div className={'form-group has-error'}>
-                        <label className='control-label'>{this.state.error.message}</label>
+                        <label className='control-label'>{this.state.error}</label>
                     </div>
                 </div>
             );
         } else {
-            let openTeamContents = [];
-            joinableTeams.forEach((joinableTeam) => {
-                openTeamContents.push(
-                    <SelectTeamItem
-                        key={'team_' + joinableTeam.name}
-                        team={joinableTeam}
-                        onTeamClick={this.handleTeamClick}
-                        loading={this.state.loadingTeamId === joinableTeam.id}
-                    />
-                );
+            let joinableTeamContents = [];
+            listableTeams.forEach((listableTeam) => {
+                if ((listableTeam.allow_open_invite && canJoinPublicTeams) || (!listableTeam.allow_open_invite && canJoinPrivateTeams)) {
+                    joinableTeamContents.push(
+                        <SelectTeamItem
+                            key={'team_' + listableTeam.name}
+                            team={listableTeam}
+                            onTeamClick={this.handleTeamClick}
+                            loading={this.state.loadingTeamId === listableTeam.id}
+                            canJoinPublicTeams={canJoinPublicTeams}
+                            canJoinPrivateTeams={canJoinPrivateTeams}
+                        />
+                    );
+                }
             });
 
-            if (openTeamContents.length === 0 && (enableTeamCreation || isSystemAdmin)) {
-                openTeamContents = (
+            if (joinableTeamContents.length === 0 && (canCreateTeams || canManageSystem)) {
+                joinableTeamContents = (
                     <div className='signup-team-dir-err'>
                         <div>
                             <FormattedMessage
@@ -164,8 +172,8 @@ export default class SelectTeam extends React.Component {
                         </div>
                     </div>
                 );
-            } else if (openTeamContents.length === 0) {
-                openTeamContents = (
+            } else if (joinableTeamContents.length === 0) {
+                joinableTeamContents = (
                     <div className='signup-team-dir-err'>
                         <div>
                             <SystemPermissionGate permissions={[Permissions.CREATE_TEAM]}>
@@ -189,7 +197,10 @@ export default class SelectTeam extends React.Component {
             }
 
             openContent = (
-                <div className='signup__content'>
+                <div
+                    id='teamsYouCanJoinContent'
+                    className='signup__content'
+                >
                     <h4>
                         <FormattedMessage
                             id='signup_team.join_open'
@@ -197,20 +208,8 @@ export default class SelectTeam extends React.Component {
                         />
                     </h4>
                     <div className='signup-team-all'>
-                        {openTeamContents}
+                        {joinableTeamContents}
                     </div>
-                </div>
-            );
-        }
-
-        let teamHelp = null;
-        if (isSystemAdmin && !enableTeamCreation) {
-            teamHelp = (
-                <div>
-                    <FormattedMessage
-                        id='login.createTeamAdminOnly'
-                        defaultMessage='This option is only available for System Administrators, and does not show up for other users.'
-                    />
                 </div>
             );
         }
@@ -219,6 +218,7 @@ export default class SelectTeam extends React.Component {
             <SystemPermissionGate permissions={[Permissions.CREATE_TEAM]}>
                 <div className='margin--extra'>
                     <Link
+                        id='createNewTeamLink'
                         to='/create_team'
                         className='signup-team-login'
                     >
@@ -228,7 +228,6 @@ export default class SelectTeam extends React.Component {
                         />
                     </Link>
                 </div>
-                {teamHelp}
             </SystemPermissionGate>
         );
 
@@ -261,13 +260,14 @@ export default class SelectTeam extends React.Component {
                 <div className='signup-header'>
                     <a
                         href='#'
+                        id='logout'
                         onClick={this.handleLogoutClick}
                     >
-                        <span
-                            className='fa fa-chevron-left'
-                            title={Utils.localizeMessage('generic_icons.logout', 'Logout Icon')}
+                        <LogoutIcon/>
+                        <FormattedMessage
+                            id='web.header.logout'
+                            defaultMessage='Logout'
                         />
-                        <FormattedMessage id='web.header.logout'/>
                     </a>
                 </div>
             );
@@ -279,6 +279,7 @@ export default class SelectTeam extends React.Component {
                 <div className='col-sm-12'>
                     <div className={'signup-team__container'}>
                         <img
+                            alt={'signup team logo'}
                             className='signup-team-logo'
                             src={logoImage}
                         />

@@ -93,6 +93,10 @@ export default class ConfirmModal extends React.Component {
         document.removeEventListener('keydown', this.handleKeypress);
     }
 
+    shouldComponentUpdate(nextProps) {
+        return nextProps.show !== this.props.show;
+    }
+
     UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line camelcase
         if (this.props.show && !nextProps.show) {
             document.removeEventListener('keydown', this.handleKeypress);
@@ -150,7 +154,7 @@ export default class ConfirmModal extends React.Component {
             cancelButton = (
                 <button
                     type='button'
-                    className='btn btn-default'
+                    className='btn btn-link btn-cancel'
                     onClick={this.handleCancel}
                 >
                     {cancelText}
@@ -164,9 +168,17 @@ export default class ConfirmModal extends React.Component {
                 show={this.props.show}
                 onHide={this.props.onCancel}
                 onExited={this.props.onExited}
+                id='confirmModal'
+                role='dialog'
+                aria-labelledby='confirmModalLabel'
             >
                 <Modal.Header closeButton={false}>
-                    <Modal.Title>{this.props.title}</Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='confirmModalLabel'
+                    >
+                        {this.props.title}
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {this.props.message}
@@ -175,10 +187,11 @@ export default class ConfirmModal extends React.Component {
                 <Modal.Footer>
                     {cancelButton}
                     <button
-                        autoFocus='true'
+                        autoFocus={true}
                         type='button'
                         className={this.props.confirmButtonClass}
                         onClick={this.handleConfirm}
+                        id='confirmModalButton'
                     >
                         {this.props.confirmButtonText}
                     </button>

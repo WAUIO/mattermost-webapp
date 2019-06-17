@@ -6,10 +6,9 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 
-import TeamStore from 'stores/team_store.jsx';
 import {localizeMessage} from 'utils/utils.jsx';
 import BackstageHeader from 'components/backstage/components/backstage_header.jsx';
-import ChannelSelect from 'components/channel_select.jsx';
+import ChannelSelect from 'components/channel_select';
 import FormError from 'components/form_error.jsx';
 import SpinnerButton from 'components/spinner_button.jsx';
 
@@ -30,6 +29,11 @@ export default class AbstractOutgoingWebhook extends React.Component {
          * The footer text to render, has id and defaultMessage
          */
         footer: PropTypes.object.isRequired,
+
+        /**
+        * The spinner loading text to render, has id and defaultMessage
+        */
+        loading: PropTypes.object.isRequired,
 
         /**
          * Any extra component/node to render
@@ -161,7 +165,7 @@ export default class AbstractOutgoingWebhook extends React.Component {
         }
 
         const hook = {
-            team_id: TeamStore.getCurrentId(),
+            team_id: this.props.team.id,
             channel_id: this.state.channelId,
             trigger_words: triggerWords,
             trigger_when: parseInt(this.state.triggerWhen, 10),
@@ -298,7 +302,7 @@ export default class AbstractOutgoingWebhook extends React.Component {
                                 <input
                                     id='description'
                                     type='text'
-                                    maxLength='128'
+                                    maxLength='500'
                                     className='form-control'
                                     value={this.state.description}
                                     onChange={this.updateDescription}
@@ -508,7 +512,7 @@ export default class AbstractOutgoingWebhook extends React.Component {
                                     />
                                     <div className='form__help'>
                                         <FormattedMessage
-                                            id='add_incoming_webhook.username.help'
+                                            id='add_outgoing_webhook.username.help'
                                             defaultMessage='Choose the username this integration will post as. Usernames can be up to 22 characters, and may contain lowercase letters, numbers and the symbols "-", "_", and ".".'
                                         />
                                     </div>
@@ -550,7 +554,7 @@ export default class AbstractOutgoingWebhook extends React.Component {
                                 errors={[this.props.serverError, this.state.clientError]}
                             />
                             <Link
-                                className='btn btn-sm'
+                                className='btn btn-link btn-sm'
                                 to={`/${this.props.team.name}/integrations/outgoing_webhooks`}
                             >
                                 <FormattedMessage
@@ -562,7 +566,9 @@ export default class AbstractOutgoingWebhook extends React.Component {
                                 className='btn btn-primary'
                                 type='submit'
                                 spinning={this.state.saving}
+                                spinningText={localizeMessage(this.props.loading.id, this.props.loading.defaultMessage)}
                                 onClick={this.handleSubmit}
+                                id='saveWebhook'
                             >
                                 <FormattedMessage
                                     id={footerToRender.id}

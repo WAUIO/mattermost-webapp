@@ -8,115 +8,124 @@ import ReactDOM from 'react-dom';
 import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import PropTypes from 'prop-types';
 
-import ModalStore from 'stores/modal_store.jsx';
-import UserStore from 'stores/user_store.jsx';
-import Constants, {GroupUnreadChannels} from 'utils/constants.jsx';
+import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
+import {t} from 'utils/i18n';
 import ConfirmModal from '../../confirm_modal.jsx';
 import {AsyncComponent} from 'components/async_load';
-import loadUserSettings from 'bundle-loader?lazy!../user_settings.jsx';
+
+import loadUserSettings from 'bundle-loader?lazy!components/user_settings';
 import loadSettingsSidebar from 'bundle-loader?lazy!../../settings_sidebar.jsx';
 
 const holders = defineMessages({
     general: {
-        id: 'user.settings.modal.general',
+        id: t('user.settings.modal.general'),
         defaultMessage: 'General',
     },
     security: {
-        id: 'user.settings.modal.security',
+        id: t('user.settings.modal.security'),
         defaultMessage: 'Security',
     },
     notifications: {
-        id: 'user.settings.modal.notifications',
+        id: t('user.settings.modal.notifications'),
         defaultMessage: 'Notifications',
     },
     display: {
-        id: 'user.settings.modal.display',
+        id: t('user.settings.modal.display'),
         defaultMessage: 'Display',
     },
     sidebar: {
-        id: 'user.settings.modal.sidebar',
+        id: t('user.settings.modal.sidebar'),
         defaultMessage: 'Sidebar',
     },
     advanced: {
-        id: 'user.settings.modal.advanced',
+        id: t('user.settings.modal.advanced'),
         defaultMessage: 'Advanced',
     },
+    checkEmail: {
+        id: 'user.settings.general.checkEmail',
+        defaultMessage: 'Check your email at {email} to verify the address. Cannot find the email?',
+    },
     confirmTitle: {
-        id: 'user.settings.modal.confirmTitle',
+        id: t('user.settings.modal.confirmTitle'),
         defaultMessage: 'Discard Changes?',
     },
     confirmMsg: {
-        id: 'user.settings.modal.confirmMsg',
+        id: t('user.settings.modal.confirmMsg'),
         defaultMessage: 'You have unsaved changes, are you sure you want to discard them?',
     },
     confirmBtns: {
-        id: 'user.settings.modal.confirmBtns',
+        id: t('user.settings.modal.confirmBtns'),
         defaultMessage: 'Yes, Discard',
     },
 });
 
 class UserSettingsModal extends React.Component {
+    static propTypes = {
+        currentUser: PropTypes.object.isRequired,
+        onHide: PropTypes.func.isRequired,
+        intl: intlShape.isRequired,
+        actions: PropTypes.shape({
+            sendVerificationEmail: PropTypes.func.isRequred,
+        }).isRequired,
+    }
+
     constructor(props) {
         super(props);
 
         this.state = {
             active_tab: 'general',
             active_section: '',
-            prev_active_section: '',
+            prev_active_section: 'dummySectionName', // dummy value that should never match any section name
             showConfirmModal: false,
             enforceFocus: true,
-            currentUser: UserStore.getCurrentUser(),
-            show: false,
+            show: true,
         };
 
-        this.mounted = false;
         this.requireConfirm = false;
 
         // Used when settings want to override the default confirm modal with their own
         // If set by a child, it will be called in place of showing the regular confirm
         // modal. It will be passed a function to call on modal confirm
         this.customConfirmAction = null;
+
+        this.modalBodyRef = React.createRef();
     }
 
-    onUserChanged = () => {
-        if (this.mounted) {
-            this.setState({currentUser: UserStore.getCurrentUser()});
-        }
+    handleResend = (email) => {
+        this.setState({resendStatus: 'sending'});
+
+        this.props.actions.sendVerificationEmail(email).then(({data, error: err}) => {
+            if (data) {
+                this.setState({resendStatus: 'success'});
+            } else if (err) {
+                this.setState({resendStatus: 'failure'});
+            }
+        });
     }
 
     componentDidMount() {
-        this.mounted = true;
-        UserStore.addChangeListener(this.onUserChanged);
-        ModalStore.addModalListener(Constants.ActionTypes.TOGGLE_ACCOUNT_SETTINGS_MODAL, this.handleToggle);
         document.addEventListener('keydown', this.handleKeyDown);
     }
 
     componentWillUnmount() {
-        this.mounted = false;
-        ModalStore.removeModalListener(Constants.ActionTypes.TOGGLE_ACCOUNT_SETTINGS_MODAL, this.handleToggle);
         document.removeEventListener('keydown', this.handleKeyDown);
     }
 
-    componentDidUpdate() {
-        UserStore.removeChangeListener(this.onUserChanged);
+    componentDidUpdate(prevProps, prevState) {
         if (!Utils.isMobile()) {
             $('.settings-content .minimize-settings').perfectScrollbar('update');
+        }
+
+        if (this.state.active_tab !== prevState.active_tab) {
+            $(ReactDOM.findDOMNode(this.modalBodyRef.current)).scrollTop(0);
         }
     }
 
     handleKeyDown = (e) => {
         if (Utils.cmdOrCtrlPressed(e) && e.shiftKey && Utils.isKeyPressed(e, Constants.KeyCodes.A)) {
-            this.setState({
-                show: !this.state.show,
-            });
+            this.handleHide();
         }
-    }
-
-    handleToggle = (value) => {
-        this.setState({
-            show: value,
-        });
     }
 
     // Called when the close button is pressed on the main modal
@@ -136,13 +145,14 @@ class UserSettingsModal extends React.Component {
         this.setState({
             active_tab: 'general',
             active_section: '',
-            prev_active_section: '',
+            prev_active_section: 'dummySectionName',
         });
+        this.props.onHide();
     }
 
     // Called to hide the settings pane when on mobile
     handleCollapse = () => {
-        $(ReactDOM.findDOMNode(this.refs.modalBody)).closest('.modal-dialog').removeClass('display--content');
+        $(ReactDOM.findDOMNode(this.modalBodyRef.current)).closest('.modal-dialog').removeClass('display--content');
 
         this.setState({
             active_tab: '',
@@ -216,7 +226,7 @@ class UserSettingsModal extends React.Component {
             this.setState({
                 active_tab: tab,
                 active_section: '',
-                prev_active_section: '',
+                prev_active_section: 'dummySectionName',
             });
         }
     }
@@ -234,7 +244,7 @@ class UserSettingsModal extends React.Component {
 
     render() {
         const {formatMessage} = this.props.intl;
-        if (this.state.currentUser == null) {
+        if (this.props.currentUser == null) {
             return (<div/>);
         }
         var tabs = [];
@@ -243,10 +253,7 @@ class UserSettingsModal extends React.Component {
         tabs.push({name: 'security', uiName: formatMessage(holders.security), icon: 'icon fa fa-lock', iconTitle: Utils.localizeMessage('user.settings.security.icon', 'Security Settings Icon')});
         tabs.push({name: 'notifications', uiName: formatMessage(holders.notifications), icon: 'icon fa fa-exclamation-circle', iconTitle: Utils.localizeMessage('user.settings.notifications.icon', 'Notification Settings Icon')});
         tabs.push({name: 'display', uiName: formatMessage(holders.display), icon: 'icon fa fa-eye', iconTitle: Utils.localizeMessage('user.settings.display.icon', 'Display Settings Icon')});
-        if (this.props.closeUnusedDirectMessages ||
-            this.props.experimentalGroupUnreadChannels !== GroupUnreadChannels.DISABLED) {
-            tabs.push({name: 'sidebar', uiName: formatMessage(holders.sidebar), icon: 'icon fa fa-columns', iconTitle: Utils.localizeMessage('user.settings.sidebar.icon', 'Sidebar Settings Icon')});
-        }
+        tabs.push({name: 'sidebar', uiName: formatMessage(holders.sidebar), icon: 'icon fa fa-columns', iconTitle: Utils.localizeMessage('user.settings.sidebar.icon', 'Sidebar Settings Icon')});
         tabs.push({name: 'advanced', uiName: formatMessage(holders.advanced), icon: 'icon fa fa-list-alt', iconTitle: Utils.localizeMessage('user.settings.advance.icon', 'Advanced Settings Icon')});
 
         return (
@@ -257,19 +264,24 @@ class UserSettingsModal extends React.Component {
                 onHide={this.handleHide}
                 onExited={this.handleHidden}
                 enforceFocus={this.state.enforceFocus}
+                role='dialog'
+                aria-labelledby='accountSettingsModalLabel'
             >
                 <Modal.Header
                     id='accountSettingsHeader'
                     closeButton={true}
                 >
-                    <Modal.Title id='accountSettingsTitle'>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='accountSettingsModalLabel'
+                    >
                         <FormattedMessage
                             id='user.settings.modal.title'
                             defaultMessage='Account Settings'
                         />
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body ref='modalBody'>
+                <Modal.Body ref={this.modalBodyRef}>
                     <div className='settings-table'>
                         <div className='settings-links'>
                             <AsyncComponent
@@ -282,7 +294,6 @@ class UserSettingsModal extends React.Component {
                         <div className='settings-content minimize-settings'>
                             <AsyncComponent
                                 doLoad={loadUserSettings}
-                                ref='userSettings'
                                 activeTab={this.state.active_tab}
                                 activeSection={this.state.active_section}
                                 prevActiveSection={this.state.prev_active_section}
@@ -313,11 +324,5 @@ class UserSettingsModal extends React.Component {
         );
     }
 }
-
-UserSettingsModal.propTypes = {
-    intl: intlShape.isRequired,
-    closeUnusedDirectMessages: PropTypes.bool,
-    experimentalGroupUnreadChannels: PropTypes.string,
-};
 
 export default injectIntl(UserSettingsModal);

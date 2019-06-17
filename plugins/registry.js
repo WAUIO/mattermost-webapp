@@ -11,6 +11,10 @@ import {
     unregisterPluginReconnectHandler,
 } from 'actions/websocket_actions.jsx';
 
+import {
+    registerPluginTranslationsSource,
+} from 'actions/views/root';
+
 import store from 'stores/redux_store.jsx';
 import {ActionTypes} from 'utils/constants.jsx';
 import {generateId} from 'utils/utils.jsx';
@@ -74,13 +78,26 @@ export default class PluginRegistry {
         return dispatchPluginComponentAction('BottomTeamSidebar', this.id, component);
     }
 
+    // Register a component fixed to the bottom of the post message.
+    // Accepts a React component. Returns a unique identifier.
+    registerPostMessageAttachmentComponent(component) {
+        return dispatchPluginComponentAction('PostMessageAttachment', this.id, component);
+    }
+
+    // Register a component to show as a tooltip when a user hovers on a link in a post.
+    // Accepts a React component. Returns a unique identifier.
+    registerLinkTooltipComponent(component) {
+        return dispatchPluginComponentAction('LinkTooltip', this.id, component);
+    }
+
     // Add a button to the channel header. If there are more than one buttons registered by any
     // plugin, a dropdown menu is created to contain all the plugin buttons.
     // Accepts the following:
     // - icon - React element to use as the button's icon
     // - action - a function called when the button is clicked, passed the channel and channel member as arguments
     // - dropdown_text - string or React element shown for the dropdown button description
-    registerChannelHeaderButtonAction(icon, action, dropdownText) {
+    // - tooltip_text - string shown for tooltip appear on hover
+    registerChannelHeaderButtonAction(icon, action, dropdownText, tooltipText) {
         const id = generateId();
 
         const data = {
@@ -89,6 +106,7 @@ export default class PluginRegistry {
             icon: resolveReactElement(icon),
             action,
             dropdownText: resolveReactElement(dropdownText),
+            tooltipText,
         };
 
         store.dispatch({
@@ -154,8 +172,9 @@ export default class PluginRegistry {
     // Accepts the following:
     // - text - A string or React element to display in the menu
     // - action - A function to trigger when component is clicked on
+    // - filter - A function whether to apply the plugin into the post' dropdown menu
     // Returns a unique identifier.
-    registerPostDropdownMenuAction(text, action) {
+    registerPostDropdownMenuAction(text, action, filter) {
         const id = generateId();
 
         store.dispatch({
@@ -166,6 +185,7 @@ export default class PluginRegistry {
                 pluginId: this.id,
                 text: resolveReactElement(text),
                 action,
+                filter,
             },
         });
 
@@ -202,12 +222,45 @@ export default class PluginRegistry {
         return id;
     }
 
-    // Unregister a component using the unique identifier returned after registration.
+    // Register a hook to intercept file uploads before they take place.
+    // Accepts a function to run before files get uploaded. Receives an array of
+    // files and a function to upload files at a later time as arguments. Must
+    // return an object that can contain two properties:
+    // - message - An error message to display, leave blank or null to display no message
+    // - files - Modified array of files to upload, set to null to reject all files
+    // Returns a unique identifier.
+    registerFilesWillUploadHook(hook) {
+        const id = generateId();
+
+        store.dispatch({
+            type: ActionTypes.RECEIVED_PLUGIN_COMPONENT,
+            name: 'FilesWillUploadHook',
+            data: {
+                id,
+                pluginId: this.id,
+                hook,
+            },
+        });
+
+        return id;
+    }
+
+    // Unregister a component, action or hook using the unique identifier returned after registration.
     // Accepts a string id.
     // Returns undefined in all cases.
     unregisterComponent(componentId) {
         store.dispatch({
             type: ActionTypes.REMOVED_PLUGIN_COMPONENT,
+            id: componentId,
+        });
+    }
+
+    // Unregister a component that provided a custom body for posts with a specific type.
+    // Accepts a string id.
+    // Returns undefined in all cases.
+    unregisterPostTypeComponent(componentId) {
+        store.dispatch({
+            type: ActionTypes.REMOVED_PLUGIN_POST_COMPONENT,
             id: componentId,
         });
     }
@@ -247,5 +300,118 @@ export default class PluginRegistry {
     // Returns undefined.
     unregisterReconnectHandler() {
         unregisterPluginReconnectHandler(this.id);
+    }
+
+    // Register a hook that will be called when a message is posted by the user before it
+    // is sent to the server. Accepts a function that receives the post as an argument.
+    //
+    // To reject a post, return an object containing an error such as
+    //     {error: {message: 'Rejected'}}
+    // To modify or allow the post without modifcation, return an object containing the post
+    // such as
+    //     {post: {...}}
+    //
+    // If the hook function is asynchronous, the message will not be sent to the server
+    // until the hook returns.
+    registerMessageWillBePostedHook(hook) {
+        const id = generateId();
+
+        store.dispatch({
+            type: ActionTypes.RECEIVED_PLUGIN_COMPONENT,
+            name: 'MessageWillBePosted',
+            data: {
+                id,
+                pluginId: this.id,
+                hook,
+            },
+        });
+
+        return id;
+    }
+
+    // Register a hook that will be called when a slash command is posted by the user before it
+    // is sent to the server. Accepts a function that receives the message (string) and the args
+    // (object) as arguments.
+    // The args object is:
+    //        {
+    //            channel_id: channelId,
+    //            team_id: teamId,
+    //            root_id: rootId,
+    //            parent_id: rootId,
+    //        }
+    //
+    // To reject a command, return an object containing an error:
+    //     {error: {message: 'Rejected'}}
+    // To ignore a command, return an empty object (to prevent an error from being displayed):
+    //     {}
+    // To modify or allow the command without modification, return an object containing the new message
+    // and args. It is not likely that you will need to change the args, so return the object that was provided:
+    //     {message: {...}, args}
+    //
+    // If the hook function is asynchronous, the command will not be sent to the server
+    // until the hook returns.
+    registerSlashCommandWillBePostedHook(hook) {
+        const id = generateId();
+
+        store.dispatch({
+            type: ActionTypes.RECEIVED_PLUGIN_COMPONENT,
+            name: 'SlashCommandWillBePosted',
+            data: {
+                id,
+                pluginId: this.id,
+                hook,
+            },
+        });
+
+        return id;
+    }
+
+    // Register a hook that will be called before a message is formatted into Markdown.
+    // Accepts a function that receives the unmodified post and the message (potentially
+    // already modified by other hooks) as arguments. This function must return a string
+    // message that will be formatted.
+    // Returns a unique identifier.
+    registerMessageWillFormatHook(hook) {
+        const id = generateId();
+
+        store.dispatch({
+            type: ActionTypes.RECEIVED_PLUGIN_COMPONENT,
+            name: 'MessageWillFormat',
+            data: {
+                id,
+                pluginId: this.id,
+                hook,
+            },
+        });
+
+        return id;
+    }
+
+    // Register a component to override file previews. Accepts a function to run before file is
+    // previewed and a react component to be rendered as the file preview.
+    // - override - A function to check whether preview needs to be overridden. Receives fileInfo and post as arguments.
+    // Returns true is preview should be overridden and false otherwise.
+    // - component - A react component to display instead of original preview. Receives fileInfo and post as props.
+    // Returns a unique identifier.
+    // Only one plugin can override a file preview at a time. If two plugins try to override the same file preview, the first plugin will perform the override and the second will not. Plugin precedence is ordered alphabetically by plugin ID.
+    registerFilePreviewComponent(override, component) {
+        const id = generateId();
+
+        store.dispatch({
+            type: ActionTypes.RECEIVED_PLUGIN_COMPONENT,
+            name: 'FilePreview',
+            data: {
+                id,
+                pluginId: this.id,
+                override,
+                component,
+            },
+        });
+
+        return id;
+    }
+
+    registerTranslations(getTranslationsForLocale) {
+        registerPluginTranslationsSource(this.id, getTranslationsForLocale);
     }
 }

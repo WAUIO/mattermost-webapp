@@ -1,310 +1,224 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {batchActions} from 'redux-batched-actions';
-import {PostTypes, SearchTypes} from 'mattermost-redux/action_types';
+import {SearchTypes} from 'mattermost-redux/action_types';
 import {getMyChannelMember} from 'mattermost-redux/actions/channels';
+import {getChannel, getMyChannelMember as getMyChannelMemberSelector} from 'mattermost-redux/selectors/entities/channels';
 import * as PostActions from 'mattermost-redux/actions/posts';
-import * as Selectors from 'mattermost-redux/selectors/entities/posts';
-import {comparePosts} from 'mattermost-redux/utils/post_utils';
+import * as PostSelectors from 'mattermost-redux/selectors/entities/posts';
+import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
+import {canEditPost, comparePosts} from 'mattermost-redux/utils/post_utils';
 
-import {sendDesktopNotification} from 'actions/notification_actions.jsx';
+import {addRecentEmoji} from 'actions/emoji_actions';
+import * as StorageActions from 'actions/storage';
 import {loadNewDMIfNeeded, loadNewGMIfNeeded} from 'actions/user_actions.jsx';
 import * as RhsActions from 'actions/views/rhs';
-import AppDispatcher from 'dispatcher/app_dispatcher.jsx';
-import ChannelStore from 'stores/channel_store.jsx';
-import PostStore from 'stores/post_store.jsx';
-import store from 'stores/redux_store.jsx';
+import {isEmbedVisible} from 'selectors/posts';
 import {getSelectedPostId, getRhsState} from 'selectors/rhs';
-import {ActionTypes, Constants, RHSStates} from 'utils/constants.jsx';
+import {
+    ActionTypes,
+    Constants,
+    RHSStates,
+    StoragePrefixes,
+} from 'utils/constants';
 import {EMOJI_PATTERN} from 'utils/emoticons.jsx';
 import * as UserAgent from 'utils/user_agent';
 
-const dispatch = store.dispatch;
-const getState = store.getState;
+import {completePostReceive} from './post_utils';
 
 export function handleNewPost(post, msg) {
-    let websocketMessageProps = {};
-    if (msg) {
-        websocketMessageProps = msg.data;
-    }
-
-    if (ChannelStore.getMyMember(post.channel_id)) {
-        completePostReceive(post, websocketMessageProps);
-    } else {
-        getMyChannelMember(post.channel_id)(dispatch, getState).then(() => completePostReceive(post, websocketMessageProps));
-    }
-
-    if (msg && msg.data) {
-        if (msg.data.channel_type === Constants.DM_CHANNEL) {
-            loadNewDMIfNeeded(post.channel_id);
-        } else if (msg.data.channel_type === Constants.GM_CHANNEL) {
-            loadNewGMIfNeeded(post.channel_id);
+    return async (dispatch, getState) => {
+        let websocketMessageProps = {};
+        if (msg) {
+            websocketMessageProps = msg.data;
         }
-    }
-}
 
-function completePostReceive(post, websocketMessageProps) {
-    if (post.root_id && Selectors.getPost(getState(), post.root_id) == null) {
-        PostActions.getPostThread(post.root_id)(dispatch, getState).then(
-            (data) => {
-                dispatchPostActions(post, websocketMessageProps);
-                PostActions.getProfilesAndStatusesForPosts(data.posts, dispatch, getState);
+        const myChannelMember = getMyChannelMemberSelector(getState(), post.channel_id);
+        if (myChannelMember && Object.keys(myChannelMember).length === 0 && myChannelMember.constructor === 'Object') {
+            await dispatch(getMyChannelMember(post.channel_id));
+        }
+
+        dispatch(completePostReceive(post, websocketMessageProps));
+
+        if (msg && msg.data) {
+            if (msg.data.channel_type === Constants.DM_CHANNEL) {
+                loadNewDMIfNeeded(post.channel_id);
+            } else if (msg.data.channel_type === Constants.GM_CHANNEL) {
+                loadNewGMIfNeeded(post.channel_id);
             }
-        );
-
-        return;
-    }
-
-    dispatchPostActions(post, websocketMessageProps);
-}
-
-function dispatchPostActions(post, websocketMessageProps) {
-    const {currentChannelId} = getState().entities.channels;
-
-    if (post.channel_id === currentChannelId) {
-        dispatch({
-            type: ActionTypes.INCREASE_POST_VISIBILITY,
-            data: post.channel_id,
-            amount: 1,
-        });
-    }
-
-    // Need manual dispatch to remove pending post
-    dispatch({
-        type: PostTypes.RECEIVED_POSTS,
-        data: {
-            order: [],
-            posts: {
-                [post.id]: post,
-            },
-        },
-        channelId: post.channel_id,
-    });
-
-    // Still needed to update unreads
-    AppDispatcher.handleServerAction({
-        type: ActionTypes.RECEIVED_POST,
-        post,
-        websocketMessageProps,
-    });
-
-    sendDesktopNotification(post, websocketMessageProps);
-}
-
-export async function flagPost(postId) {
-    await PostActions.flagPost(postId)(dispatch, getState);
-
-    const rhsState = getRhsState(getState());
-
-    // This is a hack that should be fixed with better reducers/actions, see MM-9793
-    if (rhsState === RHSStates.FLAG) {
-        let results = getState().entities.search.results;
-        const index = results.indexOf(postId);
-        if (index === -1) {
-            results = [...results, postId];
-
-            const posts = {};
-            results.forEach((id) => {
-                posts[id] = Selectors.getPost(getState(), id);
-            });
-
-            results.sort((a, b) => comparePosts(posts[a], posts[b]));
-
-            dispatch({
-                type: SearchTypes.RECEIVED_SEARCH_POSTS,
-                data: {posts, order: results},
-            });
         }
-    }
+    };
 }
 
-export async function unflagPost(postId) {
-    await PostActions.unflagPost(postId)(dispatch, getState);
+const getPostsForIds = PostSelectors.makeGetPostsForIds();
 
-    const rhsState = getRhsState(getState());
+export function flagPost(postId) {
+    return async (dispatch, getState) => {
+        await dispatch(PostActions.flagPost(postId));
+        const state = getState();
+        const rhsState = getRhsState(state);
 
-    // This is a hack that should be fixed with better reducers/actions, see MM-9793
-    if (rhsState === RHSStates.FLAG) {
-        let results = getState().entities.search.results;
-        const index = results.indexOf(postId);
-        if (index > -1) {
-            results = [...results];
-            results.splice(index, 1);
-
-            const posts = {};
-            results.forEach((id) => {
-                posts[id] = Selectors.getPost(getState(), id);
-            });
-
-            dispatch({
-                type: SearchTypes.RECEIVED_SEARCH_POSTS,
-                data: {posts, order: results},
-            });
-        }
-    }
-}
-
-export function addReaction(channelId, postId, emojiName) {
-    PostActions.addReaction(postId, emojiName)(dispatch, getState);
-}
-
-export function removeReaction(channelId, postId, emojiName) {
-    PostActions.removeReaction(postId, emojiName)(dispatch, getState);
-}
-
-export async function createPost(post, files, success) {
-    // parse message and emit emoji event
-    const emojis = post.message.match(EMOJI_PATTERN);
-    if (emojis) {
-        for (const emoji of emojis) {
-            const trimmed = emoji.substring(1, emoji.length - 1);
-            emitEmojiPosted(trimmed);
-        }
-    }
-
-    if (UserAgent.isIosClassic()) {
-        await PostActions.createPostImmediately(post, files)(dispatch, getState);
-    } else {
-        await PostActions.createPost(post, files)(dispatch, getState);
-    }
-
-    if (post.root_id) {
-        PostStore.storeCommentDraft(post.root_id, null);
-    } else {
-        PostStore.storeDraft(post.channel_id, null);
-    }
-
-    if (success) {
-        success();
-    }
-}
-
-export async function updatePost(post, success) {
-    const {data, error: err} = await PostActions.editPost(post)(dispatch, getState);
-    if (data && success) {
-        success();
-    } else if (err) {
-        AppDispatcher.handleServerAction({
-            type: ActionTypes.RECEIVED_ERROR,
-            err: {id: err.server_error_id, ...err},
-            method: 'editPost',
-        });
-    }
-}
-
-export function emitEmojiPosted(emoji) {
-    AppDispatcher.handleServerAction({
-        type: ActionTypes.EMOJI_POSTED,
-        alias: emoji,
-    });
-}
-
-const POST_INCREASE_AMOUNT = Constants.POST_CHUNK_SIZE / 2;
-
-// Returns true if there are more posts to load
-export function increasePostVisibility(channelId, focusedPostId) {
-    return async (doDispatch, doGetState) => {
-        if (doGetState().views.channel.loadingPosts[channelId]) {
-            return true;
+        if (rhsState === RHSStates.FLAG) {
+            addPostToSearchResults(postId, state, dispatch);
         }
 
-        const currentPostVisibility = doGetState().views.channel.postVisibility[channelId];
+        return {data: true};
+    };
+}
 
-        if (currentPostVisibility >= Constants.MAX_POST_VISIBILITY) {
-            return true;
+export function unflagPost(postId) {
+    return async (dispatch, getState) => {
+        await dispatch(PostActions.unflagPost(postId));
+        const state = getState();
+        const rhsState = getRhsState(state);
+
+        if (rhsState === RHSStates.FLAG) {
+            removePostFromSearchResults(postId, state, dispatch);
         }
 
-        doDispatch(batchActions([
-            {
-                type: ActionTypes.LOADING_POSTS,
-                data: true,
-                channelId,
-            },
-            {
-                type: ActionTypes.INCREASE_POST_VISIBILITY,
-                data: channelId,
-                amount: POST_INCREASE_AMOUNT,
-            },
-        ]));
+        return {data: true};
+    };
+}
 
-        const page = Math.floor(currentPostVisibility / POST_INCREASE_AMOUNT);
+export function createPost(post, files) {
+    return async (dispatch) => {
+        // parse message and emit emoji event
+        const emojis = post.message.match(EMOJI_PATTERN);
+        if (emojis) {
+            for (const emoji of emojis) {
+                const trimmed = emoji.substring(1, emoji.length - 1);
+                dispatch(addRecentEmoji(trimmed));
+            }
+        }
 
         let result;
-        if (focusedPostId) {
-            result = await PostActions.getPostsBefore(channelId, focusedPostId, page, POST_INCREASE_AMOUNT)(dispatch, getState);
+        if (UserAgent.isIosClassic()) {
+            result = await dispatch(PostActions.createPostImmediately(post, files));
         } else {
-            result = await PostActions.getPosts(channelId, page, POST_INCREASE_AMOUNT)(doDispatch, doGetState);
+            result = await dispatch(PostActions.createPost(post, files));
         }
-        const posts = result.data;
 
-        doDispatch({
-            type: ActionTypes.LOADING_POSTS,
-            data: false,
-            channelId,
-        });
+        if (post.root_id) {
+            dispatch(storeCommentDraft(post.root_id, null));
+        } else {
+            dispatch(storeDraft(post.channel_id, null));
+        }
 
-        return posts ? posts.order.length >= POST_INCREASE_AMOUNT : false;
+        return result;
+    };
+}
+
+export function storeDraft(channelId, draft) {
+    return (dispatch) => {
+        dispatch(StorageActions.setGlobalItem('draft_' + channelId, draft));
+    };
+}
+
+export function storeCommentDraft(rootPostId, draft) {
+    return (dispatch) => {
+        dispatch(StorageActions.setGlobalItem('comment_draft_' + rootPostId, draft));
+    };
+}
+
+export function addReaction(postId, emojiName) {
+    return (dispatch) => {
+        dispatch(PostActions.addReaction(postId, emojiName));
+        dispatch(addRecentEmoji(emojiName));
     };
 }
 
 export function searchForTerm(term) {
-    dispatch(RhsActions.updateSearchTerms(term));
-    dispatch(RhsActions.showSearchResults());
+    return (dispatch) => {
+        dispatch(RhsActions.updateSearchTerms(term));
+        dispatch(RhsActions.showSearchResults());
+    };
+}
+
+function addPostToSearchResults(postId, state, dispatch) {
+    const results = state.entities.search.results;
+    const index = results.indexOf(postId);
+    if (index === -1) {
+        const newPost = PostSelectors.getPost(state, postId);
+        const posts = getPostsForIds(state, results).reduce((acc, post) => {
+            acc[post.id] = post;
+            return acc;
+        }, {});
+        posts[newPost.id] = newPost;
+
+        const newResults = [...results, postId];
+        newResults.sort((a, b) => comparePosts(posts[a], posts[b]));
+
+        dispatch({
+            type: SearchTypes.RECEIVED_SEARCH_POSTS,
+            data: {posts, order: newResults},
+        });
+    }
+}
+
+function removePostFromSearchResults(postId, state, dispatch) {
+    let results = state.entities.search.results;
+    const index = results.indexOf(postId);
+    if (index > -1) {
+        results = [...results];
+        results.splice(index, 1);
+
+        const posts = getPostsForIds(state, results);
+
+        dispatch({
+            type: SearchTypes.RECEIVED_SEARCH_POSTS,
+            data: {posts, order: results},
+        });
+    }
 }
 
 export function pinPost(postId) {
-    return async (doDispatch, doGetState) => {
-        await PostActions.pinPost(postId)(doDispatch, doGetState);
+    return async (dispatch, getState) => {
+        await dispatch(PostActions.pinPost(postId));
+        const state = getState();
+        const rhsState = getRhsState(state);
 
-        AppDispatcher.handleServerAction({
-            type: ActionTypes.RECEIVED_POST_PINNED,
-            postId,
-        });
+        if (rhsState === RHSStates.PIN) {
+            addPostToSearchResults(postId, state, dispatch);
+        }
     };
 }
 
 export function unpinPost(postId) {
-    return async (doDispatch, doGetState) => {
-        await PostActions.unpinPost(postId)(doDispatch, doGetState);
+    return async (dispatch, getState) => {
+        await dispatch(PostActions.unpinPost(postId));
+        const state = getState();
+        const rhsState = getRhsState(state);
 
-        AppDispatcher.handleServerAction({
-            type: ActionTypes.RECEIVED_POST_UNPINNED,
-            postId,
-        });
+        if (rhsState === RHSStates.PIN) {
+            removePostFromSearchResults(postId, state, dispatch);
+        }
     };
 }
 
-export function doPostAction(postId, actionId) {
-    PostActions.doPostAction(postId, actionId)(dispatch, getState);
-}
-
 export function setEditingPost(postId = '', commentCount = 0, refocusId = '', title = '', isRHS = false) {
-    return async (doDispatch, doGetState) => {
-        const state = doGetState();
+    return async (dispatch, getState) => {
+        const state = getState();
+        const post = PostSelectors.getPost(state, postId);
 
-        let canEditNow = true;
-
-        // Only show the modal if we can edit the post now, but allow it to be hidden at any time
-        if (postId && state.entities.general.license.IsLicensed === 'true') {
-            const config = state.entities.general.config;
-
-            if (config.AllowEditPost === Constants.ALLOW_EDIT_POST_NEVER) {
-                canEditNow = false;
-            } else if (config.AllowEditPost === Constants.ALLOW_EDIT_POST_TIME_LIMIT) {
-                const post = Selectors.getPost(state, postId);
-
-                if ((post.create_at + (config.PostEditTimeLimit * 1000)) < Date.now()) {
-                    canEditNow = false;
-                }
-            }
+        if (!post || post.pending_post_id === postId) {
+            return {data: false};
         }
 
+        const config = state.entities.general.config;
+        const license = state.entities.general.license;
+        const userId = getCurrentUserId(state);
+        const channel = getChannel(state, post.channel_id);
+        const teamId = channel.team_id || '';
+
+        const canEditNow = canEditPost(state, config, license, teamId, post.channel_id, userId, post);
+
+        // Only show the modal if we can edit the post now, but allow it to be hidden at any time
+
         if (canEditNow) {
-            doDispatch({
+            dispatch({
                 type: ActionTypes.SHOW_EDIT_POST_MODAL,
                 data: {postId, commentCount, refocusId, title, isRHS},
-            }, doGetState);
+            });
         }
 
         return {data: canEditNow};
@@ -318,20 +232,13 @@ export function hideEditPostModal() {
 }
 
 export function deleteAndRemovePost(post) {
-    return async (doDispatch, doGetState) => {
-        const {currentUserId} = doGetState().entities.users;
-
-        let hardDelete = false;
-        if (post.user_id === currentUserId) {
-            hardDelete = true;
-        }
-
-        const {error} = await doDispatch(PostActions.deletePost(post, hardDelete));
+    return async (dispatch, getState) => {
+        const {error} = await dispatch(PostActions.deletePost(post));
         if (error) {
             return {error};
         }
 
-        if (post.id === getSelectedPostId(doGetState())) {
+        if (post.id === getSelectedPostId(getState())) {
             dispatch({
                 type: ActionTypes.SELECT_POST,
                 postId: '',
@@ -339,17 +246,20 @@ export function deleteAndRemovePost(post) {
             });
         }
 
-        doDispatch({
-            type: PostTypes.REMOVE_POST,
-            data: post,
-        });
-
-        // Needed for search store
-        AppDispatcher.handleViewAction({
-            type: Constants.ActionTypes.REMOVE_POST,
-            post,
-        });
+        dispatch(PostActions.removePost(post));
 
         return {data: true};
     };
+}
+
+export function toggleEmbedVisibility(postId) {
+    return (dispatch, getState) => {
+        const visible = isEmbedVisible(getState(), postId);
+
+        dispatch(StorageActions.setGlobalItem(StoragePrefixes.EMBED_VISIBLE + postId, !visible));
+    };
+}
+
+export function resetEmbedVisibility() {
+    return StorageActions.actionOnGlobalItemsWithPrefix(StoragePrefixes.EMBED_VISIBLE, () => null);
 }

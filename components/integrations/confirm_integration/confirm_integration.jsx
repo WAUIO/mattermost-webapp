@@ -8,6 +8,7 @@ import {Link} from 'react-router-dom';
 
 import {browserHistory} from 'utils/browser_history';
 import {Constants, ErrorPageTypes} from 'utils/constants.jsx';
+import CopyText from 'components/copy_text.jsx';
 import BackstageHeader from 'components/backstage/components/backstage_header.jsx';
 import {getSiteURL} from 'utils/url.jsx';
 import FormattedMarkdownMessage from 'components/formatted_markdown_message';
@@ -21,6 +22,7 @@ export default class ConfirmIntegration extends React.Component {
             oauthApps: PropTypes.object,
             incomingHooks: PropTypes.object,
             outgoingHooks: PropTypes.object,
+            bots: PropTypes.object,
         };
     }
 
@@ -55,8 +57,11 @@ export default class ConfirmIntegration extends React.Component {
         const incomingHook = this.props.incomingHooks[this.state.id];
         const outgoingHook = this.props.outgoingHooks[this.state.id];
         const oauthApp = this.props.oauthApps[this.state.id];
+        const bot = this.props.bots[this.state.id];
 
         if (this.state.type === Constants.Integrations.COMMAND && command) {
+            const commandToken = command.token;
+
             headerText = (
                 <FormattedMessage
                     id={'installed_commands.header'}
@@ -77,12 +82,17 @@ export default class ConfirmIntegration extends React.Component {
                         id='add_command.token'
                         defaultMessage='**Token**: {token}'
                         values={{
-                            token: command.token,
+                            token: commandToken,
                         }}
+                    />
+                    <CopyText
+                        value={commandToken}
                     />
                 </p>
             );
         } else if (this.state.type === Constants.Integrations.INCOMING_WEBHOOK && incomingHook) {
+            const incomingHookToken = getSiteURL() + '/hooks/' + incomingHook.id;
+
             headerText = (
                 <FormattedMessage
                     id={'installed_incoming_webhooks.header'}
@@ -103,12 +113,19 @@ export default class ConfirmIntegration extends React.Component {
                         id='add_incoming_webhook.url'
                         defaultMessage='**URL**: {url}'
                         values={{
-                            url: getSiteURL() + '/hooks/' + incomingHook.id,
+                            url: incomingHookToken,
                         }}
+                    />
+                    <CopyText
+                        idMessage='integrations.copy_client_secret'
+                        defaultMessage='Copy Client Secret'
+                        value={incomingHookToken}
                     />
                 </p>
             );
         } else if (this.state.type === Constants.Integrations.OUTGOING_WEBHOOK && outgoingHook) {
+            const outgoingHookToken = outgoingHook.token;
+
             headerText = (
                 <FormattedMessage
                     id={'installed_outgoing_webhooks.header'}
@@ -129,12 +146,18 @@ export default class ConfirmIntegration extends React.Component {
                         id='add_outgoing_webhook.token'
                         defaultMessage='**Token**: {token}'
                         values={{
-                            token: outgoingHook.token,
+                            token: outgoingHookToken,
                         }}
+                    />
+                    <CopyText
+                        value={outgoingHookToken}
                     />
                 </p>
             );
         } else if (this.state.type === Constants.Integrations.OAUTH_APP && oauthApp) {
+            const oauthAppToken = oauthApp.id;
+            const oauthAppSecret = oauthApp.client_secret;
+
             headerText = (
                 <FormattedMessage
                     id={'installed_oauth_apps.header'}
@@ -157,15 +180,26 @@ export default class ConfirmIntegration extends React.Component {
                         id='add_oauth_app.clientId'
                         defaultMessage='**Client ID**: {id}'
                         values={{
-                            id: oauthApp.id,
+                            id: oauthAppToken,
                         }}
-                    /> <br/>
+                    />
+                    <CopyText
+                        idMessage='integrations.copy_client_id'
+                        defaultMessage='Copy Client Id'
+                        value={oauthAppToken}
+                    />
+                    <br/>
                     <FormattedMarkdownMessage
                         id='add_oauth_app.clientSecret'
                         defaultMessage='**Client Secret**: {secret}'
                         values={{
-                            secret: oauthApp.client_secret,
+                            secret: oauthAppSecret,
                         }}
+                    />
+                    <CopyText
+                        idMessage='integrations.copy_client_secret'
+                        defaultMessage='Copy Client Secret'
+                        value={oauthAppSecret}
                     />
                 </p>
             );
@@ -190,6 +224,46 @@ export default class ConfirmIntegration extends React.Component {
                     />
                 </p>
             );
+        } else if (this.state.type === Constants.Integrations.BOT && bot) {
+            const botToken = (new URLSearchParams(this.props.location.search)).get('token');
+
+            headerText = (
+                <FormattedMessage
+                    id='bots.manage.header'
+                    defaultMessage='Bot Accounts'
+                />
+            );
+            helpText = (
+                <p>
+                    <FormattedMarkdownMessage
+                        id='bots.manage.created.text'
+                        defaultMessage='Your bot account **{botname}** has been created successfully. Please use the following access token to connect to the bot (see [documentation](https://mattermost.com/pl/default-bot-accounts) for further details).'
+                        values={{
+                            botname: bot.display_name || bot.username,
+                        }}
+                    />
+                </p>
+            );
+            tokenText = (
+                <p className='word-break--all'>
+                    <FormattedMarkdownMessage
+                        id='add_outgoing_webhook.token'
+                        defaultMessage='**Token**: {token}'
+                        values={{
+                            token: botToken,
+                        }}
+                    />
+                    <CopyText
+                        value={botToken}
+                    />
+                    <br/>
+                    <br/>
+                    <FormattedMarkdownMessage
+                        id='add_outgoing_webhook.token.message'
+                        defaultMessage='Make sure to add this bot account to teams and channels you want it to interact in. See [documentation](https://mattermost.com/pl/default-bot-accounts) to learn more.'
+                    />
+                </p>
+            );
         } else {
             browserHistory.replace(`/error?type=${ErrorPageTypes.PAGE_NOT_FOUND}`);
             return '';
@@ -207,7 +281,10 @@ export default class ConfirmIntegration extends React.Component {
                     />
                 </BackstageHeader>
                 <div className='backstage-form backstage-form__confirmation'>
-                    <h4 className='backstage-form__title'>
+                    <h4
+                        className='backstage-form__title'
+                        id='formTitle'
+                    >
                         <FormattedMessage
                             id='integrations.successful'
                             defaultMessage='Setup Successful'
@@ -220,6 +297,7 @@ export default class ConfirmIntegration extends React.Component {
                             className='btn btn-primary'
                             type='submit'
                             to={'/' + this.props.team.name + '/integrations/' + this.state.type}
+                            id='doneButton'
                         >
                             <FormattedMessage
                                 id='integrations.done'

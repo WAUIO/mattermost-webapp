@@ -28,14 +28,16 @@ export default class MobileChannelHeaderPlug extends React.PureComponent {
 
     createButton(plug) {
         return (
-            <div
-                className='navbar-toggle navbar-right__icon pull-right'
-                onClick={plug.action}
-            >
-                <span className='icon navbar-plugin-button'>
-                    {plug.icon}
-                </span>
-            </div>
+            <li className='flex-parent--center'>
+                <button
+                    className='navbar-toggle navbar-right__icon'
+                    onClick={() => this.fireAction(plug)}
+                >
+                    <span className='icon navbar-plugin-button'>
+                        {plug.icon}
+                    </span>
+                </button>
+            </li>
         );
     }
 
@@ -49,13 +51,17 @@ export default class MobileChannelHeaderPlug extends React.PureComponent {
                     <a
                         role='menuitem'
                         href='#'
-                        onClick={plug.action}
+                        onClick={() => this.fireAction(plug)}
                     >
                         {plug.dropdownText}
                     </a>
                 </li>
             );
         });
+    }
+
+    fireAction(plug) {
+        return plug.action(this.props.channel, this.props.channelMember);
     }
 
     render() {

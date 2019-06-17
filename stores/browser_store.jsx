@@ -68,18 +68,6 @@ class BrowserStoreClass {
         return loginId === sessionStorage.getItem(StoragePrefixes.LOGIN);
     }
 
-    /**
-     * Preforms the given action on each item that has the given prefix
-     * Signature for action is action(key, value)
-     */
-    actionOnGlobalItemsWithPrefix(prefix, action) {
-        dispatch(Actions.actionOnGlobalItemsWithPrefix(prefix, action));
-    }
-
-    actionOnItemsWithPrefix(prefix, action) {
-        dispatch(Actions.actionOnItemsWithPrefix(prefix, action));
-    }
-
     clear(options) {
         dispatch(Actions.clear(options));
     }
@@ -115,11 +103,11 @@ class BrowserStoreClass {
     }
 
     hasSeenLandingPage() {
-        return this.getItem('__landingPageSeen__', false);
+        return localStorage.getItem(StoragePrefixes.LANDING_PAGE_SEEN);
     }
 
     setLandingPageSeen(landingPageSeen) {
-        return this.setItem('__landingPageSeen__', landingPageSeen);
+        localStorage.setItem(StoragePrefixes.LANDING_PAGE_SEEN, landingPageSeen);
     }
 }
 

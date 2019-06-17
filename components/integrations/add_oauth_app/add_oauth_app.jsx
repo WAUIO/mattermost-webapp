@@ -5,10 +5,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import {browserHistory} from 'utils/browser_history';
+import {t} from 'utils/i18n';
 import AbstractOAuthApp from '../abstract_oauth_app.jsx';
 
-const HEADER = {id: 'add_oauth_app.header', defaultMessage: 'Add'};
-const FOOTER = {id: 'installed_oauth_apps.save', defaultMessage: 'Save'};
+const HEADER = {id: t('add_oauth_app.header'), defaultMessage: 'Add'};
+const FOOTER = {id: t('installed_oauth_apps.save'), defaultMessage: 'Save'};
+const LOADING = {id: t('installed_oauth_apps.saving'), defaultMessage: 'Saving...'};
 
 export default class AddOAuthApp extends React.PureComponent {
     static propTypes = {
@@ -60,6 +62,7 @@ export default class AddOAuthApp extends React.PureComponent {
                 team={this.props.team}
                 header={HEADER}
                 footer={FOOTER}
+                loading={LOADING}
                 renderExtra={''}
                 action={this.addOAuthApp}
                 serverError={this.state.serverError}

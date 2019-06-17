@@ -23,6 +23,7 @@
         &.post--root {
             border-bottom: 1px solid #ddd;
             padding-bottom: 1em;
+            padding-left: 1.5em;
 
             .post__body {
                 background: transparent !important;
@@ -37,6 +38,46 @@
 
         .post__body {
             width: 100%;
+        }
+
+        &.post--compact {
+            .post__body {
+                padding-left: 0;
+            }
+
+            &.same--root {
+                &.post--comment {
+                    padding-left: 1em;
+
+                    .post__header {
+                        margin-left: 0;
+                        float: none;
+                        height: auto;
+
+                        .post__time {
+                            opacity: .6;
+                        }
+                    }
+
+                    .flag-icon__container {
+                        left: auto;
+                        position: relative;
+                        top: 2px;
+                    }
+                }
+            }
+
+            &.same--user {
+                .post__header {
+                    .col__name {
+                        display: inline-block;
+                    }
+                }
+            }
+        }
+
+        .post__img {
+            padding: 2px 8px 0 0;
         }
     }
 
@@ -63,6 +104,7 @@
         }
 
         .custom-textarea {
+            max-height: calc(50vh - 80px);
             min-height: 100px;
         }
 

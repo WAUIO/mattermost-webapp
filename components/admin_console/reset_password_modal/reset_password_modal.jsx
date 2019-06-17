@@ -7,12 +7,12 @@ import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
 import {adminResetPassword} from 'actions/admin_actions.jsx';
-import UserStore from 'stores/user_store.jsx';
 import * as Utils from 'utils/utils.jsx';
 
 export default class ResetPasswordModal extends React.Component {
     static propTypes = {
         user: PropTypes.object,
+        currentUserId: PropTypes.string.isRequired,
         show: PropTypes.bool.isRequired,
         onModalSubmit: PropTypes.func,
         onModalDismissed: PropTypes.func,
@@ -122,11 +122,10 @@ export default class ResetPasswordModal extends React.Component {
             );
         }
 
-        const currentUserId = UserStore.getCurrentId();
         let currentPassword = null;
         let serverErrorCurrentPass = null;
         let newPasswordFocus = true;
-        if (currentUserId === user.id) {
+        if (this.props.currentUserId === user.id) {
             newPasswordFocus = false;
             let urlClassCurrentPass = 'input-group input-group--limit';
             if (this.state.serverErrorCurrentPass) {
@@ -150,7 +149,6 @@ export default class ResetPasswordModal extends React.Component {
                             type='password'
                             ref='currentPassword'
                             className='form-control'
-                            maxLength='22'
                             autoFocus={true}
                             tabIndex='1'
                         />
@@ -163,9 +161,14 @@ export default class ResetPasswordModal extends React.Component {
             <Modal
                 show={this.props.show}
                 onHide={this.doCancel}
+                role='dialog'
+                aria-labelledby='resetPasswordModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='resetPasswordModalLabel'
+                    >
                         {title}
                     </Modal.Title>
                 </Modal.Header>
@@ -192,7 +195,6 @@ export default class ResetPasswordModal extends React.Component {
                                         type='password'
                                         ref='password'
                                         className='form-control'
-                                        maxLength='22'
                                         autoFocus={newPasswordFocus}
                                         tabIndex='1'
                                     />
@@ -205,7 +207,7 @@ export default class ResetPasswordModal extends React.Component {
                     <Modal.Footer>
                         <button
                             type='button'
-                            className='btn btn-default'
+                            className='btn btn-link'
                             onClick={this.doCancel}
                         >
                             <FormattedMessage

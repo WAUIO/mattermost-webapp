@@ -4,6 +4,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import {NotificationSections} from 'utils/constants.jsx';
+
 import CollapseView from './collapse_view.jsx';
 import ExpandView from './expand_view.jsx';
 
@@ -24,6 +26,11 @@ export default class NotificationSection extends React.PureComponent {
          * Member's desktop notification level
          */
         memberNotificationLevel: PropTypes.string.isRequired,
+
+        /**
+         * Ignore channel-wide mentions @channel, @here and @all
+         */
+        ignoreChannelMentions: PropTypes.string,
 
         /**
          * User's global notification level
@@ -60,7 +67,7 @@ export default class NotificationSection extends React.PureComponent {
     }
 
     handleCollapseSection = () => {
-        this.props.onUpdateSection();
+        this.props.onUpdateSection(NotificationSections.NONE);
     }
 
     render() {
@@ -68,6 +75,7 @@ export default class NotificationSection extends React.PureComponent {
             expand,
             globalNotificationLevel,
             memberNotificationLevel,
+            ignoreChannelMentions,
             onSubmit,
             section,
             serverError,
@@ -79,6 +87,7 @@ export default class NotificationSection extends React.PureComponent {
                     section={section}
                     memberNotifyLevel={memberNotificationLevel}
                     globalNotifyLevel={globalNotificationLevel}
+                    ignoreChannelMentions={ignoreChannelMentions}
                     onChange={this.handleOnChange}
                     onSubmit={onSubmit}
                     serverError={serverError}
@@ -93,6 +102,7 @@ export default class NotificationSection extends React.PureComponent {
                 onExpandSection={this.handleExpandSection}
                 memberNotifyLevel={memberNotificationLevel}
                 globalNotifyLevel={globalNotificationLevel}
+                ignoreChannelMentions={ignoreChannelMentions}
             />
         );
     }

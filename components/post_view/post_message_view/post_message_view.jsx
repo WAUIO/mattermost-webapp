@@ -6,16 +6,12 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 import {Posts} from 'mattermost-redux/constants';
 
-import * as GlobalActions from 'actions/global_actions';
-
 import * as PostUtils from 'utils/post_utils';
 import * as Utils from 'utils/utils';
 
 import PostMarkdown from 'components/post_markdown';
-
-import ShowMore from '../show_more';
-
-const MAX_POST_HEIGHT = 600;
+import Pluggable from 'plugins/pluggable';
+import ShowMore from 'components/post_view/show_more';
 
 export default class PostMessageView extends React.PureComponent {
     static propTypes = {
@@ -34,11 +30,6 @@ export default class PostMessageView extends React.PureComponent {
          * Options specific to text formatting
          */
         options: PropTypes.object,
-
-        /*
-         * Post identifiers for selenium tests
-         */
-        lastPostCount: PropTypes.number,
 
         /**
          * Set to render post body compactly
@@ -87,7 +78,7 @@ export default class PostMessageView extends React.PureComponent {
         };
 
         this.imageProps = {
-            onHeightReceived: this.handleHeightReceived,
+            onImageLoaded: this.handleHeightReceived,
         };
     }
 
@@ -99,8 +90,6 @@ export default class PostMessageView extends React.PureComponent {
             this.setState((prevState) => {
                 return {checkOverflow: prevState.checkOverflow + 1};
             });
-
-            GlobalActions.postListScrollChange();
         }
     };
 
@@ -121,7 +110,10 @@ export default class PostMessageView extends React.PureComponent {
         }
 
         return (
-            <span className='post-edited__indicator'>
+            <span
+                id={`postEdited_${this.props.post.id}`}
+                className='post-edited__indicator'
+            >
                 <FormattedMessage
                     id='post_message_view.edited'
                     defaultMessage='(edited)'
@@ -139,7 +131,6 @@ export default class PostMessageView extends React.PureComponent {
             compactDisplay,
             isRHS,
             theme,
-            lastPostCount,
         } = this.props;
 
         if (post.state === Posts.POST_DELETED) {
@@ -150,7 +141,8 @@ export default class PostMessageView extends React.PureComponent {
             return <span>{post.message}</span>;
         }
 
-        const postType = post.type;
+        const postType = post.props && post.props.type ? post.props.type : post.type;
+
         if (pluginPostTypes.hasOwnProperty(postType)) {
             const PluginComponent = pluginPostTypes[postType].component;
             return (
@@ -163,11 +155,6 @@ export default class PostMessageView extends React.PureComponent {
             );
         }
 
-        let postId = null;
-        if (lastPostCount >= 0) {
-            postId = Utils.createSafeId('lastPostMessageText' + lastPostCount);
-        }
-
         let message = post.message;
         const isEphemeral = Utils.isPostEphemeral(post);
         if (compactDisplay && isEphemeral) {
@@ -178,11 +165,10 @@ export default class PostMessageView extends React.PureComponent {
         return (
             <ShowMore
                 checkOverflow={this.state.checkOverflow}
-                maxHeight={MAX_POST_HEIGHT}
                 text={message}
             >
                 <div
-                    id={postId}
+                    id={`postMessageText_${post.id}`}
                     className='post-message__text'
                     onClick={Utils.handleFormattedTextClick}
                 >
@@ -192,9 +178,15 @@ export default class PostMessageView extends React.PureComponent {
                         isRHS={isRHS}
                         options={options}
                         post={post}
+                        channelId={post.channel_id}
                     />
                 </div>
                 {this.renderEditedIndicator()}
+                <Pluggable
+                    pluggableName='PostMessageAttachment'
+                    postId={post.id}
+                    onHeightChange={this.handleHeightReceived}
+                />
             </ShowMore>
         );
     }
