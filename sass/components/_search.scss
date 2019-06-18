@@ -33,15 +33,25 @@
 }
 
 .sidebar__search-clear {
+    @include single-transition(all, .3s, ease-out);
     @include opacity(.5);
-    color: $dark-gray;
     cursor: pointer;
     margin-right: 20px;
     position: absolute;
     right: 0;
-    top: 12px;
+    top: 0;
     visibility: hidden;
-    width: 40px;
+    width: 22px;
+    margin: 0;
+    font-size: 20px;
+
+    &:hover {
+        @include opacity(1);
+    }
+
+    &.visible {
+        visibility: visible;
+    }
 }
 
 .search-bar__container {
@@ -75,17 +85,12 @@
         width: 100%;
     }
 
-    .fa-spin {
+    .LoadingSpinner {
         @include opacity(0.5);
         font-size: 1em;
         position: absolute;
-        right: 27px;
-        top: 27px;
-
-        .search-bar__container & {
-            right: 7px;
-            top: 7px;
-        }
+        right: 8px;
+        top: 5px;
     }
 }
 
@@ -125,8 +130,14 @@
             border: none;
         }
 
+        &:hover {
+            .post__header {
+                padding-right: 105px;
+            }
+        }
+
         .post__header {
-            padding-right: 100px;
+            padding-right: 70px;
         }
 
         .search-channel__name {

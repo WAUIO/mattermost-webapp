@@ -6,6 +6,7 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
 import {ErrorPageTypes} from 'utils/constants.jsx';
+import {t} from 'utils/i18n';
 
 import ErrorLink from './error_link.jsx';
 
@@ -36,7 +37,7 @@ export default function ErrorMessage({type, message, service}) {
                         <li>
                             <FormattedMessage
                                 id='error.local_storage.help3'
-                                defaultMessage='Use a supported browser (IE 11, Chrome 43+, Firefox 38+, Safari 9, Edge)'
+                                defaultMessage='Use a supported browser (IE 11, Chrome 61+, Firefox 60+, Safari 12+, Edge 42+)'
                             />
                         </li>
                     </ul>
@@ -93,7 +94,7 @@ export default function ErrorMessage({type, message, service}) {
                                 link: (
                                     <ErrorLink
                                         url={'https://docs.mattermost.com/deployment/sso-google.html'}
-                                        messageId={'error.oauth_missing_code.google.link'}
+                                        messageId={t('error.oauth_missing_code.google.link')}
                                         defaultMessage={'Google Apps'}
                                     />
                                 ),
@@ -108,7 +109,7 @@ export default function ErrorMessage({type, message, service}) {
                                 link: (
                                     <ErrorLink
                                         url={'https://docs.mattermost.com/deployment/sso-office.html'}
-                                        messageId={'error.oauth_missing_code.office365.link'}
+                                        messageId={t('error.oauth_missing_code.office365.link')}
                                         defaultMessage={'Office 365'}
                                     />
                                 ),
@@ -123,7 +124,7 @@ export default function ErrorMessage({type, message, service}) {
                                 link: (
                                     <ErrorLink
                                         url={'https://docs.mattermost.com/deployment/sso-gitlab.html'}
-                                        messageId={'error.oauth_missing_code.gitlab.link'}
+                                        messageId={t('error.oauth_missing_code.gitlab.link')}
                                         defaultMessage={'GitLab'}
                                     />
                                 ),
@@ -138,7 +139,7 @@ export default function ErrorMessage({type, message, service}) {
                                 link: (
                                     <ErrorLink
                                         url={'https://forum.mattermost.org/c/trouble-shoot'}
-                                        messageId={'error.oauth_missing_code.forum.link'}
+                                        messageId={t('error.oauth_missing_code.forum.link')}
                                         defaultMessage={'Troubleshooting forum'}
                                     />
                                 ),
@@ -146,6 +147,19 @@ export default function ErrorMessage({type, message, service}) {
                         />
                     </p>
                 </div>
+            );
+            break;
+        case ErrorPageTypes.OAUTH_ACCESS_DENIED:
+            errorMessage = (
+                <p>
+                    <FormattedMessage
+                        id='error.oauth_access_denied'
+                        defaultMessage='You must authorize Mattermost to log in with {service}.'
+                        values={{
+                            service,
+                        }}
+                    />
+                </p>
             );
             break;
         case ErrorPageTypes.PAGE_NOT_FOUND:

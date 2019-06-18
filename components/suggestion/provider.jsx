@@ -6,19 +6,29 @@ export default class Provider {
         this.latestPrefix = '';
         this.latestComplete = true;
         this.disableDispatches = false;
+        this.requestStarted = false;
     }
 
-    handlePretextChanged(suggestionId, pretext) { // eslint-disable-line no-unused-vars
+    handlePretextChanged(pretext) { // eslint-disable-line no-unused-vars
         // NO-OP for inherited classes to override
     }
 
-    startNewRequest(suggestionId, prefix) {
+    resetRequest() {
+        this.requestStarted = false;
+    }
+
+    startNewRequest(prefix) {
         this.latestPrefix = prefix;
         this.latestComplete = false;
+        this.requestStarted = true;
     }
 
     shouldCancelDispatch(prefix) {
         if (this.disableDispatches) {
+            return true;
+        }
+
+        if (!this.requestStarted) {
             return true;
         }
 
@@ -29,5 +39,13 @@ export default class Provider {
         }
 
         return false;
+    }
+
+    allowDividers() {
+        return true;
+    }
+
+    presentationType() {
+        return 'text';
     }
 }

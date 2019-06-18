@@ -8,6 +8,7 @@ import {Modal} from 'react-bootstrap';
 
 import {Constants} from 'utils/constants';
 import {localizeMessage} from 'utils/utils.jsx';
+import {t} from 'utils/i18n';
 
 const INT32_MAX = 2147483647;
 
@@ -79,16 +80,21 @@ export default class EditPostTimeLimitModal extends React.Component {
             <Modal
                 dialogClassName='admin-modal edit-post-time-limit-modal'
                 show={this.props.show}
+                role='dialog'
+                aria-labelledby='editPostTimeModalLabel'
             >
                 <Modal.Header
                     closeButton={true}
                 >
-                    <h4 className='modal-title'>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='editPostTimeModalLabel'
+                    >
                         <FormattedMessage
                             id='edit_post.time_limit_modal.title'
                             defaultMessage='Configure Global Edit Post Time Limit'
                         />
-                    </h4>
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <FormattedHTMLMessage
@@ -175,7 +181,7 @@ export default class EditPostTimeLimitModal extends React.Component {
                         disabled={this.state.saving}
                     >
                         <FormattedMessage
-                            id={this.state.saving ? 'save_button.saving' : 'edit_post.time_limit_modal.save_button'}
+                            id={this.state.saving ? t('save_button.saving') : t('edit_post.time_limit_modal.save_button')}
                             defaultMessage='Save Edit Time'
                         />
                     </button>

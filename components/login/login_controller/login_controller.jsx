@@ -3,66 +3,69 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {Link} from 'react-router-dom';
 
 import {Client4} from 'mattermost-redux/client';
 
 import * as GlobalActions from 'actions/global_actions.jsx';
-import {addUserToTeamFromInvite} from 'actions/team_actions.jsx';
-import {checkMfa, webLogin} from 'actions/user_actions.jsx';
-import BrowserStore from 'stores/browser_store.jsx';
-import UserStore from 'stores/user_store.jsx';
-import TeamStore from 'stores/team_store.jsx';
+import LocalStorageStore from 'stores/local_storage_store';
 
 import {browserHistory} from 'utils/browser_history';
 import Constants from 'utils/constants.jsx';
 import messageHtmlToComponent from 'utils/message_html_to_component';
 import * as TextFormatting from 'utils/text_formatting.jsx';
 import * as Utils from 'utils/utils.jsx';
+import {showNotification} from 'utils/notifications.jsx';
+import {t} from 'utils/i18n.jsx';
 
 import logoImage from 'images/logo.png';
 
 import SiteNameAndDescription from 'components/common/site_name_and_description';
 import AnnouncementBar from 'components/announcement_bar';
 import FormError from 'components/form_error.jsx';
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 import BackButton from 'components/common/back_button.jsx';
+import LoadingScreen from 'components/loading_screen.jsx';
+import LoadingWrapper from 'components/widgets/loading/loading_wrapper.jsx';
+import SuccessIcon from 'components/icon/success_icon';
+import WarningIcon from 'components/icon/warning_icon';
+import LocalizedInput from 'components/localized_input/localized_input';
 
 import LoginMfa from '../login_mfa.jsx';
-export default class LoginController extends React.Component {
-    static get propTypes() {
-        return {
-            location: PropTypes.object.isRequired,
-            isLicensed: PropTypes.bool.isRequired,
 
-            customBrandText: PropTypes.string,
-            customDescriptionText: PropTypes.string,
-            enableCustomBrand: PropTypes.bool.isRequired,
-            enableLdap: PropTypes.bool.isRequired,
-            enableOpenServer: PropTypes.bool.isRequired,
-            enableSaml: PropTypes.bool.isRequired,
-            enableSignInWithEmail: PropTypes.bool.isRequired,
-            enableSignInWithUsername: PropTypes.bool.isRequired,
-            enableSignUpWithEmail: PropTypes.bool.isRequired,
-            enableSignUpWithGitLab: PropTypes.bool.isRequired,
-            enableSignUpWithGoogle: PropTypes.bool.isRequired,
-            enableSignUpWithOffice365: PropTypes.bool.isRequired,
-            experimentalPrimaryTeam: PropTypes.string,
-            ldapLoginFieldName: PropTypes.string,
-            samlLoginButtonText: PropTypes.string,
-            siteName: PropTypes.string,
-        };
+class LoginController extends React.Component {
+    static propTypes = {
+        intl: intlShape.isRequired,
+
+        location: PropTypes.object.isRequired,
+        isLicensed: PropTypes.bool.isRequired,
+        currentUser: PropTypes.object,
+        customBrandText: PropTypes.string,
+        customDescriptionText: PropTypes.string,
+        enableCustomBrand: PropTypes.bool.isRequired,
+        enableLdap: PropTypes.bool.isRequired,
+        enableOpenServer: PropTypes.bool.isRequired,
+        enableSaml: PropTypes.bool.isRequired,
+        enableSignInWithEmail: PropTypes.bool.isRequired,
+        enableSignInWithUsername: PropTypes.bool.isRequired,
+        enableSignUpWithEmail: PropTypes.bool.isRequired,
+        enableSignUpWithGitLab: PropTypes.bool.isRequired,
+        enableSignUpWithGoogle: PropTypes.bool.isRequired,
+        enableSignUpWithOffice365: PropTypes.bool.isRequired,
+        experimentalPrimaryTeam: PropTypes.string,
+        ldapLoginFieldName: PropTypes.string,
+        samlLoginButtonText: PropTypes.string,
+        siteName: PropTypes.string,
+        initializing: PropTypes.bool,
+        actions: PropTypes.shape({
+            login: PropTypes.func.isRequired,
+            addUserToTeamFromInvite: PropTypes.func.isRequired,
+        }).isRequired,
     }
 
     constructor(props) {
         super(props);
-
-        this.preSubmit = this.preSubmit.bind(this);
-        this.submit = this.submit.bind(this);
-        this.finishSignin = this.finishSignin.bind(this);
-
-        this.handleLoginIdChange = this.handleLoginIdChange.bind(this);
-        this.handlePasswordChange = this.handlePasswordChange.bind(this);
 
         let loginId = '';
         if ((new URLSearchParams(this.props.location.search)).get('extra') === Constants.SIGNIN_VERIFIED && (new URLSearchParams(this.props.location.search)).get('email')) {
@@ -78,23 +81,106 @@ export default class LoginController extends React.Component {
             password: '',
             showMfa: false,
             loading: false,
+            sessionExpired: false,
+            brandImageError: false,
         };
     }
 
     componentDidMount() {
-        document.title = this.props.siteName;
-        BrowserStore.removeGlobalItem('team');
-        if (UserStore.getCurrentUser()) {
+        this.configureTitle();
+
+        if (this.props.currentUser) {
             GlobalActions.redirectUserToDefaultTeam();
+            return;
         }
 
-        if ((new URLSearchParams(this.props.location.search)).get('extra') === Constants.SIGNIN_VERIFIED && (new URLSearchParams(this.props.location.search)).get('email')) {
+        const search = new URLSearchParams(this.props.location.search);
+        const extra = search.get('extra');
+        const email = search.get('email');
+
+        if (extra === Constants.SIGNIN_VERIFIED && email) {
             this.refs.password.focus();
+        }
+
+        // Determine if the user was unexpectedly logged out.
+        if (LocalStorageStore.getWasLoggedIn()) {
+            if (extra === Constants.SIGNIN_CHANGE) {
+                // Assume that if the user triggered a sign in change, it was intended to logout.
+                // We can't preflight this, since in some flows it's the server that invalidates
+                // our session after we use it to complete the sign in change.
+                LocalStorageStore.setWasLoggedIn(false);
+            } else {
+                // Although the authority remains the local sessionExpired bit on the state, set this
+                // extra field in the querystring to signal the desktop app. And although eslint
+                // complains about this, it is allowed: https://reactjs.org/docs/react-component.html#componentdidmount.
+                // eslint-disable-next-line react/no-did-mount-set-state
+                this.setState({sessionExpired: true});
+                search.set('extra', Constants.SESSION_EXPIRED);
+                browserHistory.replace(`${this.props.location.pathname}?${search}`);
+            }
+        }
+
+        this.showSessionExpiredNotificationIfNeeded();
+    }
+
+    componentDidUpdate() {
+        this.configureTitle();
+        this.showSessionExpiredNotificationIfNeeded();
+    }
+
+    componentWillUnmount() {
+        if (this.closeSessionExpiredNotification) {
+            this.closeSessionExpiredNotification();
+            this.closeSessionExpiredNotification = null;
         }
     }
 
-    preSubmit(e) {
+    configureTitle = () => {
+        if (this.state.sessionExpired) {
+            document.title = this.props.intl.formatMessage({
+                id: 'login.session_expired.title',
+                defaultMessage: '* {siteName} - Session Expired',
+            }, {
+                siteName: this.props.siteName,
+            });
+        } else {
+            document.title = this.props.siteName;
+        }
+    }
+
+    showSessionExpiredNotificationIfNeeded = () => {
+        if (this.state.sessionExpired && !this.closeSessionExpiredNotification) {
+            showNotification({
+                title: this.props.siteName,
+                body: Utils.localizeMessage(
+                    'login.session_expired.notification',
+                    'Session Expired: Please sign in to continue receiving notifications.'
+                ),
+                requireInteraction: true,
+                silent: false,
+                onClick: () => {
+                    window.focus();
+                    if (this.closeSessionExpiredNotification()) {
+                        this.closeSessionExpiredNotification();
+                        this.closeSessionExpiredNotification = null;
+                    }
+                },
+            }).then((closeNotification) => {
+                this.closeSessionExpiredNotification = closeNotification;
+            }).catch(() => {
+                // Ignore the failure to display the notification.
+            });
+        } else if (!this.state.sessionExpired && this.closeSessionExpiredNotification) {
+            this.closeSessionExpiredNotification();
+            this.closeSessionExpiredNotification = null;
+        }
+    }
+
+    preSubmit = (e) => {
         e.preventDefault();
+
+        // Discard any session expiry notice once the user interacts with the login page.
+        this.onDismissSessionExpired();
 
         const {location} = this.props;
         const newQuery = location.search.replace(/(extra=password_change)&?/i, '');
@@ -104,20 +190,34 @@ export default class LoginController extends React.Component {
 
         // password managers don't always call onInput handlers for form fields so it's possible
         // for the state to get out of sync with what the user sees in the browser
-        let loginId = this.refs.loginId.value;
-        if (loginId !== this.state.loginId) {
-            this.setState({loginId});
+        let loginId = this.state.loginId;
+        if (this.refs.loginId) {
+            loginId = this.refs.loginId.value;
+            if (loginId !== this.state.loginId) {
+                this.setState({loginId});
+            }
         }
 
-        const password = this.refs.password.value;
-        if (password !== this.state.password) {
-            this.setState({password});
+        let password = this.state.password;
+        if (this.refs.password) {
+            password = this.refs.password.value;
+            if (password !== this.state.password) {
+                this.setState({password});
+            }
         }
 
         // don't trim the password since we support spaces in passwords
         loginId = loginId.trim().toLowerCase();
 
         if (!loginId) {
+            t('login.noEmail');
+            t('login.noEmailLdapUsername');
+            t('login.noEmailUsername');
+            t('login.noEmailUsernameLdapUsername');
+            t('login.noLdapUsername');
+            t('login.noUsername');
+            t('login.noUsernameLdapUsername');
+
             // it's slightly weird to be constructing the message ID, but it's a bit nicer than triply nested if statements
             let msgId = 'login.no';
             if (this.state.emailSigninEnabled) {
@@ -155,57 +255,18 @@ export default class LoginController extends React.Component {
             return;
         }
 
-        checkMfa(
-            loginId,
-            (requiresMfa) => {
-                if (requiresMfa) {
-                    this.setState({showMfa: true});
-                } else {
-                    this.submit(loginId, password, '');
-                }
-            },
-            (err) => {
-                this.setState({serverError: err.message});
-            }
-        );
+        this.submit(loginId, password, '');
     }
 
-    submit(loginId, password, token) {
+    submit = (loginId, password, token) => {
         this.setState({serverError: null, loading: true});
 
-        webLogin(
-            loginId,
-            password,
-            token,
-            () => {
-                // check for query params brought over from signup_user_complete
-                const params = new URLSearchParams(this.props.location.search);
-                const inviteToken = params.get('t') || '';
-                const inviteId = params.get('id') || '';
-
-                if (inviteId || inviteToken) {
-                    addUserToTeamFromInvite(
-                        inviteToken,
-                        inviteId,
-                        (team) => {
-                            this.finishSignin(team);
-                        },
-                        () => {
-                            // there's not really a good way to deal with this, so just let the user log in like normal
-                            this.finishSignin();
-                        }
-                    );
-
-                    return;
-                }
-
-                this.finishSignin();
-            },
-            (err) => {
-                if (err.id === 'api.user.login.not_verified.app_error') {
+        this.props.actions.login(loginId, password, token).then(async ({error}) => {
+            if (error) {
+                if (error.server_error_id === 'api.user.login.not_verified.app_error') {
                     browserHistory.push('/should_verify_email?&email=' + encodeURIComponent(loginId));
-                } else if (err.id === 'store.sql_user.get_for_login.app_error' ||
-                    err.id === 'ent.ldap.do_login.user_not_registered.app_error') {
+                } else if (error.server_error_id === 'store.sql_user.get_for_login.app_error' ||
+                    error.server_error_id === 'ent.ldap.do_login.user_not_registered.app_error') {
                     this.setState({
                         showMfa: false,
                         loading: false,
@@ -216,7 +277,7 @@ export default class LoginController extends React.Component {
                             />
                         ),
                     });
-                } else if (err.id === 'api.user.check_user_password.invalid.app_error' || err.id === 'ent.ldap.do_login.invalid_password.app_error') {
+                } else if (error.server_error_id === 'api.user.check_user_password.invalid.app_error' || error.server_error_id === 'ent.ldap.do_login.invalid_password.app_error') {
                     this.setState({
                         showMfa: false,
                         loading: false,
@@ -227,55 +288,88 @@ export default class LoginController extends React.Component {
                             />
                         ),
                     });
+                } else if (!this.state.showMfa && error.server_error_id === 'mfa.validate_token.authenticate.app_error') {
+                    this.setState({showMfa: true});
                 } else {
-                    this.setState({showMfa: false, serverError: err.message, loading: false});
+                    this.setState({showMfa: false, serverError: error.message, loading: false});
                 }
+
+                return;
             }
-        );
+
+            // check for query params brought over from signup_user_complete
+            const params = new URLSearchParams(this.props.location.search);
+            const inviteToken = params.get('t') || '';
+            const inviteId = params.get('id') || '';
+
+            if (inviteId || inviteToken) {
+                const {data: team} = await this.props.actions.addUserToTeamFromInvite(inviteToken, inviteId);
+                if (team) {
+                    this.finishSignin(team);
+                } else {
+                    // there's not really a good way to deal with this, so just let the user log in like normal
+                    this.finishSignin();
+                }
+            } else {
+                this.finishSignin();
+            }
+        });
     }
 
-    finishSignin(team) {
+    finishSignin = (team) => {
         const experimentalPrimaryTeam = this.props.experimentalPrimaryTeam;
-        const primaryTeam = TeamStore.getByName(experimentalPrimaryTeam);
         const query = new URLSearchParams(this.props.location.search);
         const redirectTo = query.get('redirect_to');
 
-        GlobalActions.loadCurrentLocale();
+        Utils.setCSRFFromCookie();
+
+        // Record a successful login to local storage. If an unintentional logout occurs, e.g.
+        // via session expiration, this bit won't get reset and we can notify the user as such.
+        LocalStorageStore.setWasLoggedIn(true);
         if (redirectTo && redirectTo.match(/^\/([^/]|$)/)) {
             browserHistory.push(redirectTo);
         } else if (team) {
             browserHistory.push(`/${team.name}`);
-        } else if (primaryTeam) {
-            browserHistory.push(`/${primaryTeam.name}/channels/${Constants.DEFAULT_CHANNEL}`);
+        } else if (experimentalPrimaryTeam) {
+            browserHistory.push(`/${experimentalPrimaryTeam}`);
         } else {
             GlobalActions.redirectUserToDefaultTeam();
         }
     }
 
-    handleLoginIdChange(e) {
+    handleLoginIdChange = (e) => {
         this.setState({
             loginId: e.target.value,
         });
     }
 
-    handlePasswordChange(e) {
+    handlePasswordChange = (e) => {
         this.setState({
             password: e.target.value,
         });
     }
 
-    createCustomLogin() {
+    handleBrandImageError = () => {
+        this.setState({brandImageError: true});
+    }
+
+    createCustomLogin = () => {
         if (this.props.enableCustomBrand) {
             const text = this.props.customBrandText || '';
             const formattedText = TextFormatting.formatText(text);
+            const brandImageUrl = Client4.getBrandImageUrl(0);
+            const brandImageStyle = this.state.brandImageError ? {display: 'none'} : {};
 
             return (
                 <div>
                     <img
-                        src={Client4.getBrandImageUrl(0)}
+                        alt={'brand image'}
+                        src={brandImageUrl}
+                        onError={this.handleBrandImageError}
+                        style={brandImageStyle}
                     />
                     <div>
-                        {messageHtmlToComponent(formattedText, false, {mentions: false})}
+                        {messageHtmlToComponent(formattedText, false, {mentions: false, imagesMetadata: null})}
                     </div>
                 </div>
             );
@@ -284,7 +378,7 @@ export default class LoginController extends React.Component {
         return null;
     }
 
-    createLoginPlaceholder() {
+    createLoginPlaceholder = () => {
         const ldapEnabled = this.state.ldapEnabled;
         const usernameSigninEnabled = this.state.usernameSigninEnabled;
         const emailSigninEnabled = this.state.emailSigninEnabled;
@@ -317,7 +411,7 @@ export default class LoginController extends React.Component {
         return '';
     }
 
-    checkSignUpEnabled() {
+    checkSignUpEnabled = () => {
         return this.props.enableSignUpWithEmail ||
             this.props.enableSignUpWithGitLab ||
             this.props.enableSignUpWithOffice365 ||
@@ -326,65 +420,106 @@ export default class LoginController extends React.Component {
             this.props.enableSaml;
     }
 
-    createLoginOptions() {
+    onDismissSessionExpired = () => {
+        LocalStorageStore.setWasLoggedIn(false);
+        this.setState({sessionExpired: false});
+    }
+
+    createExtraText = () => {
         const extraParam = (new URLSearchParams(this.props.location.search)).get('extra');
-        let extraBox = '';
-        if (extraParam) {
-            if (extraParam === Constants.SIGNIN_CHANGE) {
-                extraBox = (
-                    <div className='alert alert-success'>
-                        <i
-                            className='fa fa-check'
-                            title={Utils.localizeMessage('generic_icons.success', 'Success Icon')}
-                        />
-                        <FormattedMessage
-                            id='login.changed'
-                            defaultMessage=' Sign-in method changed successfully'
-                        />
-                    </div>
-                );
-            } else if (extraParam === Constants.SIGNIN_VERIFIED) {
-                extraBox = (
-                    <div className='alert alert-success'>
-                        <i
-                            className='fa fa-check'
-                            title={Utils.localizeMessage('generic_icons.success', 'Success Icon')}
-                        />
-                        <FormattedMessage
-                            id='login.verified'
-                            defaultMessage=' Email Verified'
-                        />
-                    </div>
-                );
-            } else if (extraParam === Constants.SESSION_EXPIRED) {
-                extraBox = (
-                    <div className='alert alert-warning'>
-                        <i
-                            className='fa fa-exclamation-triangle'
-                            title={Utils.localizeMessage('generic_icons.warning', 'Warning Icon')}
-                        />
-                        <FormattedMessage
-                            id='login.session_expired'
-                            defaultMessage=' Your session has expired. Please login again.'
-                        />
-                    </div>
-                );
-            } else if (extraParam === Constants.PASSWORD_CHANGE) {
-                extraBox = (
-                    <div className='alert alert-success'>
-                        <i
-                            className='fa fa-check'
-                            title={Utils.localizeMessage('generic_icons.success', 'Success Icon')}
-                        />
-                        <FormattedMessage
-                            id='login.passwordChanged'
-                            defaultMessage=' Password updated successfully'
-                        />
-                    </div>
-                );
-            }
+
+        if (this.state.sessionExpired) {
+            return (
+                <div className='alert alert-warning'>
+                    <WarningIcon/>
+                    {' '}
+                    <FormattedMessage
+                        id='login.session_expired'
+                        defaultMessage='Your session has expired. Please log in again.'
+                    />
+                    {' '}
+                    <Link
+                        className='btn-close'
+                        to='/login'
+                        onClick={this.onDismissSessionExpired}
+                    >
+                        <span>
+                            {'×'}
+                        </span>
+                    </Link>
+                </div>
+            );
         }
 
+        if (extraParam === Constants.GET_TERMS_ERROR) {
+            return (
+                <div className='alert has-error no-padding'>
+                    <label className='control-label'>
+                        <FormattedMessage
+                            id='login.get_terms_error'
+                            defaultMessage='Unable to load terms of service. If this issue persists, contact your System Administrator.'
+                        />
+                    </label>
+                </div>
+            );
+        } else if (extraParam === Constants.TERMS_REJECTED) {
+            return (
+                <div className='alert alert-warning'>
+                    <WarningIcon/>
+                    <FormattedMarkdownMessage
+                        id='login.terms_rejected'
+                        defaultMessage='You must agree to the terms of service before accessing {siteName}. Please contact your System Administrator for more details.'
+                        values={{
+                            siteName: this.props.siteName,
+                        }}
+                    />
+                </div>
+            );
+        } else if (extraParam === Constants.SIGNIN_CHANGE) {
+            return (
+                <div className='alert alert-success'>
+                    <SuccessIcon/>
+                    <FormattedMessage
+                        id='login.changed'
+                        defaultMessage=' Sign-in method changed successfully'
+                    />
+                </div>
+            );
+        } else if (extraParam === Constants.SIGNIN_VERIFIED) {
+            return (
+                <div className='alert alert-success'>
+                    <SuccessIcon/>
+                    <FormattedMessage
+                        id='login.verified'
+                        defaultMessage=' Email Verified'
+                    />
+                </div>
+            );
+        } else if (extraParam === Constants.PASSWORD_CHANGE) {
+            return (
+                <div className='alert alert-success'>
+                    <SuccessIcon/>
+                    <FormattedMessage
+                        id='login.passwordChanged'
+                        defaultMessage=' Password updated successfully'
+                    />
+                </div>
+            );
+        } else if (extraParam === Constants.CREATE_LDAP) {
+            return (
+                <div className='alert alert-grey'>
+                    <FormattedMessage
+                        id='login.ldapCreate'
+                        defaultMessage=' Enter your AD/LDAP username and password to create an account.'
+                    />
+                </div>
+            );
+        }
+
+        return null;
+    }
+
+    createLoginOptions = () => {
         const loginControls = [];
 
         const ldapEnabled = this.state.ldapEnabled;
@@ -399,27 +534,6 @@ export default class LoginController extends React.Component {
             let errorClass = '';
             if (this.state.serverError) {
                 errorClass = ' has-error';
-            }
-
-            let loginButton = (
-                <FormattedMessage
-                    id='login.signIn'
-                    defaultMessage='Sign in'
-                />
-            );
-
-            if (this.state.loading) {
-                loginButton =
-                (<span>
-                    <span
-                        className='fa fa-refresh icon--rotate'
-                        title={Utils.localizeMessage('generic_icons.loading', 'Loading Icon')}
-                    />
-                    <FormattedMessage
-                        id='login.signInLoading'
-                        defaultMessage='Signing in...'
-                    />
-                </span>);
             }
 
             loginControls.push(
@@ -443,11 +557,11 @@ export default class LoginController extends React.Component {
                                 placeholder={this.createLoginPlaceholder()}
                                 spellCheck='false'
                                 autoCapitalize='off'
-                                autoFocus='true'
+                                autoFocus={true}
                             />
                         </div>
                         <div className={'form-group' + errorClass}>
-                            <input
+                            <LocalizedInput
                                 id='loginPassword'
                                 type='password'
                                 className='form-control'
@@ -455,7 +569,7 @@ export default class LoginController extends React.Component {
                                 name='password'
                                 value={this.state.password}
                                 onChange={this.handlePasswordChange}
-                                placeholder={Utils.localizeMessage('login.password', 'Password')}
+                                placeholder={{id: t('login.password'), defaultMessage: 'Password'}}
                                 spellCheck='false'
                             />
                         </div>
@@ -465,7 +579,16 @@ export default class LoginController extends React.Component {
                                 type='submit'
                                 className='btn btn-primary'
                             >
-                                { loginButton }
+                                <LoadingWrapper
+                                    id='login_button_signing'
+                                    loading={this.state.loading}
+                                    text={Utils.localizeMessage('login.signInLoading', 'Signing in...')}
+                                >
+                                    <FormattedMessage
+                                        id='login.signIn'
+                                        defaultMessage='Sign in'
+                                    />
+                                </LoadingWrapper>
                             </button>
                         </div>
                     </div>
@@ -502,6 +625,7 @@ export default class LoginController extends React.Component {
         if (usernameSigninEnabled || emailSigninEnabled) {
             loginControls.push(
                 <div
+                    id='login_forgot'
                     key='forgotPassword'
                     className='form-group'
                 >
@@ -621,6 +745,7 @@ export default class LoginController extends React.Component {
         if (loginControls.length === 0) {
             loginControls.push(
                 <FormError
+                    key='noMethods'
                     error={
                         <FormattedMessage
                             id='login.noMethods'
@@ -634,7 +759,7 @@ export default class LoginController extends React.Component {
 
         return (
             <div>
-                {extraBox}
+                {this.createExtraText()}
                 {loginControls}
             </div>
         );
@@ -648,7 +773,12 @@ export default class LoginController extends React.Component {
         const {
             customDescriptionText,
             siteName,
+            initializing,
         } = this.props;
+
+        if (initializing) {
+            return (<LoadingScreen/>);
+        }
 
         let content;
         let customContent;
@@ -675,12 +805,16 @@ export default class LoginController extends React.Component {
             <div>
                 <AnnouncementBar/>
                 {backButton}
-                <div className='col-sm-12'>
+                <div
+                    id='login_section'
+                    className='col-sm-12'
+                >
                     <div className={'signup-team__container ' + customClass}>
                         <div className='signup__markdown'>
                             {customContent}
                         </div>
                         <img
+                            alt={'signup team logo'}
                             className='signup-team-logo'
                             src={logoImage}
                         />
@@ -697,3 +831,5 @@ export default class LoginController extends React.Component {
         );
     }
 }
+
+export default injectIntl(LoginController);

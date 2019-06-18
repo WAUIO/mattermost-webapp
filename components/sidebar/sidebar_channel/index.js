@@ -5,14 +5,16 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
 import {savePreferences} from 'mattermost-redux/actions/preferences';
-import {leaveChannel} from 'mattermost-redux/actions/channels';
 
 import {
+    getCurrentChannelId,
     getChannelsNameMapInCurrentTeam,
     makeGetChannel,
     shouldHideDefaultChannel,
+    getRedirectChannelNameForTeam,
 } from 'mattermost-redux/selectors/entities/channels';
 import {getMyChannelMemberships} from 'mattermost-redux/selectors/entities/common';
+import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {getUserIdsInChannels, getUser} from 'mattermost-redux/selectors/entities/users';
 import {getInt, getTeammateNameDisplaySetting} from 'mattermost-redux/selectors/entities/preferences';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
@@ -20,9 +22,11 @@ import {isChannelMuted, isFavoriteChannel} from 'mattermost-redux/utils/channel_
 
 import {displayUsername} from 'mattermost-redux/utils/user_utils';
 
-import {Constants, NotificationLevels} from 'utils/constants.jsx';
+import {Constants, NotificationLevels, StoragePrefixes} from 'utils/constants.jsx';
 
+import {leaveChannel} from 'actions/views/channel';
 import {open as openLhs} from 'actions/views/lhs.js';
+import {getPostDraft} from 'selectors/rhs';
 
 import SidebarChannel from './sidebar_channel.jsx';
 
@@ -33,7 +37,9 @@ function makeMapStateToProps() {
         const channelId = ownProps.channelId;
 
         const config = getConfig(state);
+        const currentChannelId = getCurrentChannelId(state);
         const channel = getChannel(state, {id: channelId}) || {};
+        const draft = channel.id ? getPostDraft(state, StoragePrefixes.DRAFT, channel.id) : false;
 
         const enableTutorial = config.EnableTutorial === 'true';
         const tutorialStep = getInt(state, Constants.Preferences.TUTORIAL_STEP, ownProps.currentUserId, Constants.TutorialSteps.FINISHED);
@@ -70,6 +76,7 @@ function makeMapStateToProps() {
         let channelTeammateId = '';
         let channelTeammateDeletedAt = 0;
         let channelTeammateUsername = '';
+        let channelTeammateIsBot = false;
         let channelDisplayName = channel.display_name;
         if (channel.type === Constants.DM_CHANNEL) {
             teammate = getUser(state, channel.teammate_id);
@@ -77,6 +84,7 @@ function makeMapStateToProps() {
                 channelTeammateId = teammate.id;
                 channelTeammateDeletedAt = teammate.delete_at;
                 channelTeammateUsername = teammate.username;
+                channelTeammateIsBot = teammate.is_bot;
             }
 
             channelDisplayName = displayUsername(teammate, teammateNameDisplay, false);
@@ -105,6 +113,8 @@ function makeMapStateToProps() {
             channelTeammateId,
             channelTeammateUsername,
             channelTeammateDeletedAt,
+            channelTeammateIsBot,
+            hasDraft: draft && Boolean(draft.message.trim() || draft.fileInfos.length || draft.uploadsInProgress.length) && currentChannelId !== channel.id,
             showTutorialTip: enableTutorial && tutorialStep === Constants.TutorialSteps.CHANNEL_POPOVER,
             townSquareDisplayName: channelsByName[Constants.DEFAULT_CHANNEL] && channelsByName[Constants.DEFAULT_CHANNEL].display_name,
             offTopicDisplayName: channelsByName[Constants.OFFTOPIC_CHANNEL] && channelsByName[Constants.OFFTOPIC_CHANNEL].display_name,
@@ -114,6 +124,7 @@ function makeMapStateToProps() {
             membersCount,
             shouldHideChannel,
             channelIsArchived: channel.delete_at !== 0,
+            redirectChannel: getRedirectChannelNameForTeam(state, getCurrentTeamId(state)),
         };
     };
 }

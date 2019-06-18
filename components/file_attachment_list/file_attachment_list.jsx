@@ -4,6 +4,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import {sortFileInfos} from 'mattermost-redux/utils/file_utils';
+
 import {FileTypes} from 'utils/constants.jsx';
 import {getFileType} from 'utils/utils';
 
@@ -36,13 +38,7 @@ export default class FileAttachmentList extends React.Component {
 
         isEmbedVisible: PropTypes.bool,
 
-        actions: PropTypes.shape({
-
-            /*
-             * Function to get file metadata for a post
-             */
-            getMissingFilesForPost: PropTypes.func.isRequired,
-        }).isRequired,
+        locale: PropTypes.string.isRequired,
     }
 
     constructor(props) {
@@ -51,12 +47,6 @@ export default class FileAttachmentList extends React.Component {
         this.handleImageClick = this.handleImageClick.bind(this);
 
         this.state = {showPreviewModal: false, startImgIndex: 0};
-    }
-
-    componentDidMount() {
-        if (this.props.post.file_ids || this.props.post.filenames) {
-            this.props.actions.getMissingFilesForPost(this.props.post.id);
-        }
     }
 
     handleImageClick(indexClicked) {
@@ -68,7 +58,12 @@ export default class FileAttachmentList extends React.Component {
     }
 
     render() {
-        const {fileInfos, fileCount, compactDisplay} = this.props;
+        const {
+            compactDisplay,
+            fileInfos,
+            fileCount,
+            locale,
+        } = this.props;
 
         if (compactDisplay === false) {
             if (fileInfos && fileInfos.length === 1) {
@@ -79,7 +74,7 @@ export default class FileAttachmentList extends React.Component {
                         <SingleImageView
                             fileInfo={fileInfos[0]}
                             isEmbedVisible={this.props.isEmbedVisible}
-                            post={this.props.post}
+                            postId={this.props.post.id}
                         />
                     );
                 }
@@ -90,15 +85,15 @@ export default class FileAttachmentList extends React.Component {
             }
         }
 
+        const sortedFileInfos = sortFileInfos(fileInfos, locale);
         const postFiles = [];
-        if (fileInfos && fileInfos.length > 0) {
-            for (let i = 0; i < fileInfos.length; i++) {
-                const fileInfo = fileInfos[i];
-
+        if (sortedFileInfos && sortedFileInfos.length > 0) {
+            for (let i = 0; i < sortedFileInfos.length; i++) {
+                const fileInfo = sortedFileInfos[i];
                 postFiles.push(
                     <FileAttachment
                         key={fileInfo.id}
-                        fileInfo={fileInfos[i]}
+                        fileInfo={sortedFileInfos[i]}
                         index={i}
                         handleImageClick={this.handleImageClick}
                         compactDisplay={compactDisplay}
@@ -126,7 +121,8 @@ export default class FileAttachmentList extends React.Component {
                     show={this.state.showPreviewModal}
                     onModalDismissed={this.hidePreviewModal}
                     startIndex={this.state.startImgIndex}
-                    fileInfos={fileInfos}
+                    fileInfos={sortedFileInfos}
+                    postId={this.props.post.id}
                 />
             </React.Fragment>
         );

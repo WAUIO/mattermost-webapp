@@ -6,21 +6,19 @@ import React from 'react';
 import classNames from 'classnames';
 
 import {trackEvent} from 'actions/diagnostics_actions.jsx';
-import {postListScrollChange} from 'actions/global_actions.jsx';
-import PostStore from 'stores/post_store.jsx';
-import WebrtcStore from 'stores/webrtc_store.jsx';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
+
 import FileUploadOverlay from 'components/file_upload_overlay.jsx';
 import RhsThread from 'components/rhs_thread';
 import SearchBar from 'components/search_bar';
 import SearchResults from 'components/search_results';
 
-export default class SidebarRight extends React.Component {
+export default class SidebarRight extends React.PureComponent {
     static propTypes = {
         isExpanded: PropTypes.bool.isRequired,
         isOpen: PropTypes.bool.isRequired,
-        currentUser: PropTypes.object,
+        currentUserId: PropTypes.string.isRequired,
         channel: PropTypes.object,
         postRightVisible: PropTypes.bool,
         searchVisible: PropTypes.bool,
@@ -29,48 +27,26 @@ export default class SidebarRight extends React.Component {
         isPinnedPosts: PropTypes.bool,
         previousRhsState: PropTypes.string,
         actions: PropTypes.shape({
-            getPinnedPosts: PropTypes.func.isRequired,
-            getFlaggedPosts: PropTypes.func.isRequired,
             setRhsExpanded: PropTypes.func.isRequired,
+            showPinnedPosts: PropTypes.func.isRequired,
+            scrollPostList: PropTypes.func.isRequired,
         }),
-    }
-
-    constructor(props) {
-        super(props);
-
-        this.plScrolledToBottom = true;
-    }
-
-    componentDidMount() {
-        PostStore.addPostPinnedChangeListener(this.onPostPinnedChange);
-    }
-
-    componentWillUnmount() {
-        PostStore.removePostPinnedChangeListener(this.onPostPinnedChange);
-    }
-
-    UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line camelcase
-        const isOpen = this.props.searchVisible || this.props.postRightVisible;
-        const willOpen = nextProps.searchVisible || nextProps.postRightVisible;
-
-        if (!isOpen && willOpen) {
-            trackEvent('ui', 'ui_rhs_opened');
-        }
-    }
+    };
 
     componentDidUpdate(prevProps) {
+        const wasOpen = prevProps.searchVisible || prevProps.postRightVisible;
         const isOpen = this.props.searchVisible || this.props.postRightVisible;
 
-        const wasOpen = prevProps.searchVisible || prevProps.postRightVisible;
-
-        if (isOpen && !wasOpen) {
-            setTimeout(postListScrollChange, 0);
+        if (!wasOpen && isOpen) {
+            trackEvent('ui', 'ui_rhs_opened');
+            if (Utils.disableVirtList()) {
+                setTimeout(this.props.actions.scrollPostList, 0);
+            }
         }
-    }
 
-    onPostPinnedChange = () => {
-        if (this.props.channel && this.props.isPinnedPosts) {
-            this.props.actions.getPinnedPosts(this.props.channel.id);
+        const {actions, isPinnedPosts, channel} = this.props;
+        if (isPinnedPosts && prevProps.isPinnedPosts === isPinnedPosts && channel.id !== prevProps.channel.id) {
+            actions.showPinnedPosts(channel.id);
         }
     }
 
@@ -81,7 +57,7 @@ export default class SidebarRight extends React.Component {
     render() {
         const {
             channel,
-            currentUser,
+            currentUserId,
             isFlaggedPosts,
             isMentionSearch,
             isPinnedPosts,
@@ -98,7 +74,7 @@ export default class SidebarRight extends React.Component {
         }
 
         var searchForm = null;
-        if (currentUser) {
+        if (currentUserId) {
             searchForm = <SearchBar isFocus={searchVisible && !isFlaggedPosts && !isPinnedPosts}/>;
         }
 
@@ -132,8 +108,7 @@ export default class SidebarRight extends React.Component {
                     <div className='search-bar__container channel-header alt'>{searchForm}</div>
                     <RhsThread
                         previousRhsState={previousRhsState}
-                        isWebrtc={WebrtcStore.isBusy()}
-                        currentUser={currentUser}
+                        currentUserId={currentUserId}
                         toggleSize={this.toggleSize}
                         shrink={this.onShrink}
                     />

@@ -5,9 +5,7 @@ import {Client4} from 'mattermost-redux/client';
 
 import store from 'stores/redux_store.jsx';
 import {ActionTypes} from 'utils/constants.jsx';
-import messageHtmlToComponent from 'utils/message_html_to_component';
 import {getSiteURL} from 'utils/url.jsx';
-import {formatText} from 'utils/text_formatting.jsx';
 import PluginRegistry from 'plugins/registry';
 import {unregisterAllPluginWebSocketEvents, unregisterPluginReconnectHandler} from 'actions/websocket_actions.jsx';
 
@@ -23,15 +21,6 @@ function registerPlugin(id, plugin) {
     window.plugins[id] = plugin;
 }
 window.registerPlugin = registerPlugin;
-
-// Common libraries exposed on window for plugins to use as Webpack externals.
-window.React = require('react');
-window.ReactDOM = require('react-dom');
-window.Redux = require('redux');
-window.ReactRedux = require('react-redux');
-window.ReactBootstrap = require('react-bootstrap');
-window.PostUtils = {formatText, messageHtmlToComponent};
-window.PropTypes = require('prop-types');
 
 // initializePlugins queries the server for all enabled plugins and loads each in turn.
 export async function initializePlugins() {
@@ -49,9 +38,9 @@ export async function initializePlugins() {
         return;
     }
 
-    data.forEach((m) => {
-        loadPlugin(m);
-    });
+    await Promise.all(data.map((m) => {
+        return loadPlugin(m);
+    }));
 }
 
 // getPlugins queries the server for all enabled plugins
@@ -70,27 +59,41 @@ export function getPlugins() {
     };
 }
 
+// loadedPlugins tracks which plugins have been added as script tags to the page
+const loadedPlugins = {};
+
 // loadPlugin fetches the web app bundle described by the given manifest, waits for the bundle to
 // load, and then ensures the plugin has been initialized.
 export function loadPlugin(manifest) {
-    function onLoad() {
-        initializePlugin(manifest);
-        console.log('Loaded ' + manifest.id + ' plugin'); //eslint-disable-line no-console
-    }
+    return new Promise((resolve) => {
+        // Don't load it again if previously loaded
+        if (loadedPlugins[manifest.id]) {
+            resolve();
+            return;
+        }
 
-    // Backwards compatibility for old plugins
-    let bundlePath = manifest.webapp.bundle_path;
-    if (bundlePath.includes('/static/') && !bundlePath.includes('/static/plugins/')) {
-        bundlePath = bundlePath.replace('/static/', '/static/plugins/');
-    }
+        function onLoad() {
+            initializePlugin(manifest);
+            console.log('Loaded ' + manifest.id + ' plugin'); //eslint-disable-line no-console
+            resolve();
+        }
 
-    const script = document.createElement('script');
-    script.id = 'plugin_' + manifest.id;
-    script.type = 'text/javascript';
-    script.src = getSiteURL() + bundlePath;
-    script.onload = onLoad;
-    console.log('Loading ' + manifest.id + ' plugin'); //eslint-disable-line no-console
-    document.getElementsByTagName('head')[0].appendChild(script);
+        // Backwards compatibility for old plugins
+        let bundlePath = manifest.webapp.bundle_path;
+        if (bundlePath.includes('/static/') && !bundlePath.includes('/static/plugins/')) {
+            bundlePath = bundlePath.replace('/static/', '/static/plugins/');
+        }
+
+        const script = document.createElement('script');
+        script.id = 'plugin_' + manifest.id;
+        script.type = 'text/javascript';
+        script.src = getSiteURL() + bundlePath;
+        script.onload = onLoad;
+        console.log('Loading ' + manifest.id + ' plugin'); //eslint-disable-line no-console
+        document.getElementsByTagName('head')[0].appendChild(script);
+
+        loadedPlugins[manifest.id] = true;
+    });
 }
 
 // initializePlugin creates a registry specific to the plugin and invokes any initialize function
@@ -99,7 +102,7 @@ function initializePlugin(manifest) {
     // Initialize the plugin
     const plugin = window.plugins[manifest.id];
     const registry = new PluginRegistry(manifest.id);
-    if (plugin.initialize) {
+    if (plugin && plugin.initialize) {
         plugin.initialize(registry, store);
     }
 }
@@ -109,6 +112,9 @@ function initializePlugin(manifest) {
 // for removing any of its registered components.
 export function removePlugin(manifest) {
     console.log('Removing ' + manifest.id + ' plugin'); //eslint-disable-line no-console
+
+    loadedPlugins[manifest.id] = false;
+
     const plugin = window.plugins[manifest.id];
     if (plugin && plugin.uninitialize) {
         plugin.uninitialize();

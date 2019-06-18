@@ -3,9 +3,11 @@
 
 import * as AdminActions from 'mattermost-redux/actions/admin';
 import * as UserActions from 'mattermost-redux/actions/users';
+import * as TeamActions from 'mattermost-redux/actions/teams';
 import {Client4} from 'mattermost-redux/client';
+import {bindClientFunc} from 'mattermost-redux/actions/helpers';
 
-import {clientLogout} from 'actions/global_actions.jsx';
+import {emitUserLoggedOutEvent} from 'actions/global_actions.jsx';
 import {getOnNavigationConfirmed} from 'selectors/views/admin';
 import store from 'stores/redux_store.jsx';
 import {ActionTypes} from 'utils/constants.jsx';
@@ -105,42 +107,18 @@ export async function samlCertificateStatus(success, error) {
     }
 }
 
-export function getOAuthAppInfo(clientId, success, error) {
-    Client4.getOAuthAppInfo(clientId).then(
-        (data) => {
-            if (success) {
-                success(data);
-            }
-        }
-    ).catch(
-        (err) => {
-            if (error) {
-                error(err);
-            }
-        }
-    );
+export function getOAuthAppInfo(clientId) {
+    return bindClientFunc({
+        clientFunc: Client4.getOAuthAppInfo,
+        params: [clientId],
+    });
 }
 
-export function allowOAuth2(params, success, error) {
-    const responseType = params.get('response_type');
-    const clientId = params.get('client_id');
-    const redirectUri = params.get('redirect_uri');
-    const state = params.get('state');
-    const scope = params.get('scope');
-
-    Client4.authorizeOAuthApp(responseType, clientId, redirectUri, state, scope).then(
-        (data) => {
-            if (success) {
-                success(data);
-            }
-        }
-    ).catch(
-        (err) => {
-            if (error) {
-                error(err);
-            }
-        }
-    );
+export function allowOAuth2({responseType, clientId, redirectUri, state, scope}) {
+    return bindClientFunc({
+        clientFunc: Client4.authorizeOAuthApp,
+        params: [responseType, clientId, redirectUri, state, scope],
+    });
 }
 
 export async function emailToLdap(loginId, password, token, ldapId, ldapPassword, success, error) {
@@ -165,7 +143,7 @@ export async function oauthToEmail(currentService, email, password, success, err
     const {data, error: err} = await UserActions.switchOAuthToEmail(currentService, email, password)(dispatch, getState);
     if (data) {
         if (data.follow_link) {
-            clientLogout(data.follow_link);
+            emitUserLoggedOutEvent(data.follow_link);
         }
         if (success) {
             success(data);
@@ -205,7 +183,7 @@ export async function removeLicenseFile(success, error) {
 export async function uploadPublicSamlCertificate(file, success, error) {
     const {data, error: err} = await AdminActions.uploadPublicSamlCertificate(file)(dispatch, getState);
     if (data && success) {
-        success(data);
+        success('saml-public.crt');
     } else if (err && error) {
         error({id: err.server_error_id, ...err});
     }
@@ -214,7 +192,7 @@ export async function uploadPublicSamlCertificate(file, success, error) {
 export async function uploadPrivateSamlCertificate(file, success, error) {
     const {data, error: err} = await AdminActions.uploadPrivateSamlCertificate(file)(dispatch, getState);
     if (data && success) {
-        success(data);
+        success('saml-private.key');
     } else if (err && error) {
         error({id: err.server_error_id, ...err});
     }
@@ -223,7 +201,7 @@ export async function uploadPrivateSamlCertificate(file, success, error) {
 export async function uploadIdpSamlCertificate(file, success, error) {
     const {data, error: err} = await AdminActions.uploadIdpSamlCertificate(file)(dispatch, getState);
     if (data && success) {
-        success(data);
+        success('saml-idp.crt');
     } else if (err && error) {
         error({id: err.server_error_id, ...err});
     }
@@ -332,4 +310,22 @@ export function confirmNavigation() {
             type: ActionTypes.CONFIRM_NAVIGATION,
         });
     };
+}
+
+export async function invalidateAllEmailInvites(success, error) {
+    const {data, error: err} = await dispatch(TeamActions.invalidateAllEmailInvites());
+    if (data && success) {
+        success(data);
+    } else if (err && error) {
+        error({id: err.server_error_id, ...err});
+    }
+}
+
+export async function testSmtp(success, error) {
+    const {data, error: err} = await dispatch(AdminActions.testEmail());
+    if (data && success) {
+        success(data);
+    } else if (err && error) {
+        error({id: err.server_error_id, ...err});
+    }
 }

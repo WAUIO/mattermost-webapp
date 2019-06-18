@@ -9,8 +9,17 @@ import {FormattedMessage} from 'react-intl';
 import {oauthToEmail} from 'actions/admin_actions.jsx';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
+import {t} from 'utils/i18n.jsx';
+import LocalizedInput from 'components/localized_input/localized_input';
 
-export default class OAuthToEmail extends React.Component {
+export default class OAuthToEmail extends React.PureComponent {
+    static propTypes = {
+        currentType: PropTypes.string,
+        email: PropTypes.string,
+        siteName: PropTypes.string,
+        passwordConfig: PropTypes.object,
+    };
+
     constructor(props) {
         super(props);
 
@@ -50,7 +59,11 @@ export default class OAuthToEmail extends React.Component {
             this.props.currentType,
             this.props.email,
             password,
-            null,
+            (data) => {
+                if (data.follow_link) {
+                    window.location.href = data.follow_link;
+                }
+            },
             (err) => {
                 this.setState({error: err.message});
             }
@@ -97,22 +110,22 @@ export default class OAuthToEmail extends React.Component {
                         />
                     </p>
                     <div className={formClass}>
-                        <input
+                        <LocalizedInput
                             type='password'
                             className='form-control'
                             name='password'
                             ref='password'
-                            placeholder={Utils.localizeMessage('claim.oauth_to_email.newPwd', 'New Password')}
+                            placeholder={{id: t('claim.oauth_to_email.newPwd'), defaultMessage: 'New Password'}}
                             spellCheck='false'
                         />
                     </div>
                     <div className={formClass}>
-                        <input
+                        <LocalizedInput
                             type='password'
                             className='form-control'
                             name='passwordconfirm'
                             ref='passwordconfirm'
-                            placeholder={Utils.localizeMessage('claim.oauth_to_email.confirm', 'Confirm Password')}
+                            placeholder={{id: t('claim.oauth_to_email.confirm'), defaultMessage: 'Confirm Password'}}
                             spellCheck='false'
                         />
                     </div>
@@ -134,10 +147,3 @@ export default class OAuthToEmail extends React.Component {
         );
     }
 }
-
-OAuthToEmail.propTypes = {
-    currentType: PropTypes.string,
-    email: PropTypes.string,
-    siteName: PropTypes.string,
-    passwordConfig: PropTypes.object,
-};

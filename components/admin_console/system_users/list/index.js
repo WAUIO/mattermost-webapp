@@ -5,14 +5,14 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
 import {getUser} from 'mattermost-redux/actions/users';
-import {updateTeamMemberSchemeRoles} from 'mattermost-redux/actions/teams';
 
 import SystemUsersList from './system_users_list.jsx';
-import {getUsers} from './selectors.jsx';
+import {getNonBotUsers} from './selectors.jsx';
 
 function mapStateToProps(state, ownProps) {
+    const users = getNonBotUsers(state, ownProps.loading, ownProps.teamId, ownProps.term, ownProps.filter);
     return {
-        users: getUsers(state, ownProps.loading, ownProps.teamId, ownProps.term),
+        users,
     };
 }
 
@@ -20,7 +20,6 @@ function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
             getUser,
-            updateTeamMemberSchemeRoles,
         }, dispatch),
     };
 }

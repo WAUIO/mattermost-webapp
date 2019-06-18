@@ -12,12 +12,14 @@ import {haveITeamPermission} from 'mattermost-redux/selectors/entities/roles';
 import {Permissions} from 'mattermost-redux/constants';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
+import {loadIncomingHooksAndProfilesForTeam} from 'actions/integration_actions';
+
 import InstalledIncomingWebhooks from './installed_incoming_webhooks.jsx';
 
 function mapStateToProps(state) {
     const config = getConfig(state);
     const teamId = getCurrentTeamId(state);
-    const canManageOthersWebhooks = haveITeamPermission(state, {team: teamId, permission: Permissions.MANAGE_OTHERS_WEBHOOKS});
+    const canManageOthersWebhooks = haveITeamPermission(state, {team: teamId, permission: Permissions.MANAGE_OTHERS_INCOMING_WEBHOOKS});
     const incomingHooks = getIncomingHooks(state);
     const incomingWebhooks = Object.keys(incomingHooks).
         map((key) => incomingHooks[key]).
@@ -37,7 +39,7 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
-            getIncomingHooks: Actions.getIncomingHooks,
+            loadIncomingHooksAndProfilesForTeam,
             removeIncomingHook: Actions.removeIncomingHook,
         }, dispatch),
     };

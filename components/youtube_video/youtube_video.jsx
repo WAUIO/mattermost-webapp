@@ -4,8 +4,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {getYoutubeVideoInfo} from 'actions/integration_actions.jsx';
-import * as Utils from 'utils/utils.jsx';
+import {getYoutubeVideoInfo} from 'actions/integration_actions';
+
+import WarningIcon from 'components/icon/warning_icon';
+
+import * as PostUtils from 'utils/post_utils.jsx';
+import * as Utils from 'utils/utils';
 
 const ytRegex = /(?:http|https):\/\/(?:www\.|m\.)?(?:(?:youtube\.com\/(?:(?:v\/)|(?:(?:watch|embed\/watch)(?:\/|.*v=))|(?:embed\/)|(?:user\/[^/]+\/u\/[0-9]\/)))|(?:youtu\.be\/))([^#&?]*)/;
 
@@ -13,10 +17,10 @@ export default class YoutubeVideo extends React.PureComponent {
     static propTypes = {
         channelId: PropTypes.string.isRequired,
         currentChannelId: PropTypes.string.isRequired,
+        hasImageProxy: PropTypes.bool.isRequired,
         link: PropTypes.string.isRequired,
         show: PropTypes.bool.isRequired,
         googleDeveloperKey: PropTypes.string,
-        onLinkLoaded: PropTypes.func,
     }
 
     constructor(props) {
@@ -105,13 +109,12 @@ export default class YoutubeVideo extends React.PureComponent {
         } else {
             this.loadWithoutKey();
         }
-        this.props.onLinkLoaded();
     }
 
     loadWithoutKey() {
         this.setState({
             loaded: true,
-            thumb: 'https://i.ytimg.com/vi/' + this.state.videoId + '/hqdefault.jpg',
+            thumb: PostUtils.getImageSrc('https://i.ytimg.com/vi/' + this.state.videoId + '/hqdefault.jpg', this.props.hasImageProxy),
         });
     }
 
@@ -142,7 +145,7 @@ export default class YoutubeVideo extends React.PureComponent {
             loaded: true,
             receivedYoutubeData: true,
             title: metadata.title,
-            thumb,
+            thumb: PostUtils.getImageSrc(thumb, this.props.hasImageProxy),
         });
         return null;
     }
@@ -191,10 +194,7 @@ export default class YoutubeVideo extends React.PureComponent {
                     <div className='video-thumbnail__container'>
                         <div className='video-thumbnail__error'>
                             <div>
-                                <i
-                                    className='fa fa-warning fa-2x'
-                                    title={Utils.localizeMessage('generic_icons.warning', 'Warning Icon')}
-                                />
+                                <WarningIcon additionalClassName='fa-2x'/>
                             </div>
                             <div>{Utils.localizeMessage('youtube_video.notFound', 'Video not found')}</div>
                         </div>
@@ -217,6 +217,7 @@ export default class YoutubeVideo extends React.PureComponent {
                 <div className='embed-responsive embed-responsive-4by3 video-div__placeholder'>
                     <div className='video-thumbnail__container'>
                         <img
+                            alt='youtube video thumbnail'
                             className='video-thumbnail'
                             src={this.state.thumb}
                         />

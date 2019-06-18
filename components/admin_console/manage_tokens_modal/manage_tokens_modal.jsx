@@ -4,12 +4,14 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {Modal} from 'react-bootstrap';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 import {Client4} from 'mattermost-redux/client';
 import * as UserUtils from 'mattermost-redux/utils/user_utils';
 
 import RevokeTokenButton from 'components/admin_console/revoke_token_button';
 import LoadingScreen from 'components/loading_screen.jsx';
+
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 
 export default class ManageTokensModal extends React.PureComponent {
     static propTypes = {
@@ -130,6 +132,7 @@ export default class ManageTokensModal extends React.PureComponent {
             <div>
                 <div className='manage-teams__user'>
                     <img
+                        alt={''}
                         className='manage-teams__profile-picture'
                         src={Client4.getProfilePictureUrl(user.id, user.last_picture_update)}
                     />
@@ -143,9 +146,9 @@ export default class ManageTokensModal extends React.PureComponent {
                     </div>
                 </div>
                 <div className='padding-top x2'>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='admin.manage_tokens.userAccessTokensDescription'
-                        defaultMessage='Personal access tokens function similarly to session tokens and can be used by integrations to <a href="https://about.mattermost.com/default-api-authentication" target="_blank">interact with this WAU Chat server</a>. Tokens are disabled if the user is deactivated. Learn more about <a href="https://about.mattermost.com/default-user-access-tokens" target="_blank">personal access tokens</a>.'
+                        defaultMessage='Personal access tokens function similarly to session tokens and can be used by integrations to [interact with this WAU Chat server](!https://about.mattermost.com/default-api-authentication). Tokens are disabled if the user is deactivated. Learn more about [personal access tokens](!https://about.mattermost.com/default-user-access-tokens).'
                     />
                 </div>
                 <div className='manage-teams__teams'>
@@ -161,9 +164,14 @@ export default class ManageTokensModal extends React.PureComponent {
                 show={this.props.show}
                 onHide={this.props.onModalDismissed}
                 dialogClassName='manage-teams'
+                role='dialog'
+                aria-labelledby='manageTokensModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='manageTokensModalLabel'
+                    >
                         <FormattedMessage
                             id='admin.manage_tokens.manageTokensTitle'
                             defaultMessage='Manage Personal Access Tokens'

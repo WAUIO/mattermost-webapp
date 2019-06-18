@@ -4,12 +4,16 @@
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
+import {savePreferences} from 'mattermost-redux/actions/preferences';
 import {getSupportedTimezones} from 'mattermost-redux/actions/general';
 import {autoUpdateTimezone} from 'mattermost-redux/actions/timezone';
 import {getConfig, getSupportedTimezones as getTimezones} from 'mattermost-redux/selectors/entities/general';
 import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
+import {get} from 'mattermost-redux/selectors/entities/preferences';
 import {getUserTimezone} from 'mattermost-redux/selectors/entities/timezone';
 import {getUserCurrentTimezone} from 'mattermost-redux/utils/timezone_utils';
+
+import {Preferences} from 'utils/constants.jsx';
 
 import UserSettingsDisplay from './user_settings_display.jsx';
 
@@ -39,6 +43,12 @@ function mapStateToProps(state) {
         userTimezone,
         shouldAutoUpdateTimezone,
         currentUserTimezone: getUserCurrentTimezone(userTimezone),
+        militaryTime: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.USE_MILITARY_TIME, Preferences.USE_MILITARY_TIME_DEFAULT),
+        teammateNameDisplay: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.NAME_NAME_FORMAT, configTeammateNameDisplay),
+        channelDisplayMode: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.CHANNEL_DISPLAY_MODE, Preferences.CHANNEL_DISPLAY_MODE_DEFAULT),
+        messageDisplay: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.MESSAGE_DISPLAY, Preferences.MESSAGE_DISPLAY_DEFAULT),
+        collapseDisplay: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.COLLAPSE_DISPLAY, Preferences.COLLAPSE_DISPLAY_DEFAULT),
+        linkPreviewDisplay: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.LINK_PREVIEW_DISPLAY, Preferences.LINK_PREVIEW_DISPLAY_DEFAULT),
     };
 }
 
@@ -47,6 +57,7 @@ function mapDispatchToProps(dispatch) {
         actions: bindActionCreators({
             getSupportedTimezones,
             autoUpdateTimezone,
+            savePreferences,
         }, dispatch),
     };
 }

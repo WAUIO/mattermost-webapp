@@ -8,11 +8,8 @@ import {Overlay, OverlayTrigger, Popover, Tooltip} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
 import {browserHistory} from 'utils/browser_history';
-import {openDirectChannelToUser} from 'actions/channel_actions.jsx';
-import ChannelStore from 'stores/channel_store.jsx';
-import TeamStore from 'stores/team_store.jsx';
 import {canManageMembers} from 'utils/channel_utils.jsx';
-import Constants from 'utils/constants.jsx';
+import {Constants} from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 import ChannelInviteModal from 'components/channel_invite_modal';
 import ChannelMembersModal from 'components/channel_members_modal';
@@ -28,8 +25,11 @@ export default class PopoverListMembers extends React.Component {
         users: PropTypes.array.isRequired,
         memberCount: PropTypes.number,
         currentUserId: PropTypes.string.isRequired,
+        teamUrl: PropTypes.string,
         actions: PropTypes.shape({
+            openModal: PropTypes.func.isRequired,
             getProfilesInChannel: PropTypes.func.isRequired,
+            openDirectChannelToUserId: PropTypes.func.isRequired,
         }).isRequired,
     };
 
@@ -62,21 +62,16 @@ export default class PopoverListMembers extends React.Component {
     };
 
     handleShowDirectChannel = (user) => {
+        const {actions} = this.props;
         const teammateId = user.id;
 
         if (teammateId) {
-            openDirectChannelToUser(
-                teammateId,
-                (channel, channelAlreadyExisted) => {
-                    browserHistory.push(TeamStore.getCurrentTeamRelativeUrl() + '/channels/' + channel.name);
-                    if (channelAlreadyExisted) {
-                        this.closePopover();
-                    }
-                },
-                () => {
-                    this.closePopover();
+            actions.openDirectChannelToUserId(teammateId).then(({data}) => {
+                if (data) {
+                    browserHistory.push(this.props.teamUrl + '/channels/' + data.name);
                 }
-            );
+                this.closePopover();
+            });
         }
     };
 
@@ -142,7 +137,7 @@ export default class PopoverListMembers extends React.Component {
             );
 
             const manageMembers = canManageMembers(this.props.channel);
-            const isDefaultChannel = ChannelStore.isDefault(this.props.channel);
+            const isDefaultChannel = this.props.channel.name === Constants.DEFAULT_CHANNEL;
 
             if (isDefaultChannel || !manageMembers) {
                 membersName = (
@@ -185,7 +180,7 @@ export default class PopoverListMembers extends React.Component {
         if (this.state.showChannelMembersModal) {
             channelMembersModal = (
                 <ChannelMembersModal
-                    onModalDismissed={this.hideChannelMembersModal}
+                    onHide={this.hideChannelMembersModal}
                     showInviteModal={this.showChannelInviteModal}
                     channel={this.props.channel}
                 />
@@ -264,6 +259,12 @@ export default class PopoverListMembers extends React.Component {
                     >
                         <div className='more-modal__header'>
                             {title}
+                            {this.props.channel.group_constrained && <div className='subhead'>
+                                <FormattedMessage
+                                    id='channel_header.groupConstrained'
+                                    defaultMessage='Members managed by linked groups.'
+                                />
+                            </div>}
                         </div>
                         <div className='more-modal__body'>
                             <div className='more-modal__list'>

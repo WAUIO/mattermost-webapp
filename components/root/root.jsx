@@ -6,30 +6,24 @@ require('perfect-scrollbar/jquery')($);
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {IntlProvider} from 'react-intl';
 import FastClick from 'fastclick';
 import {Route, Switch, Redirect} from 'react-router-dom';
 import {setUrl} from 'mattermost-redux/actions/general';
 import {setSystemEmojis} from 'mattermost-redux/actions/emojis';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
-import {Client4} from 'mattermost-redux/client';
-import {setLocalizeFunction} from 'mattermost-redux/utils/i18n_utils.js';
 
 import * as UserAgent from 'utils/user_agent.jsx';
 import {EmojiIndicesByAlias} from 'utils/emoji.jsx';
 import {trackLoadTime} from 'actions/diagnostics_actions.jsx';
 import * as GlobalActions from 'actions/global_actions.jsx';
 import BrowserStore from 'stores/browser_store.jsx';
-import ErrorStore from 'stores/error_store.jsx';
-import LocalizationStore from 'stores/localization_store.jsx';
-import UserStore from 'stores/user_store.jsx';
-import {loadMeAndConfig} from 'actions/user_actions.jsx';
 import {loadRecentlyUsedCustomEmojis} from 'actions/emoji_actions.jsx';
 import * as I18n from 'i18n/i18n.jsx';
 import {initializePlugins} from 'plugins';
-import {localizeMessage} from 'utils/utils.jsx';
+import 'plugins/export.js';
 import Constants, {StoragePrefixes} from 'utils/constants.jsx';
 import {HFTRoute, LoggedInHFTRoute} from 'components/header_footer_template_route';
+import IntlProvider from 'components/intl_provider';
 import NeedsTeam from 'components/needs_team';
 import {makeAsyncComponent} from 'components/async_load';
 import loadErrorPage from 'bundle-loader?lazy!components/error_page';
@@ -40,6 +34,7 @@ import loadPasswordResetSendLink from 'bundle-loader?lazy!components/password_re
 import loadPasswordResetForm from 'bundle-loader?lazy!components/password_reset_form';
 import loadSignupController from 'bundle-loader?lazy!components/signup/signup_controller';
 import loadSignupEmail from 'bundle-loader?lazy!components/signup/signup_email';
+import loadTermsOfService from 'bundle-loader?lazy!components/terms_of_service';
 import loadShouldVerifyEmail from 'bundle-loader?lazy!components/should_verify_email';
 import loadDoVerifyEmail from 'bundle-loader?lazy!components/do_verify_email';
 import loadClaimController from 'bundle-loader?lazy!components/claim';
@@ -52,9 +47,11 @@ import loadCreateTeam from 'bundle-loader?lazy!components/create_team';
 import loadMfa from 'bundle-loader?lazy!components/mfa/mfa_controller';
 import store from 'stores/redux_store.jsx';
 import {getSiteURL} from 'utils/url.jsx';
+import {enableDevModeFeatures, isDevMode} from 'utils/utils';
 
 const CreateTeam = makeAsyncComponent(loadCreateTeam);
 const ErrorPage = makeAsyncComponent(loadErrorPage);
+const TermsOfService = makeAsyncComponent(loadTermsOfService);
 const LoginController = makeAsyncComponent(loadLoginController);
 const AdminConsole = makeAsyncComponent(loadAdminConsole);
 const LoggedIn = makeAsyncComponent(loadLoggedIn);
@@ -88,7 +85,10 @@ export default class Root extends React.Component {
         diagnosticsEnabled: PropTypes.bool,
         diagnosticId: PropTypes.string,
         noAccounts: PropTypes.bool,
-        children: PropTypes.object,
+        showTermsOfService: PropTypes.bool,
+        actions: PropTypes.shape({
+            loadMeAndConfig: PropTypes.func.isRequired,
+        }).isRequired,
     }
 
     constructor(props) {
@@ -109,7 +109,7 @@ export default class Root extends React.Component {
                 }
 
                 console.log('detected logout from a different tab'); //eslint-disable-line no-console
-                GlobalActions.emitUserLoggedOutEvent('/', false);
+                GlobalActions.emitUserLoggedOutEvent('/', false, false);
             }
 
             if (e.originalEvent.key === StoragePrefixes.LOGIN && e.originalEvent.storageArea === localStorage && e.originalEvent.newValue) {
@@ -137,23 +137,22 @@ export default class Root extends React.Component {
         // Fastclick
         FastClick.attach(document.body);
 
-        // Loading page so reset connection failure count
-        ErrorStore.setConnectionErrorCount(0);
-
         this.state = {
             configLoaded: false,
-            locale: LocalizationStore.getLocale(),
-            translations: LocalizationStore.getTranslations(),
         };
     }
 
     onConfigLoaded = () => {
+        if (isDevMode()) {
+            enableDevModeFeatures();
+        }
+
         const segmentKey = Constants.DIAGNOSTICS_SEGMENT_KEY;
         const diagnosticId = this.props.diagnosticId;
 
         /*eslint-disable */
-        if (segmentKey != null && segmentKey !== '' && this.props.diagnosticsEnabled) {
-            !function(){var analytics=global.window.analytics=global.window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","group","track","ready","alias","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="3.0.1";
+        if (segmentKey != null && segmentKey !== '' && !segmentKey.startsWith('placeholder') && this.props.diagnosticsEnabled) {
+            !function(){var analytics=global.window.analytics=global.window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","group","track","ready","alias","page","once","off","on"];analytics.factory=function(t){return function(...args){var e=Array.prototype.slice.call(args);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol ? "https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="3.0.1";
                 analytics.load(segmentKey);
 
                 analytics.identify(diagnosticId, {}, {
@@ -188,18 +187,13 @@ export default class Root extends React.Component {
         /*eslint-enable */
 
         const afterIntl = () => {
-            initializePlugins();
-            I18n.doAddLocaleData();
-            setLocalizeFunction(localizeMessage);
+            if (this.props.location.pathname === '/' && this.props.noAccounts) {
+                this.props.history.push('/signup_user_complete');
+            }
 
-            // Setup localization listener
-            LocalizationStore.addChangeListener(this.localizationChanged);
-
-            // Get our localizaiton
-            GlobalActions.loadCurrentLocale();
-
-            this.redirectIfNecessary(this.props);
-            this.setState({configLoaded: true});
+            initializePlugins().then(() => {
+                this.setState({configLoaded: true});
+            });
         };
         if (global.Intl) {
             afterIntl();
@@ -216,27 +210,20 @@ export default class Root extends React.Component {
 
         // redirect to the mobile landing page if the user hasn't seen it before
         if (iosDownloadLink && UserAgent.isIosWeb() && !BrowserStore.hasSeenLandingPage() && !toResetPasswordScreen) {
-            this.props.history.push('/get_ios_app');
+            this.props.history.push('/get_ios_app?redirect_to=' + encodeURIComponent(this.props.location.pathname) + encodeURIComponent(this.props.location.search));
             BrowserStore.setLandingPageSeen(true);
         } else if (androidDownloadLink && UserAgent.isAndroidWeb() && !BrowserStore.hasSeenLandingPage() && !toResetPasswordScreen) {
-            this.props.history.push('/get_android_app');
+            this.props.history.push('/get_android_app?redirect_to=' + encodeURIComponent(this.props.location.pathname) + encodeURIComponent(this.props.location.search));
             BrowserStore.setLandingPageSeen(true);
         }
-    }
-
-    localizationChanged = () => {
-        const locale = LocalizationStore.getLocale();
-
-        Client4.setAcceptLanguage(locale);
-        this.setState({locale, translations: LocalizationStore.getTranslations()});
     }
 
     redirectIfNecessary = (props) => {
         if (props.location.pathname === '/') {
             if (this.props.noAccounts) {
                 this.props.history.push('/signup_user_complete');
-            } else if (UserStore.getCurrentUser()) {
-                GlobalActions.redirectUserToDefaultTeam();
+            } else if (props.showTermsOfService) {
+                this.props.history.push('/terms_of_service');
             }
         }
     }
@@ -246,26 +233,26 @@ export default class Root extends React.Component {
     }
 
     componentDidMount() {
-        loadMeAndConfig(this.onConfigLoaded);
+        this.props.actions.loadMeAndConfig().then((response) => {
+            if (this.props.location.pathname === '/' && response[2] && response[2].data) {
+                GlobalActions.redirectUserToDefaultTeam();
+            }
+            this.onConfigLoaded();
+        });
         trackLoadTime();
     }
 
     componentWillUnmount() {
-        LocalizationStore.removeChangeListener(this.localizationChanged);
         $(window).unbind('storage');
     }
 
     render() {
-        if (this.state.translations == null || this.state.configLoaded === false) {
+        if (!this.state.configLoaded) {
             return <div/>;
         }
 
         return (
-            <IntlProvider
-                locale={this.state.locale}
-                messages={this.state.translations}
-                key={this.state.locale}
-            >
+            <IntlProvider>
                 <Switch>
                     <Route
                         path={'/error'}
@@ -307,6 +294,10 @@ export default class Root extends React.Component {
                         path={'/help'}
                         component={HelpController}
                     />
+                    <LoggedInRoute
+                        path={'/terms_of_service'}
+                        component={TermsOfService}
+                    />
                     <Route
                         path={'/get_ios_app'}
                         component={GetIosApp}
@@ -339,7 +330,12 @@ export default class Root extends React.Component {
                         path={'/:team'}
                         component={NeedsTeam}
                     />
-                    <Redirect to={'/login'}/>
+                    <Redirect
+                        to={{
+                            ...this.props.location,
+                            pathname: '/login',
+                        }}
+                    />
                 </Switch>
             </IntlProvider>
         );

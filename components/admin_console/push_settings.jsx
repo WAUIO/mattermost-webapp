@@ -2,10 +2,12 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
+
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 
 import AdminSettings from './admin_settings.jsx';
 import DropdownSetting from './dropdown_setting.jsx';
@@ -67,7 +69,7 @@ export default class PushSettings extends AdminSettings {
     getConfigFromState(config) {
         config.EmailSettings.SendPushNotifications = this.state.pushNotificationServerType !== PUSH_NOTIFICATIONS_OFF;
         config.EmailSettings.PushNotificationServer = this.state.pushNotificationServer.trim();
-        config.EmailSettings.PushNotificationContents = this.state.pushNotificationContents;
+        config.TeamSettings.MaxNotificationsPerChannel = this.state.maxNotificationsPerChannel;
 
         return config;
     }
@@ -92,10 +94,12 @@ export default class PushSettings extends AdminSettings {
             pushNotificationServer = Constants.MHPNS;
         }
 
+        const maxNotificationsPerChannel = config.TeamSettings.MaxNotificationsPerChannel;
+
         return {
             pushNotificationServerType,
             pushNotificationServer,
-            pushNotificationContents: config.EmailSettings.PushNotificationContents,
+            maxNotificationsPerChannel,
             agree,
         };
     }
@@ -110,8 +114,8 @@ export default class PushSettings extends AdminSettings {
     renderTitle() {
         return (
             <FormattedMessage
-                id='admin.notifications.title'
-                defaultMessage='Notification Settings'
+                id='admin.environment.pushNotificationServer'
+                defaultMessage='Push Notification Server'
             />
         );
     }
@@ -120,39 +124,39 @@ export default class PushSettings extends AdminSettings {
         const pushNotificationServerTypes = [];
         pushNotificationServerTypes.push({value: PUSH_NOTIFICATIONS_OFF, text: Utils.localizeMessage('admin.email.pushOff', 'Do not send push notifications')});
         if (this.props.license.IsLicensed === 'true' && this.props.license.MHPNS === 'true') {
-            pushNotificationServerTypes.push({value: PUSH_NOTIFICATIONS_MHPNS, text: Utils.localizeMessage('admin.email.mhpns', 'Use encrypted, production-quality HPNS connection to iOS and Android apps')});
+            pushNotificationServerTypes.push({value: PUSH_NOTIFICATIONS_MHPNS, text: Utils.localizeMessage('admin.email.mhpns', 'Use HPNS connection with uptime SLA to send notifications to iOS and Android apps')});
         }
-        pushNotificationServerTypes.push({value: PUSH_NOTIFICATIONS_MTPNS, text: Utils.localizeMessage('admin.email.mtpns', 'Use iOS and Android apps on iTunes and Google Play with TPNS')});
+        pushNotificationServerTypes.push({value: PUSH_NOTIFICATIONS_MTPNS, text: Utils.localizeMessage('admin.email.mtpns', 'Use TPNS connection to send notifications to iOS and Android apps')});
         pushNotificationServerTypes.push({value: PUSH_NOTIFICATIONS_CUSTOM, text: Utils.localizeMessage('admin.email.selfPush', 'Manually enter Push Notification Service location')});
 
         let sendHelpText = null;
         let pushServerHelpText = null;
         if (this.state.pushNotificationServerType === PUSH_NOTIFICATIONS_OFF) {
             sendHelpText = (
-                <FormattedHTMLMessage
+                <FormattedMarkdownMessage
                     id='admin.email.pushOffHelp'
-                    defaultMessage='Please see <a href="https://about.mattermost.com/default-mobile-push-notifications/" target="_blank">documentation on push notifications</a> to learn more about setup options.'
+                    defaultMessage='Please see [documentation on push notifications](!https://about.mattermost.com/default-mobile-push-notifications/) to learn more about setup options.'
                 />
             );
         } else if (this.state.pushNotificationServerType === PUSH_NOTIFICATIONS_MHPNS) {
             pushServerHelpText = (
-                <FormattedHTMLMessage
+                <FormattedMarkdownMessage
                     id='admin.email.mhpnsHelp'
-                    defaultMessage='Download <a href="https://about.mattermost.com/mattermost-ios-app/" target="_blank">WAU Chat iOS app</a> from iTunes. Download <a href="https://about.mattermost.com/mattermost-android-app/" target="_blank">WAU Chat Android app</a> from Google Play. Learn more about the <a href="https://about.mattermost.com/default-hpns/" target="_blank">WAU Chat Hosted Push Notification Service</a>.'
+                    defaultMessage='Download [WAU Chat iOS app](!https://about.mattermost.com/mattermost-ios-app/) from iTunes. Download [WAU Chat Android app](!https://about.mattermost.com/mattermost-android-app/) from Google Play. Learn more about the [WAU Chat Hosted Push Notification Service](!https://about.mattermost.com/default-hpns/).'
                 />
             );
         } else if (this.state.pushNotificationServerType === PUSH_NOTIFICATIONS_MTPNS) {
             pushServerHelpText = (
-                <FormattedHTMLMessage
+                <FormattedMarkdownMessage
                     id='admin.email.mtpnsHelp'
-                    defaultMessage='Download <a href="https://about.mattermost.com/mattermost-ios-app/" target="_blank">WAU Chat iOS app</a> from iTunes. Download <a href="https://about.mattermost.com/mattermost-android-app/" target="_blank">WAU Chat Android app</a> from Google Play. Learn more about the <a href="https://about.mattermost.com/default-tpns/" target="_blank">WAU Chat Test Push Notification Service</a>.'
+                    defaultMessage='Download [WAU Chat iOS app](!https://about.mattermost.com/mattermost-ios-app/) from iTunes. Download [WAU Chat Android app](!https://about.mattermost.com/mattermost-android-app/) from Google Play. Learn more about the [WAU Chat Test Push Notification Service](!https://about.mattermost.com/default-tpns/).'
                 />
             );
         } else {
             pushServerHelpText = (
-                <FormattedHTMLMessage
+                <FormattedMarkdownMessage
                     id='admin.email.easHelp'
-                    defaultMessage='Learn more about compiling and deploying your own mobile apps from an <a href="https://about.mattermost.com/default-enterprise-app-store" target="_blank">Enterprise App Store</a>.'
+                    defaultMessage='Learn more about compiling and deploying your own mobile apps from an [Enterprise App Store](!https://about.mattermost.com/default-enterprise-app-store).'
                 />
             );
         }
@@ -169,9 +173,9 @@ export default class PushSettings extends AdminSettings {
                             checked={this.state.agree}
                             onChange={this.handleAgreeChange}
                         />
-                        <FormattedHTMLMessage
+                        <FormattedMarkdownMessage
                             id='admin.email.agreeHPNS'
-                            defaultMessage=' I understand and accept the WAU Chat Hosted Push Notification Service <a href="https://about.mattermost.com/hpns-terms/" target="_blank">Terms of Service</a> and <a href="https://about.mattermost.com/hpns-privacy/" target="_blank">Privacy Policy</a>.'
+                            defaultMessage=' I understand and accept the WAU Chat Hosted Push Notification Service [Terms of Service](!https://about.mattermost.com/hpns-terms/) and [Privacy Policy](!https://about.mattermost.com/hpns-privacy/).'
                         />
                     </div>
                 </div>
@@ -179,14 +183,7 @@ export default class PushSettings extends AdminSettings {
         }
 
         return (
-            <SettingsGroup
-                header={
-                    <FormattedMessage
-                        id='admin.notifications.push'
-                        defaultMessage='Mobile Push'
-                    />
-                }
-            >
+            <SettingsGroup>
                 <DropdownSetting
                     id='pushNotificationServerType'
                     values={pushNotificationServerTypes}
@@ -210,36 +207,32 @@ export default class PushSettings extends AdminSettings {
                             defaultMessage='Push Notification Server:'
                         />
                     }
-                    placeholder={Utils.localizeMessage('admin.email.pushServerEx', 'E.g.: "http://push-test.mattermost.com"')}
+                    placeholder={Utils.localizeMessage('admin.email.pushServerEx', 'E.g.: "https://push-test.mattermost.com"')}
                     helpText={pushServerHelpText}
                     value={this.state.pushNotificationServer}
                     onChange={this.handleChange}
                     disabled={this.state.pushNotificationServerType !== PUSH_NOTIFICATIONS_CUSTOM}
                     setByEnv={this.isSetByEnv('EmailSettings.PushNotificationServer')}
                 />
-                <DropdownSetting
-                    id='pushNotificationContents'
-                    values={[
-                        {value: 'generic_no_channel', text: Utils.localizeMessage('admin.email.genericNoChannelPushNotification', '"Send generic description with only sender name')},
-                        {value: 'generic', text: Utils.localizeMessage('admin.email.genericPushNotification', 'Send generic description with sender and channel names')},
-                        {value: 'full', text: Utils.localizeMessage('admin.email.fullPushNotification', 'Send full message snippet')},
-                    ]}
+                <TextSetting
+                    id='maxNotificationsPerChannel'
+                    type='number'
                     label={
                         <FormattedMessage
-                            id='admin.email.pushContentTitle'
-                            defaultMessage='Push Notification Contents:'
+                            id='admin.team.maxNotificationsPerChannelTitle'
+                            defaultMessage='Max Notifications Per Channel:'
                         />
                     }
-                    value={this.state.pushNotificationContents}
-                    onChange={this.handleDropdownChange}
-                    disabled={this.state.pushNotificationServerType === PUSH_NOTIFICATIONS_OFF}
+                    placeholder={Utils.localizeMessage('admin.team.maxNotificationsPerChannelExample', 'E.g.: "1000"')}
                     helpText={
-                        <FormattedHTMLMessage
-                            id='admin.email.pushContentDesc'
-                            defaultMessage='"Send generic description with only sender name" includes only the name of the person who sent the message in push notifications, with no information about channel name or message contents.<br /><br />"Send generic description with sender and channel names" includes the name of the person who sent the message and the channel it was sent in, but not the message text.<br /><br />"Send full message snippet" includes a message excerpt in push notifications, which may contain confidential information sent in messages. If your Push Notification Service is outside your firewall, it is *highly recommended* this option only be used with an "https" protocol to encrypt the connection.'
+                        <FormattedMarkdownMessage
+                            id='admin.team.maxNotificationsPerChannelDescription'
+                            defaultMessage='Maximum total number of users in a channel before users typing messages, @all, @here, and @channel no longer send notifications because of performance.'
                         />
                     }
-                    setByEnv={this.isSetByEnv('EmailSettings.PushNotificationContents')}
+                    value={this.state.maxNotificationsPerChannel}
+                    onChange={this.handleChange}
+                    setByEnv={this.isSetByEnv('TeamSettings.MaxNotificationsPerChannel')}
                 />
             </SettingsGroup>
         );

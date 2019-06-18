@@ -6,8 +6,7 @@ import {Modal} from 'react-bootstrap';
 import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import PropTypes from 'prop-types';
 
-import WebrtcStore from 'stores/webrtc_store.jsx';
-import Constants, {WebrtcActionTypes} from 'utils/constants.jsx';
+import Constants from 'utils/constants.jsx';
 import {isKeyPressed} from 'utils/utils';
 
 class LeaveTeamModal extends React.PureComponent {
@@ -35,12 +34,6 @@ class LeaveTeamModal extends React.PureComponent {
 
         show: PropTypes.bool.isRequired,
 
-        /**
-         * is the user busy in a video call
-         */
-
-        isBusy: PropTypes.bool.isRequired,
-
         intl: intlShape.isRequired,
 
         actions: PropTypes.shape({
@@ -49,7 +42,7 @@ class LeaveTeamModal extends React.PureComponent {
              * An action to remove user from team
              */
 
-            removeUserFromTeam: PropTypes.func.isRequired,
+            leaveTeam: PropTypes.func.isRequired,
 
             /**
              * An action to toggle the right menu
@@ -75,15 +68,9 @@ class LeaveTeamModal extends React.PureComponent {
         }
     };
 
-    handleSubmit = (e) => {
+    handleSubmit = () => {
         this.props.onHide();
-
-        if (this.props.isBusy) {
-            WebrtcStore.emitChanged({action: WebrtcActionTypes.IN_PROGRESS});
-            e.preventDefault();
-            return;
-        }
-        this.props.actions.removeUserFromTeam(this.props.currentTeamId, this.props.currentUserId);
+        this.props.actions.leaveTeam(this.props.currentTeamId, this.props.currentUserId);
         this.props.actions.toggleSideBarRightMenu();
     };
 
@@ -93,9 +80,15 @@ class LeaveTeamModal extends React.PureComponent {
                 className='modal-confirm'
                 show={this.props.show}
                 onHide={this.props.onHide}
+                id='leaveTeamModal'
+                role='dialog'
+                aria-labelledby='leaveTeamModalLabel'
             >
                 <Modal.Header closeButton={false}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='leaveTeamModalLabel'
+                    >
                         <FormattedMessage
                             id='leave_team_modal.title'
                             defaultMessage='Leave the team?'
@@ -111,8 +104,9 @@ class LeaveTeamModal extends React.PureComponent {
                 <Modal.Footer>
                     <button
                         type='button'
-                        className='btn btn-default'
+                        className='btn btn-link'
                         onClick={this.props.onHide}
+                        id='leaveTeamNo'
                     >
                         <FormattedMessage
                             id='leave_team_modal.no'
@@ -123,6 +117,7 @@ class LeaveTeamModal extends React.PureComponent {
                         type='button'
                         className='btn btn-danger'
                         onClick={this.handleSubmit}
+                        id='leaveTeamYes'
                     >
                         <FormattedMessage
                             id='leave_team_modal.yes'

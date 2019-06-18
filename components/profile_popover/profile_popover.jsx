@@ -4,27 +4,26 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {OverlayTrigger, Popover, Tooltip} from 'react-bootstrap';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, intlShape, injectIntl} from 'react-intl';
+
+import EventEmitter from 'mattermost-redux/utils/event_emitter';
 
 import LocalDateTime from 'components/local_date_time';
+import UserSettingsModal from 'components/user_settings/modal';
 import {browserHistory} from 'utils/browser_history';
-import {openDirectChannelToUser} from 'actions/channel_actions.jsx';
 import * as GlobalActions from 'actions/global_actions.jsx';
-import * as WebrtcActions from 'actions/webrtc_actions.jsx';
-import TeamStore from 'stores/team_store.jsx';
-import UserStore from 'stores/user_store.jsx';
-import WebrtcStore from 'stores/webrtc_store.jsx';
-import Constants from 'utils/constants.jsx';
+import Constants, {ModalIdentifiers, UserStatuses} from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 import Pluggable from 'plugins/pluggable';
 
-const UserStatuses = Constants.UserStatuses;
+import AddUserToChannelModal from 'components/add_user_to_channel_modal';
+import ToggleModalButtonRedux from 'components/toggle_modal_button_redux';
 
 /**
  * The profile popover, or hovercard, that appears with user information when clicking
  * on the username or profile picture of a user.
  */
-class ProfilePopover extends React.Component {
+class ProfilePopover extends React.PureComponent {
     static getComponentName() {
         return 'ProfilePopover';
     }
@@ -39,17 +38,14 @@ class ProfilePopover extends React.Component {
         /**
          * User the popover is being opened for
          */
-        user: PropTypes.object.isRequired,
+        user: PropTypes.object,
 
         /**
          * Status for the user, either 'offline', 'away', 'dnd' or 'online'
          */
         status: PropTypes.string,
 
-        /**
-         * Set to true if the user is in a WebRTC call
-         */
-        isBusy: PropTypes.bool,
+        hideStatus: PropTypes.bool,
 
         /**
          * Function to call to hide the popover
@@ -62,15 +58,51 @@ class ProfilePopover extends React.Component {
          */
         isRHS: PropTypes.bool,
 
+        currentTeamId: PropTypes.string.isRequired,
+
         /**
          * @internal
          */
         hasMention: PropTypes.bool,
 
         /**
-         * Whether or not WebRtc is enabled.
+         * @internal
          */
-        enableWebrtc: PropTypes.bool.isRequired,
+        currentUserId: PropTypes.string.isRequired,
+
+        /**
+         * @internal
+         */
+        teamUrl: PropTypes.string.isRequired,
+
+        /**
+         * @internal
+         */
+        isTeamAdmin: PropTypes.bool.isRequired,
+
+        /**
+         * @internal
+         */
+        isChannelAdmin: PropTypes.bool.isRequired,
+
+        /**
+         * @internal
+         */
+        canManageAnyChannelMembersInCurrentTeam: PropTypes.bool.isRequired,
+
+        /**
+         * @internal
+         */
+        actions: PropTypes.shape({
+            getMembershipForCurrentEntities: PropTypes.func.isRequired,
+            openDirectChannelToUserId: PropTypes.func.isRequired,
+            openModal: PropTypes.func.isRequired,
+        }).isRequired,
+
+        /**
+         * react-intl helper object
+         */
+        intl: intlShape.isRequired,
 
         ...Popover.propTypes,
     }
@@ -78,58 +110,26 @@ class ProfilePopover extends React.Component {
     static defaultProps = {
         isRHS: false,
         hasMention: false,
+        status: UserStatuses.OFFLINE,
     }
 
     constructor(props) {
         super(props);
 
-        this.initWebrtc = this.initWebrtc.bind(this);
         this.handleShowDirectChannel = this.handleShowDirectChannel.bind(this);
         this.handleMentionKeyClick = this.handleMentionKeyClick.bind(this);
         this.handleEditAccountSettings = this.handleEditAccountSettings.bind(this);
         this.state = {
-            currentUserId: UserStore.getCurrentId(),
             loadingDMChannel: -1,
         };
     }
-    shouldComponentUpdate(nextProps) {
-        if (!Utils.areObjectsEqual(nextProps.user, this.props.user)) {
-            return true;
-        }
 
-        if (nextProps.src !== this.props.src) {
-            return true;
-        }
-
-        if (nextProps.status !== this.props.status) {
-            return true;
-        }
-
-        if (nextProps.isBusy !== this.props.isBusy) {
-            return true;
-        }
-
-        // React-Bootstrap Forwarded Props from OverlayTrigger to Popover
-        if (nextProps.arrowOffsetLeft !== this.props.arrowOffsetLeft) {
-            return true;
-        }
-
-        if (nextProps.arrowOffsetTop !== this.props.arrowOffsetTop) {
-            return true;
-        }
-
-        if (nextProps.positionLeft !== this.props.positionLeft) {
-            return true;
-        }
-
-        if (nextProps.positionTop !== this.props.positionTop) {
-            return true;
-        }
-
-        return false;
+    componentDidMount() {
+        this.props.actions.getMembershipForCurrentEntities(this.props.userId);
     }
 
     handleShowDirectChannel(e) {
+        const {actions} = this.props;
         e.preventDefault();
 
         if (!this.props.user) {
@@ -144,9 +144,8 @@ class ProfilePopover extends React.Component {
 
         this.setState({loadingDMChannel: user.id});
 
-        openDirectChannelToUser(
-            user.id,
-            () => {
+        actions.openDirectChannelToUserId(user.id).then((result) => {
+            if (!result.error) {
                 if (Utils.isMobile()) {
                     GlobalActions.emitCloseRightHandSide();
                 }
@@ -154,16 +153,9 @@ class ProfilePopover extends React.Component {
                 if (this.props.hide) {
                     this.props.hide();
                 }
-                browserHistory.push(`${TeamStore.getCurrentTeamRelativeUrl()}/messages/@${user.username}`);
+                browserHistory.push(`${this.props.teamUrl}/messages/@${user.username}`);
             }
-        );
-    }
-
-    initWebrtc() {
-        if (this.props.status !== UserStatuses.OFFLINE && !WebrtcStore.isBusy()) {
-            GlobalActions.emitCloseRightHandSide();
-            WebrtcActions.initWebrtc(this.props.user.id, true);
-        }
+        });
     }
 
     handleMentionKeyClick(e) {
@@ -175,7 +167,7 @@ class ProfilePopover extends React.Component {
         if (this.props.hide) {
             this.props.hide();
         }
-        GlobalActions.emitPopoverMentionKeyClick(this.props.isRHS, this.props.user.username);
+        EventEmitter.emit('mention_key_click', this.props.user.username, this.props.isRHS);
     }
 
     handleEditAccountSettings(e) {
@@ -187,71 +179,36 @@ class ProfilePopover extends React.Component {
         if (this.props.hide) {
             this.props.hide();
         }
-        GlobalActions.showAccountSettingsModal();
+        this.props.actions.openModal({ModalId: ModalIdentifiers.USER_SETTINGS, dialogType: UserSettingsModal});
     }
 
     render() {
+        if (!this.props.user) {
+            return null;
+        }
+
         const popoverProps = Object.assign({}, this.props);
         delete popoverProps.user;
+        delete popoverProps.userId;
         delete popoverProps.src;
         delete popoverProps.status;
+        delete popoverProps.hideStatus;
         delete popoverProps.isBusy;
         delete popoverProps.hide;
         delete popoverProps.isRHS;
         delete popoverProps.hasMention;
         delete popoverProps.dispatch;
-        delete popoverProps.enableWebrtc;
         delete popoverProps.enableTimezone;
+        delete popoverProps.currentUserId;
+        delete popoverProps.currentTeamId;
+        delete popoverProps.teamUrl;
+        delete popoverProps.actions;
+        delete popoverProps.isTeamAdmin;
+        delete popoverProps.isChannelAdmin;
+        delete popoverProps.canManageAnyChannelMembersInCurrentTeam;
+        delete popoverProps.intl;
 
-        let webrtc;
-        const webrtcEnabled = this.props.enableWebrtc && Utils.isUserMediaAvailable();
-        if (webrtcEnabled && this.props.user.id !== this.state.currentUserId) {
-            const isOnline = this.props.status !== UserStatuses.OFFLINE;
-            let webrtcMessage;
-            if (isOnline && !this.props.isBusy) {
-                webrtcMessage = (
-                    <FormattedMessage
-                        id='user_profile.webrtc.call'
-                        defaultMessage='Start Video Call'
-                    />
-                );
-            } else if (this.props.isBusy) {
-                webrtcMessage = (
-                    <FormattedMessage
-                        id='user_profile.webrtc.unavailable'
-                        defaultMessage='New call unavailable until your existing call ends'
-                    />
-                );
-            } else {
-                webrtcMessage = (
-                    <FormattedMessage
-                        id='user_profile.webrtc.offline'
-                        defaultMessage='The user is offline'
-                    />
-                );
-            }
-
-            webrtc = (
-                <div
-                    data-toggle='tooltip'
-                    key='makeCall'
-                    className='popover__row'
-                >
-                    <a
-                        href='#'
-                        className='text-nowrap user-popover__email'
-                        onClick={this.initWebrtc}
-                        disabled={!isOnline}
-                    >
-                        <i
-                            className='fa fa-video-camera'
-                            title={Utils.localizeMessage('webrtc.icon', 'Webrtc Icon')}
-                        />
-                        {webrtcMessage}
-                    </a>
-                </div>
-            );
-        }
+        const {formatMessage} = this.props.intl;
 
         var dataContent = [];
         dataContent.push(
@@ -266,16 +223,26 @@ class ProfilePopover extends React.Component {
         );
 
         const fullname = Utils.getFullName(this.props.user);
+
+        if (fullname || this.props.user.position) {
+            dataContent.push(
+                <hr
+                    key='user-popover-hr'
+                    className='divider divider--expanded'
+                />
+            );
+        }
+
         if (fullname) {
             dataContent.push(
                 <OverlayTrigger
-                    delayShow={Constants.WEBRTC_TIME_DELAY}
+                    delayShow={Constants.OVERLAY_TIME_DELAY}
                     placement='top'
                     overlay={<Tooltip id='fullNameTooltip'>{fullname}</Tooltip>}
                     key='user-popover-fullname'
                 >
                     <div
-                        className='overflow--ellipsis text-nowrap padding-top'
+                        className='overflow--ellipsis text-nowrap'
                     >
                         <strong>{fullname}</strong>
                     </div>
@@ -283,17 +250,28 @@ class ProfilePopover extends React.Component {
             );
         }
 
+        if (this.props.user.is_bot) {
+            dataContent.push(
+                <div
+                    key='bot-description'
+                    className='overflow--ellipsis text-nowrap'
+                >
+                    {this.props.user.bot_description}
+                </div>
+            );
+        }
+
         if (this.props.user.position) {
             const position = this.props.user.position.substring(0, Constants.MAX_POSITION_LENGTH);
             dataContent.push(
                 <OverlayTrigger
-                    delayShow={Constants.WEBRTC_TIME_DELAY}
+                    delayShow={Constants.OVERLAY_TIME_DELAY}
                     placement='top'
                     overlay={<Tooltip id='positionTooltip'>{position}</Tooltip>}
                     key='user-popover-position'
                 >
                     <div
-                        className='overflow--ellipsis text-nowrap padding-bottom half'
+                        className='overflow--ellipsis text-nowrap padding-bottom padding-top half'
                     >
                         {position}
                     </div>
@@ -302,10 +280,10 @@ class ProfilePopover extends React.Component {
         }
 
         const email = this.props.user.email;
-        if (email) {
+        if (email && !this.props.user.is_bot) {
             dataContent.push(
                 <hr
-                    key='user-popover-hr'
+                    key='user-popover-hr2'
                     className='divider divider--expanded'
                 />
             );
@@ -331,7 +309,7 @@ class ProfilePopover extends React.Component {
                 key='profilePopoverPluggable2'
                 pluggableName='PopoverUserAttributes'
                 user={this.props.user}
-                status={this.props.status}
+                status={this.props.hideStatus ? null : this.props.status}
             />
         );
 
@@ -350,7 +328,7 @@ class ProfilePopover extends React.Component {
             );
         }
 
-        if (this.props.user.id === UserStore.getCurrentId()) {
+        if (this.props.user.id === this.props.currentUserId) {
             dataContent.push(
                 <div
                     data-toggle='tooltip'
@@ -363,7 +341,7 @@ class ProfilePopover extends React.Component {
                     >
                         <i
                             className='fa fa-pencil-square-o'
-                            title={Utils.localizeMessage('generic_icons.edit', 'Edit Icon')}
+                            title={formatMessage({id: 'generic_icons.edit', defaultMessage: 'Edit Icon'})}
                         />
                         <FormattedMessage
                             id='user_profile.account.editSettings'
@@ -374,7 +352,7 @@ class ProfilePopover extends React.Component {
             );
         }
 
-        if (this.props.user.id !== UserStore.getCurrentId()) {
+        if (this.props.user.id !== this.props.currentUserId) {
             dataContent.push(
                 <div
                     data-toggle='tooltip'
@@ -388,7 +366,7 @@ class ProfilePopover extends React.Component {
                     >
                         <i
                             className='fa fa-paper-plane'
-                            title={Utils.localizeMessage('user_profile.send.dm.icon', 'Send Message Icon')}
+                            title={formatMessage({id: 'user_profile.send.dm.icon', defaultMessage: 'Send Message Icon'})}
                         />
                         <FormattedMessage
                             id='user_profile.send.dm'
@@ -397,7 +375,39 @@ class ProfilePopover extends React.Component {
                     </a>
                 </div>
             );
-            dataContent.push(webrtc);
+
+            if (this.props.canManageAnyChannelMembersInCurrentTeam) {
+                dataContent.push(
+                    <div
+                        data-toggle='tooltip'
+                        className='popover__row first'
+                        key='user-popover-add-to-channel'
+                    >
+                        <a
+                            href='#'
+                            className='text-nowrap'
+                        >
+                            <ToggleModalButtonRedux
+                                ref='addUserToChannelModalButton'
+                                modalId={ModalIdentifiers.ADD_USER_TO_CHANNEL}
+                                role='menuitem'
+                                dialogType={AddUserToChannelModal}
+                                dialogProps={{user: this.props.user}}
+                                onClick={this.props.hide}
+                            >
+                                <i
+                                    className='fa fa-user-plus'
+                                    title={formatMessage({id: 'user_profile.add_user_to_channel.icon', defaultMessage: 'Add User to Channel Icon'})}
+                                />
+                                <FormattedMessage
+                                    id='user_profile.add_user_to_channel'
+                                    defaultMessage='Add to a Channel'
+                                />
+                            </ToggleModalButtonRedux>
+                        </a>
+                    </div>
+                );
+            }
         }
 
         dataContent.push(
@@ -405,14 +415,33 @@ class ProfilePopover extends React.Component {
                 key='profilePopoverPluggable3'
                 pluggableName='PopoverUserActions'
                 user={this.props.user}
-                status={this.props.status}
+                status={this.props.hideStatus ? null : this.props.status}
             />
         );
+
+        let roleTitle;
+        if (this.props.user.is_bot) {
+            roleTitle = <span className='user-popover__role'>{Utils.localizeMessage('bots.is_bot', 'BOT')}</span>;
+        } else if (Utils.isSystemAdmin(this.props.user.roles)) {
+            roleTitle = <span className='user-popover__role'>{Utils.localizeMessage('admin.permissions.roles.system_admin.name', 'System Admin')}</span>;
+        } else if (this.props.isTeamAdmin) {
+            roleTitle = <span className='user-popover__role'>{Utils.localizeMessage('admin.permissions.roles.team_admin.name', 'Team Admin')}</span>;
+        } else if (this.props.isChannelAdmin) {
+            roleTitle = <span className='user-popover__role'>{Utils.localizeMessage('admin.permissions.roles.channel_admin.name', 'Channel Admin')}</span>;
+        }
 
         let title = `@${this.props.user.username}`;
         if (this.props.hasMention) {
             title = <a onClick={this.handleMentionKeyClick}>{title}</a>;
         }
+        title = (
+            <span>
+                <span className='user-popover__username'>
+                    {title}
+                </span>
+                {roleTitle}
+            </span>
+        );
 
         return (
             <Popover
@@ -428,4 +457,4 @@ class ProfilePopover extends React.Component {
 
 delete ProfilePopover.propTypes.id;
 
-export default ProfilePopover;
+export default injectIntl(ProfilePopover);

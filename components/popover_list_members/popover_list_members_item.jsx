@@ -10,6 +10,7 @@ import ProfilePicture from 'components/profile_picture';
 import MessageIcon from 'components/svg/message_icon';
 import {UserStatuses} from 'utils/constants';
 import * as Utils from 'utils/utils.jsx';
+import BotBadge from 'components/widgets/badges/bot_badge.jsx';
 
 export default class PopoverListMembersItem extends React.PureComponent {
     static propTypes = {
@@ -47,21 +48,29 @@ export default class PopoverListMembersItem extends React.PureComponent {
             );
         }
 
+        const botClass = this.props.user.is_bot ? ' more-modal__row--bot' : '';
+
+        const status = this.props.user.is_bot ? null : this.props.status;
+
         return (
             <div
-                className='more-modal__row'
+                className={'more-modal__row' + botClass}
                 onClick={this.handleClick}
             >
                 <ProfilePicture
                     src={Client4.getProfilePictureUrl(this.props.user.id, this.props.user.last_picture_update)}
-                    status={this.props.status}
+                    status={status}
                     width='32'
                     height='32'
                 />
-                <div className='more-modal__details'>
+                <div className='more-modal__details d-flex whitespace--nowrap'>
                     <div className='more-modal__name'>
                         {name}
                     </div>
+                    <BotBadge
+                        show={Boolean(this.props.user.is_bot)}
+                        className='badge-popoverlist'
+                    />
                 </div>
                 <div className='more-modal__actions'>
                     {messageIcon}

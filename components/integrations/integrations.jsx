@@ -7,6 +7,8 @@ import {FormattedMessage} from 'react-intl';
 
 import {Permissions} from 'mattermost-redux/constants';
 
+import BotAccountsIcon from 'images/bot_default_icon.png';
+
 import * as Utils from 'utils/utils.jsx';
 import IncomingWebhookIcon from 'images/incoming_webhook.jpg';
 import OAuthIcon from 'images/oauth_icon.png';
@@ -28,7 +30,6 @@ export default class Integrations extends React.Component {
             enableOutgoingWebhooks: PropTypes.bool,
             enableCommands: PropTypes.bool,
             enableOAuthServiceProvider: PropTypes.bool,
-            enableOnlyAdminIntegrations: PropTypes.bool,
         };
     }
 
@@ -48,7 +49,7 @@ export default class Integrations extends React.Component {
             options.push(
                 <TeamPermissionGate
                     teamId={this.props.team.id}
-                    permissions={[Permissions.MANAGE_WEBHOOKS]}
+                    permissions={[Permissions.MANAGE_INCOMING_WEBHOOKS]}
                     key='incomingWebhookPermission'
                 >
                     <IntegrationOption
@@ -76,7 +77,7 @@ export default class Integrations extends React.Component {
             options.push(
                 <TeamPermissionGate
                     teamId={this.props.team.id}
-                    permissions={[Permissions.MANAGE_WEBHOOKS]}
+                    permissions={[Permissions.MANAGE_OUTGOING_WEBHOOKS]}
                     key='outgoingWebhookPermission'
                 >
                     <IntegrationOption
@@ -155,6 +156,30 @@ export default class Integrations extends React.Component {
             );
         }
 
+        options.push(
+            <SystemPermissionGate
+                permissions={['manage_bots']}
+                key='botsPermissions'
+            >
+                <IntegrationOption
+                    image={BotAccountsIcon}
+                    title={
+                        <FormattedMessage
+                            id='bots.manage.header'
+                            defaultMessage='Bot Accounts'
+                        />
+                    }
+                    description={
+                        <FormattedMessage
+                            id='bots.manage.description'
+                            defaultMessage='Use bot accounts to integrate with Mattermost through plugins or the API'
+                        />
+                    }
+                    link={'/' + this.props.team.name + '/integrations/bots'}
+                />
+            </SystemPermissionGate>
+        );
+
         return (
             <div className='backstage-content row'>
                 <div className='backstage-header'>
@@ -185,7 +210,7 @@ export default class Integrations extends React.Component {
                         }}
                     />
                 </div>
-                <div>
+                <div className='integrations-list d-flex flex-wrap'>
                     {options}
                 </div>
             </div>

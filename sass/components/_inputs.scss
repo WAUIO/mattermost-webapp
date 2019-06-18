@@ -1,5 +1,42 @@
 @charset 'UTF-8';
 
+.help-text {
+    display: block;
+    margin: 10px 0 0;
+    color: $dark-gray;
+
+    &.no-margin {
+        margin: 0;
+    }
+
+    &.no-margin--top {
+        margin-top: 0;
+    }
+
+    ul,
+    ol {
+        padding-left: 23px;
+    }
+
+    a {
+        opacity: .5;
+    }
+
+    .help-link {
+        margin-right: 5px;
+    }
+
+    .btn {
+        font-size: 13px;
+    }
+
+    &.remove-filename {
+        margin-bottom: 5px;
+        position: relative;
+        top: -2px;
+    }
+}
+
 .form-control {
     @include border-radius($border-rad);
 

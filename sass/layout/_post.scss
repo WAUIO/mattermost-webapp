@@ -26,13 +26,36 @@
     min-height: 37px;
     position: relative;
 
+    &.textarea-wrapper--preview {
+        > div {
+            &:first-child {
+                display: none;
+            }
+        }
+    }
+
     .textbox-preview-area {
+        white-space: normal;
         box-shadow: none;
         left: 0;
-        position: absolute;
+        position: relative;
         top: 0;
-        white-space: normal;
         z-index: 2;
+
+        p {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        ul + p,
+        ol + p {
+            margin-top: .6em;
+        }
+
+        p + ul,
+        p + ol {
+            margin-top: .6em;
+        }
     }
 
     .help__text {
@@ -270,15 +293,24 @@
     }
 
     .post-list-holder-by-time {
-        -webkit-overflow-scrolling: touch;
         height: 100%;
-        overflow-y: scroll;
-        padding: 1em 0 0;
-        position: absolute;
         width: 100%;
-
+        position: absolute;
         &.active {
             display: inline;
+        }
+        &.normal_post_list {
+            overflow-y: scroll;
+            padding: 1em 0 0;
+            .post-list__table {
+                display: table;
+            }
+            .post-list__content {
+                vertical-align: bottom;
+                height: unset;
+                padding: 14px 0px 7px;
+                display: table-cell;
+            }
         }
     }
 
@@ -320,7 +352,10 @@
             @include border-radius(50px);
             cursor: pointer;
             display: inline-block;
-            padding: 4px 20px 3px;
+            padding: 0 20px;
+            height: 28px;
+            display: flex;
+            align-items: center;
         }
 
         &.visible {
@@ -402,7 +437,7 @@
 .post-create__container {
     @include flex(0 0 auto);
     width: 100%;
-    z-index: 7;
+    z-index: 10;
 
     label {
         font-weight: normal;
@@ -420,7 +455,7 @@
 
     .custom-textarea {
         bottom: 0;
-        max-height: 162px;
+        max-height: calc(50vh - 40px);
         overflow: hidden;
         padding: 12px 0 12px 15px;
         resize: none;
@@ -430,7 +465,7 @@
         }
 
         &.custom-textarea--emoji-picker {
-            padding-right: 80px;
+            padding-right: 90px;
         }
 
         &.textbox-preview-area {
@@ -677,17 +712,12 @@
 }
 
 .post-list__table {
-    @include clearfix;
-    display: table;
     height: 100%;
-    min-height: 350px;
-    padding-bottom: .5em;
-    table-layout: fixed;
     width: 100%;
 
     .post-list__content {
-        display: table-cell;
-        vertical-align: bottom;
+        height: 100%;
+        overflow: hidden;
 
         .dropdown-menu {
             &.bottom {
@@ -696,12 +726,20 @@
             }
         }
     }
+    .loading-screen {
+        position: relative;
+        height: 40px;
+        padding: 0px;
+        .loading__content {
+            height: 40px;
+        }
+    }
 }
 
 .post {
     @include legacy-pie-clearfix;
     max-width: 100%;
-    padding: 8px .5em 0 1em;
+    padding: 8px .5em 0 1.5em; // If this needs to be changed then .post-row__padding needs to be adjusted accordingly
     position: relative;
     word-wrap: break-word;
 
@@ -741,6 +779,7 @@
         .flag-icon__container,
         .post__reply,
         .post-reaction,
+        .post__dropdown,
         .post__remove {
             visibility: visible;
         }
@@ -762,6 +801,7 @@
         .comment-icon__container,
         .post__reply,
         .post__remove,
+        .post__dropdown,
         .reacticon__container,
         .permalink-icon {
             visibility: visible;
@@ -786,6 +826,41 @@
         .post__header {
             .col__reply {
                 display: none;
+            }
+        }
+    }
+
+    &.post--thread {
+        &.same--user {
+            padding: 0 .5em 0 1em;
+
+            .post__header {
+                margin-bottom: 0;
+
+                .post__header--info {
+                    position: absolute;
+                    left: -5px;
+
+                    .post__time {
+                        font-size: 0.7em;
+                        display: inline-block;
+                        left: -14px;
+                        line-height: 20px;
+                        position: absolute;
+                        text-align: right;
+                        text-rendering: auto;
+                        top: 4px;
+                        width: 51px;
+
+                    }
+
+                    .flag-icon__container {
+                        left: 32px;
+                        margin-left: 7px;
+                        position: absolute;
+                        top: 6px;
+                    }
+                }
             }
         }
     }
@@ -891,6 +966,7 @@
         blockquote {
             display: flex;
             padding: 3px 0px 3px 20px;
+            flex-direction: column;
 
             &:before {
                 font-size: 15px;
@@ -912,7 +988,7 @@
         }
 
         .post__header {
-            display: block;
+            display: flex;
             height: 22px;
             margin-bottom: 0;
             padding: 0;
@@ -944,7 +1020,7 @@
                 padding-left: 20px;
             }
 
-            div {
+            div:not(.image-loading__container) {
                 margin-bottom: 0;
             }
 
@@ -1088,7 +1164,7 @@
 
     &.same--root {
         &.same--user {
-            padding: 0 .5em 0 1em;
+            padding: 0 .5em 0 1.5em;
 
             &:hover,
             &.post--hovered {
@@ -1098,7 +1174,7 @@
             }
 
             .flag-icon__container {
-                left: 36px;
+                left: 32px;
                 margin-left: 7px;
                 position: absolute;
                 top: 6px;
@@ -1171,7 +1247,7 @@
     .post__content {
         display: table;
         margin: 0 auto;
-        padding: 0 5px;
+        padding: 0 8px 0 5px;
         position: relative;
         table-layout: fixed;
         width: 100%;
@@ -1186,10 +1262,16 @@
         max-width: 1000px;
     }
 
+    &:hover {
+        .post__header {
+            padding: 0 55px 0 0;
+        }
+    }
+
     .post__header {
         display: flex;
         margin-bottom: 2px;
-        padding: 0 70px 0 0;
+        padding: 0 40px 0 0;
         white-space: nowrap;
         width: 100%;
 
@@ -1199,6 +1281,7 @@
         }
 
         .col__name {
+            display: flex;
             font-weight: 600;
             margin-right: 7px;
             overflow: hidden;
@@ -1245,6 +1328,7 @@
                 justify-content: flex-end;
                 padding: 0 4px 0 0;
                 width: auto;
+                align-items: center;
             }
 
             .dropdown {
@@ -1252,6 +1336,7 @@
                     display: flex;
                     flex: 1;
                     justify-content: center;
+                    align-items: center;
                 }
             }
 
@@ -1261,6 +1346,7 @@
                 flex: 1;
                 margin: 0;
                 top: 0;
+                align-items: center;
             }
 
             .reacticon__container {
@@ -1387,6 +1473,7 @@
         text-decoration: none;
         vertical-align: middle;
         width: 100%;
+        visibility: hidden;
 
         &:after {
             content: '...';
@@ -1448,9 +1535,6 @@
         ul,
         ol {
             font-size: 13.5px;
-            margin-bottom: .11em;
-            margin-top: 3px;
-            padding-left: 22px;
 
             p {
                 margin-bottom: 0;
@@ -1606,7 +1690,7 @@
         margin: 0;
         text-rendering: auto;
         position: relative;
-        z-index: 5;
+        z-index: 2;
 
         &.pull-left {
             margin: 4px 5px 0 0;
@@ -1666,6 +1750,18 @@
 
     .post-waiting {
         color: #999999;
+        position: relative;
+
+        .spinner {
+            width: 20px;
+            position: absolute;
+            right: 8px;
+            top: 4px;
+        }
+
+        .post-message {
+            padding-right: 24px;
+        }
     }
 
     .permalink-icon {
@@ -1807,7 +1903,6 @@
     }
 }
 
-.bot-indicator,
 .post__pinned-badge {
     border-radius: 2px;
     font-family: inherit;
@@ -1816,8 +1911,21 @@
     padding: 1px 4px;
 }
 
-.bot-indicator {
-    margin: 2px 10px 0 -4px;
+.Badge {
+    &.badge-autocomplete {
+        margin: 0px 4px;
+        padding: 0px 5px;
+        display: inline;
+    }
+    &.badge-popoverlist {
+        margin: 0px 4px;
+        display: inline;
+    }
+    &.badge-admin {
+        margin: 0px 4px;
+        background: rgba(61, 60, 64, 0.15);
+        display: inline;
+    }
 }
 
 .post__pinned-badge {
@@ -1842,12 +1950,16 @@
 
 .post-collapse {
     bottom: 0;
+    pointer-events: none;
     position: absolute;
     width: 100%;
 
     .post-collapse__gradient, .post-attachment-collapse__gradient {
-        pointer-events: none;
         position: relative;
+    }
+
+    .post-collapse__show-more, .post-attachment-collapse__show-more {
+        pointer-events: auto;
     }
 }
 
@@ -1905,6 +2017,17 @@
         // components/post/post_message_view/post_message_view.jsx must
         // be changed to match it
         max-height: 600px;
+        .all-emoji {
+            .emoticon {
+                min-height: 32px;
+                min-width: 32px;
+                vertical-align: top;
+            }
+            .emoticon--unicode {
+                font-size: 32px;
+                line-height: 1.1;
+            }
+        }
     }
 
     .post-collapse__gradient, .post-attachment-collapse__gradient {
@@ -1923,6 +2046,7 @@
 
     .post-collapse__show-more, .post-attachment-collapse__show-more {
         position: relative;
+        padding-top: 10px;
     }
 
     .post-collapse__gradient, .post-attachment-collapse__gradient {
@@ -1941,5 +2065,37 @@
     position: absolute;
     right: 0;
     top: 0;
-    width: 100%;
+    width: 0;
+}
+
+.post-row__padding {
+    &.bottom > div:not(.post) {
+        padding-bottom: 1em;
+    }
+    &.top > div:not(.post) {
+        padding-top: 1em;
+    }
+
+    &.top .post {
+        padding-top: 22px; // this is based off of 8px padding for post + 1em
+        &.same--root.same--user {
+            padding-top: 1em;
+        }
+    }
+
+    &.bottom .post {
+        padding-bottom: 1em;
+        &.same--root.same--user {
+            padding-bottom: 1em;
+        }
+    }
+}
+
+.post-list__dynamic {
+    .date-separator, .new-separator {
+        z-index: 1;
+        height: 1px;
+        margin-bottom: 1em;
+        margin-top: -1em;
+    }
 }

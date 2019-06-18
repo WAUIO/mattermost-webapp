@@ -2,31 +2,29 @@
 // See LICENSE.txt for license information.
 
 import {connect} from 'react-redux';
-import {getTeamByName} from 'mattermost-redux/selectors/entities/teams';
 
-import Constants from 'utils/constants';
-import {getGlobalItem} from 'selectors/storage';
+import {getTeamByName} from 'mattermost-redux/selectors/entities/teams';
+import {getRedirectChannelNameForTeam} from 'mattermost-redux/selectors/entities/channels';
+
 import {getIsRhsOpen, getIsRhsMenuOpen} from 'selectors/rhs';
 import {getIsLhsOpen} from 'selectors/lhs';
-import {getIsWebrtcOpen} from 'selectors/webrtc';
+import {getLastViewedChannelNameByTeamName} from 'selectors/local_storage';
 
 import CenterChannel from './center_channel';
 
-const getLastChannelPath = (state, teamName) => {
-    const team = getTeamByName(state, teamName);
-
-    if (team) {
-        return getGlobalItem(state, Constants.PREV_CHANNEL_KEY + team.id, Constants.DEFAULT_CHANNEL);
+const mapStateToProps = (state, ownProps) => {
+    let channelName = getLastViewedChannelNameByTeamName(state, ownProps.match.params.team);
+    if (!channelName) {
+        const team = getTeamByName(state, ownProps.match.params.team);
+        channelName = getRedirectChannelNameForTeam(state, team.id);
     }
-    return Constants.DEFAULT_CHANNEL;
+    const lastChannelPath = `${ownProps.match.url}/channels/${channelName}`;
+    return {
+        lastChannelPath,
+        lhsOpen: getIsLhsOpen(state),
+        rhsOpen: getIsRhsOpen(state),
+        rhsMenuOpen: getIsRhsMenuOpen(state),
+    };
 };
-
-const mapStateToProps = (state, ownProps) => ({
-    lastChannelPath: `${ownProps.match.url}/channels/${getLastChannelPath(state, ownProps.match.params.team)}`,
-    lhsOpen: getIsLhsOpen(state),
-    rhsOpen: getIsRhsOpen(state),
-    rhsMenuOpen: getIsRhsMenuOpen(state),
-    webRtcOpen: getIsWebrtcOpen(state),
-});
 
 export default connect(mapStateToProps)(CenterChannel);

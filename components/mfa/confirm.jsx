@@ -2,11 +2,14 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 
-import {loadMe} from 'actions/user_actions.jsx';
 import Constants from 'utils/constants.jsx';
-import Utils from 'utils/utils.jsx';
+import {isKeyPressed} from 'utils/utils.jsx';
+
+import {redirectUserToDefaultTeam} from 'actions/global_actions.jsx';
+
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 
 const KeyCodes = Constants.KeyCodes;
 
@@ -21,13 +24,11 @@ export default class Confirm extends React.Component {
 
     submit = (e) => {
         e.preventDefault();
-        loadMe().then(() => {
-            this.props.history.push('/');
-        });
+        redirectUserToDefaultTeam();
     }
 
     onKeyPress = (e) => {
-        if (Utils.isKeyPressed(e, KeyCodes.ENTER)) {
+        if (isKeyPressed(e, KeyCodes.ENTER)) {
             this.submit(e);
         }
     }
@@ -41,9 +42,9 @@ export default class Confirm extends React.Component {
                     className='form-group'
                 >
                     <p>
-                        <FormattedHTMLMessage
+                        <FormattedMarkdownMessage
                             id='mfa.confirm.complete'
-                            defaultMessage='<strong>Set up complete!</strong>'
+                            defaultMessage='**Set up complete!**'
                         />
                     </p>
                     <p>
@@ -66,8 +67,3 @@ export default class Confirm extends React.Component {
         );
     }
 }
-
-Confirm.defaultProps = {
-};
-Confirm.propTypes = {
-};

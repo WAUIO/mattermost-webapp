@@ -7,7 +7,6 @@ import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 import {Link} from 'react-router-dom';
 
 import {mark, trackEvent} from 'actions/diagnostics_actions.jsx';
-import {switchTeams} from 'actions/team_actions.jsx';
 import Constants from 'utils/constants.jsx';
 import {isDesktopApp} from 'utils/user_agent.jsx';
 import {localizeMessage} from 'utils/utils.jsx';
@@ -25,7 +24,7 @@ export default class TeamButton extends React.Component {
         e.preventDefault();
         mark('TeamLink#click');
         trackEvent('ui', 'ui_team_sidebar_switch_team');
-        switchTeams(this.props.url);
+        this.props.switchTeam(this.props.url);
     }
 
     handleDisabled(e) {
@@ -46,12 +45,11 @@ export default class TeamButton extends React.Component {
 
             if (this.props.mentions) {
                 badge = (
-                    <span className={`badge pull-right small ${teamIconUrl ? 'stroked' : ''}`}>{this.props.mentions}</span>
+                    <span className={'badge pull-right small'}>{this.props.mentions}</span>
                 );
             }
         }
 
-        let btn;
         let content = this.props.content;
 
         if (!content) {
@@ -78,33 +76,24 @@ export default class TeamButton extends React.Component {
             }
         }
 
-        if (this.props.isMobile) {
-            btn = (
+        const toolTip = this.props.tip || localizeMessage('team.button.name_undefined', 'Name undefined');
+        const btn = (
+            <OverlayTrigger
+                trigger={['hover', 'focus']}
+                delayShow={Constants.OVERLAY_TIME_DELAY}
+                placement={this.props.placement}
+                overlay={
+                    <Tooltip id={`tooltip-${this.props.url}`}>
+                        {toolTip}
+                    </Tooltip>
+                }
+            >
                 <div className={'team-btn ' + btnClass}>
                     {badge}
                     {content}
                 </div>
-            );
-        } else {
-            const toolTip = this.props.tip || localizeMessage('team.button.name_undefined', 'Name undefined');
-            btn = (
-                <OverlayTrigger
-                    trigger={['hover', 'focus']}
-                    delayShow={Constants.OVERLAY_TIME_DELAY}
-                    placement={this.props.placement}
-                    overlay={
-                        <Tooltip id={`tooltip-${this.props.url}`}>
-                            {toolTip}
-                        </Tooltip>
-                    }
-                >
-                    <div className={'team-btn ' + btnClass}>
-                        {badge}
-                        {content}
-                    </div>
-                </OverlayTrigger>
-            );
-        }
+            </OverlayTrigger>
+        );
 
         let teamButton;
         if (isDesktopApp()) {
@@ -131,6 +120,7 @@ export default class TeamButton extends React.Component {
         } else {
             teamButton = (
                 <Link
+                    id={`${this.props.url.slice(1)}TeamButton`}
                     className={disabled}
                     to={this.props.url}
                     onClick={handleClick}
@@ -168,9 +158,9 @@ TeamButton.propTypes = {
     tip: PropTypes.node.isRequired,
     active: PropTypes.bool,
     disabled: PropTypes.bool,
-    isMobile: PropTypes.bool,
     unread: PropTypes.bool,
     mentions: PropTypes.number,
     placement: PropTypes.oneOf(['left', 'right', 'top', 'bottom']),
     teamIconUrl: PropTypes.string,
+    switchTeam: PropTypes.func.isRequired,
 };

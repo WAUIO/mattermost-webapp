@@ -10,12 +10,8 @@
     width: 400px;
     z-index: 8;
 
-    .error-bar--fixed & {
-        height: calc(100% - 22px);
-    }
-
-    &.webrtc {
-        z-index: 5;
+    body.announcement-bar--fixed & {
+        height: calc(100% - #{$announcement-bar-height});
     }
 
     &.sidebar--right--expanded {
@@ -32,8 +28,7 @@
         width: 300%;
     }
 
-    &.move--left,
-    &.webrtc--show {
+    &.move--left {
         .sidebar--right__bg {
             left: -100%;
         }
@@ -71,6 +66,12 @@
             }
         }
 
+        &.post--comment {
+            .post__body {
+                border-left: none;
+            }
+        }
+
         .post__content {
             padding: 0 10px 0 0;
         }
@@ -85,7 +86,7 @@
                     flex: auto;
                 }
 
-                &.bot-indicator {
+                &.Badge {
                     flex: none;
                 }
             }
@@ -163,6 +164,15 @@
         @include flex-direction(column);
         border-left: $border-gray;
         height: calc(100% - 56px);
+
+        .loading-screen {
+            position: relative;
+            height: 40px;
+            padding: 0px;
+            .loading__content {
+                height: 40px;
+            }
+        }
     }
 
     .sidebar__overlay {
@@ -288,17 +298,16 @@
     @include single-transition(all, .2s, linear);
     @include translateX(0);
     cursor: pointer;
-    font-size: 16px;
     height: 48px;
-    line-height: 0;
-    padding-left: 1px;
     text-align: center;
     width: 45px;
     z-index: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     .fa {
         position: relative;
-        top: 18px;
-        right: 2px;
+        top: 1px;
     }
 }

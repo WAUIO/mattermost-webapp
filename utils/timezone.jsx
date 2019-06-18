@@ -13,3 +13,11 @@ export function getSupportedTimezones() {
 export function getBrowserTimezone() {
     return moment.tz.guess();
 }
+
+export function getBrowserUtcOffset() {
+    return moment().utcOffset();
+}
+
+export function getUtcOffsetForTimeZone(timezone) {
+    return moment.tz(timezone).utcOffset();
+}

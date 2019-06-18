@@ -6,7 +6,7 @@ import React from 'react';
 import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
-import {localizeMessage} from 'utils/utils.jsx';
+import SuccessIcon from 'components/icon/success_icon';
 
 export default class GetLinkModal extends React.PureComponent {
     static propTypes = {
@@ -95,10 +95,7 @@ export default class GetLinkModal extends React.PureComponent {
         if (this.state.copiedLink) {
             copyLinkConfirm = (
                 <p className='alert alert-success alert--confirm'>
-                    <i
-                        className='fa fa-check'
-                        title={localizeMessage('generic_icons.success', 'Success Icon')}
-                    />
+                    <SuccessIcon/>
                     <FormattedMessage
                         id='get_link.clipboard'
                         defaultMessage=' Link copied'
@@ -111,8 +108,13 @@ export default class GetLinkModal extends React.PureComponent {
             <Modal
                 show={this.props.show}
                 onHide={this.onHide}
+                role='dialog'
+                aria-labelledby='getLinkModalLabel'
             >
-                <Modal.Header closeButton={true}>
+                <Modal.Header
+                    id='getLinkModalLabel'
+                    closeButton={true}
+                >
                     <h4 className='modal-title'>{this.props.title}</h4>
                 </Modal.Header>
                 <Modal.Body>
@@ -123,7 +125,7 @@ export default class GetLinkModal extends React.PureComponent {
                     <button
                         id='linkModalCloseButton'
                         type='button'
-                        className='btn btn-default'
+                        className='btn btn-link'
                         onClick={this.onHide}
                     >
                         <FormattedMessage

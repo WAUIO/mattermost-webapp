@@ -9,26 +9,26 @@ import {haveISystemPermission} from 'mattermost-redux/selectors/entities/roles';
 import {Permissions} from 'mattermost-redux/constants';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
+import {loadOAuthAppsAndProfiles} from 'actions/integration_actions';
+
 import InstalledOAuthApps from './installed_oauth_apps.jsx';
 
 function mapStateToProps(state) {
     const config = getConfig(state);
     const enableOAuthServiceProvider = config.EnableOAuthServiceProvider === 'true';
-    const enableOnlyAdminIntegrations = config.EnableOnlyAdminIntegrations === 'true';
 
     return {
         canManageOauth: haveISystemPermission(state, {permission: Permissions.MANAGE_OAUTH}),
         oauthApps: getOAuthApps(state),
         regenOAuthAppSecretRequest: state.requests.integrations.updateOAuthApp,
         enableOAuthServiceProvider,
-        enableOnlyAdminIntegrations,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
-            getOAuthApps: Actions.getOAuthApps,
+            loadOAuthAppsAndProfiles,
             regenOAuthAppSecret: Actions.regenOAuthAppSecret,
             deleteOAuthApp: Actions.deleteOAuthApp,
         }, dispatch),

@@ -1,5 +1,13 @@
 @charset 'UTF-8';
 
+body {
+    &.announcement-bar--fixed {
+        .signup-header {
+            top: 24px;
+        }
+    }
+}
+
 .signup-header {
     background: $bg--gray;
     line-height: 33px;
@@ -11,7 +19,7 @@
     z-index: 5;
 
     .fa {
-        margin-right: 5px;
+        margin-right: 4px;
     }
 }
 
@@ -20,6 +28,20 @@
     max-width: 400px;
     padding: 100px 0 50px;
     position: relative;
+
+    .medium-center {
+        width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .terms-of-service__markdown {
+        background-color: #fff;
+        overflow-y: auto;
+        padding-top: 3em;
+        padding-bottom: 3em;
+        min-width: 100vw;
+    }
 
     &.branded {
         @include display-flex;
@@ -30,12 +52,27 @@
             @include flex(1.3 0 0);
             padding-right: 80px;
 
+            ul + p,
+            ol + p {
+                margin-top: .6em;
+            }
+
+            p + ul,
+            p + ol {
+                margin-top: .6em;
+            }
+
             img {
                 max-width: 450px;
             }
 
             p {
                 color: lighten($black, 50%);
+                line-height: 1.6em;
+                margin: 0;
+                white-space: pre-wrap;
+                width: 100%;
+                word-break: break-word;
             }
         }
 
@@ -49,8 +86,47 @@
         padding-top: 70px;
     }
 
+    &.terms-of-service__container {
+        padding-top: 33px;
+        max-width: 100%;
+    }
+
+    .terms-of-service__footer {
+        padding-top: .5em;
+        padding-bottom: .5em;
+
+        .terms-of-service__button-group {
+            padding-top: 1em;
+            padding-bottom: 1em;
+        }
+
+        .terms-of-service__server-error {
+            padding-bottom: 1em;
+        }
+    }
+
+    &.max-width--full {
+        max-width: 100%;
+    }
+
     .form-control:focus {
         @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6));
+    }
+
+    .terms-of-service-error__height--fill {
+        min-height: calc(100vh - 107px - 4em);
+        height: calc(100vh - 107px - 4em);
+    }
+
+    .terms-of-service__height--fill {
+        min-height: calc(100vh - 69px - 3em);
+        height: calc(100vh - 69px - 3em);
+    }
+
+    .medium-center {
+        width: 70%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     h1,
@@ -205,12 +281,21 @@
         padding: em(7px) em(15px);
 
         .fa {
+            margin: 0;
+            top: 1px;
             font-size: 17px;
-            margin-right: 8px;
+
+            &:last-child {
+                margin-left: 8px;
+            }
+
+            &:first-child {
+                margin-right: 8px;
+            }
 
             &.fa--margin-top {
                 position: relative;
-                top: 2px;
+                top: 1px;
             }
         }
 
@@ -218,10 +303,9 @@
             @include background-size(100% 100%);
             display: inline-block;
             height: 18px;
-            margin-right: 8px;
+            margin-right: 12px;
             position: relative;
             text-align: center;
-            top: -1px;
             width: 18px;
         }
 
@@ -230,22 +314,21 @@
             color: $white;
             display: block;
             height: 40px;
-            line-height: 36px;
             margin: 1em 0;
             min-width: 200px;
-            padding: 0 1em 0 2em;
+            padding: 0 24px;
             text-align: left;
+            display: flex;
+            align-items: center;
             width: 200px;
 
             > span {
                 position: relative;
-                top: 11px;
-                vertical-align: top;
+                display: flex;
+                align-items: center;
 
                 > span {
-                    display: inline-block;
                     line-height: normal;
-                    vertical-align: top;
                 }
             }
 
@@ -311,7 +394,6 @@
 
             &.btn--full {
                 max-width: 350px;
-                padding-left: 35px;
                 text-align: left;
                 width: 100%;
             }
@@ -334,22 +416,14 @@
                 left: -2px;
                 margin-right: .5em;
             }
-
-            &.fa-chevron-right {
-                font-size: .8em;
-                right: -5px;
-                top: 0;
-            }
-
-            &.fa-chevron-left {
-                font-size: .8em;
-                left: -2px;
-                top: 0px;
-            }
         }
     }
 
     .has-error {
+        &.no-padding {
+            padding: 0;
+        }
+
         .control-label {
             @include border-radius(3px);
             background: #f2f2f2;
@@ -440,12 +514,23 @@
     @include border-radius(2px);
     border: 1px solid #dddddd;
     margin: 0 0 20px;
+    border-radius: 4px;
+    overflow: hidden;
 
     .signup-team-dir {
         @include legacy-pie-clearfix;
+        display: flex;
+        align-items: center;
         background: #fafafa;
-        border-top: 1px solid #d5d5d5;
+        border-top: 1px solid #ddd;
         position: relative;
+        padding-top: 3px;
+        height: 3.8em;
+
+        &:hover {
+            @include single-transition(background-color, .15s, ease);
+            background: $white;
+        }
 
         &:first-child {
             border: none;
@@ -458,8 +543,9 @@
         .icon {
             cursor: pointer;
             float: left;
-            margin: 16px 7px 0 15px;
+            margin: 0 -8px 0 15px;
             opacity: .45;
+            height: 20px;
 
             svg {
                 height: 20px;
@@ -467,13 +553,28 @@
             }
         }
 
+        .fa-lock {
+            top: 1px;
+            position: relative;
+            font-size: 18px;
+        }
+
         a {
             color: inherit;
-            display: block;
+            display: flex;
             font-size: 1.1em;
             height: 3.5em;
             line-height: 3.6em;
-            padding: 0 15px;
+            text-decoration: none;
+            padding: 0 20px 0 16px;
+            align-items: center;
+            flex: 1 1 auto;
+            justify-content: space-between;
+
+            &.disabled {
+                cursor: default;
+                color: $dark-gray;
+            }
         }
     }
 
@@ -499,11 +600,8 @@
 
     .signup-team__icon {
         color: $dark-gray;
-        float: right;
         font-size: 1.5em;
-        line-height: 25px;
         position: relative;
-        top: .66em;
 
         &.fa-spin {
             font-size: .9em;

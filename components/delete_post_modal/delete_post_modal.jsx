@@ -17,30 +17,15 @@ export default class DeletePostModal extends React.PureComponent {
         teamName: PropTypes.string,
         post: PropTypes.object.isRequired,
         commentCount: PropTypes.number.isRequired,
-
-        /**
-         * Does the post come from RHS mode
-         */
         isRHS: PropTypes.bool.isRequired,
-
-        /**
-        * Function called when modal is dismissed
-        */
         onHide: PropTypes.func.isRequired,
-
         actions: PropTypes.shape({
-
-            /**
-            * Function called for deleting post
-            */
             deleteAndRemovePost: PropTypes.func.isRequired,
         }),
     }
 
     constructor(props) {
         super(props);
-        this.handleDelete = this.handleDelete.bind(this);
-        this.onHide = this.onHide.bind(this);
         this.state = {
             show: true,
         };
@@ -66,7 +51,13 @@ export default class DeletePostModal extends React.PureComponent {
         }
     }
 
-    onHide() {
+    handleEntered = () => {
+        if (this.deletePostBtn) {
+            this.deletePostBtn.focus();
+        }
+    }
+
+    onHide = () => {
         this.setState({show: false});
 
         if (!UserAgent.isMobile()) {
@@ -84,7 +75,7 @@ export default class DeletePostModal extends React.PureComponent {
 
     render() {
         var commentWarning = '';
-        if (this.props.commentCount > 0) {
+        if (this.props.commentCount > 0 && this.props.post.root_id === '') {
             commentWarning = (
                 <FormattedMessage
                     id='delete_post.warning'
@@ -111,12 +102,19 @@ export default class DeletePostModal extends React.PureComponent {
         return (
             <Modal
                 show={this.state.show}
+                onEntered={this.handleEntered}
                 onHide={this.onHide}
                 onExited={this.props.onHide}
                 enforceFocus={false}
+                id='deletePostModal'
+                role='dialog'
+                aria-labelledby='deletePostModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='deletePostModalLabel'
+                    >
                         <FormattedMessage
                             id='delete_post.confirm'
                             defaultMessage='Confirm {term} Delete'
@@ -141,7 +139,7 @@ export default class DeletePostModal extends React.PureComponent {
                 <Modal.Footer>
                     <button
                         type='button'
-                        className='btn btn-default'
+                        className='btn btn-link'
                         onClick={this.onHide}
                     >
                         <FormattedMessage
@@ -157,6 +155,7 @@ export default class DeletePostModal extends React.PureComponent {
                         autoFocus={true}
                         className='btn btn-danger'
                         onClick={this.handleDelete}
+                        id='deletePostModalButton'
                     >
                         <FormattedMessage
                             id='delete_post.del'

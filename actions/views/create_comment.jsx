@@ -4,22 +4,27 @@
 import {createSelector} from 'reselect';
 import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
 import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
-import {makeGetMessageInHistoryItem, makeGetCommentCountForPost, getPost} from 'mattermost-redux/selectors/entities/posts';
+import {
+    makeGetMessageInHistoryItem,
+    makeGetCommentCountForPost,
+    getPost,
+    getPostIdsInChannel,
+} from 'mattermost-redux/selectors/entities/posts';
 import {getCustomEmojisByName} from 'mattermost-redux/selectors/entities/emojis';
 import {
-    addReaction,
     removeReaction,
     addMessageIntoHistory,
     moveHistoryIndexBack,
     moveHistoryIndexForward,
 } from 'mattermost-redux/actions/posts';
 import {Posts} from 'mattermost-redux/constants';
+import {isPostPendingOrFailed} from 'mattermost-redux/utils/post_utils';
 
 import * as PostActions from 'actions/post_actions.jsx';
-import * as GlobalActions from 'actions/global_actions.jsx';
-import * as ChannelActions from 'actions/channel_actions.jsx';
+import {executeCommand} from 'actions/command';
+import {runMessageWillBePostedHooks, runSlashCommandWillBePostedHooks} from 'actions/hooks';
 import {setGlobalItem, actionOnGlobalItemsWithPrefix} from 'actions/storage';
-import {EmojiMap} from 'stores/emoji_store.jsx';
+import EmojiMap from 'utils/emoji_map';
 import {getPostDraft} from 'selectors/rhs';
 
 import * as Utils from 'utils/utils.jsx';
@@ -60,14 +65,14 @@ export function makeOnMoveHistoryIndex(rootId, direction) {
 }
 
 export function submitPost(channelId, rootId, draft) {
-    return (dispatch, getState) => {
+    return async (dispatch, getState) => {
         const state = getState();
 
         const userId = getCurrentUserId(state);
 
         const time = Utils.getTimestamp();
 
-        const post = {
+        let post = {
             file_ids: [],
             message: draft.message,
             channel_id: channelId,
@@ -76,19 +81,24 @@ export function submitPost(channelId, rootId, draft) {
             pending_post_id: `${userId}:${time}`,
             user_id: userId,
             create_at: time,
+            metadata: {},
         };
 
-        GlobalActions.emitUserCommentedEvent(post);
+        const hookResult = await dispatch(runMessageWillBePostedHooks(post));
+        if (hookResult.error) {
+            return {error: hookResult.error};
+        }
 
-        PostActions.createPost(post, draft.fileInfos);
+        post = hookResult.data;
+
+        return dispatch(PostActions.createPost(post, draft.fileInfos));
     };
 }
 
 export function submitReaction(postId, action, emojiName) {
     return (dispatch) => {
         if (action === '+') {
-            dispatch(addReaction(postId, emojiName));
-            PostActions.emitEmojiPosted(emojiName);
+            dispatch(PostActions.addReaction(postId, emojiName));
         } else if (action === '-') {
             dispatch(removeReaction(postId, emojiName));
         }
@@ -96,34 +106,46 @@ export function submitReaction(postId, action, emojiName) {
 }
 
 export function submitCommand(channelId, rootId, draft) {
-    return (dispatch, getState) => {
+    return async (dispatch, getState) => {
         const state = getState();
 
         const teamId = getCurrentTeamId(state);
 
-        const args = {
+        let args = {
             channel_id: channelId,
             team_id: teamId,
             root_id: rootId,
             parent_id: rootId,
         };
 
-        const {message} = draft;
+        let {message} = draft;
 
-        return new Promise((resolve, reject) => {
-            ChannelActions.executeCommand(message, args, resolve, (err) => {
-                if (err.sendMessage) {
-                    dispatch(submitPost(channelId, rootId, draft));
-                } else {
-                    reject(err);
-                }
-            });
-        });
+        const hookResult = await dispatch(runSlashCommandWillBePostedHooks(message, args));
+        if (hookResult.error) {
+            return {error: hookResult.error};
+        } else if (!hookResult.data.message && !hookResult.data.args) {
+            // do nothing with an empty return from a hook
+            return {};
+        }
+
+        message = hookResult.data.message;
+        args = hookResult.data.args;
+
+        const {error} = await dispatch(executeCommand(message, args));
+
+        if (error) {
+            if (error.sendMessage) {
+                return dispatch(submitPost(channelId, rootId, draft));
+            }
+            throw (error);
+        }
+
+        return {};
     };
 }
 
 export function makeOnSubmit(channelId, rootId, latestPostId) {
-    return () => async (dispatch, getState) => {
+    return (options = {}) => async (dispatch, getState) => {
         const draft = getPostDraft(getState(), StoragePrefixes.COMMENT_DRAFT, rootId);
         const {message} = draft;
 
@@ -138,7 +160,7 @@ export function makeOnSubmit(channelId, rootId, latestPostId) {
 
         if (isReaction && emojiMap.has(isReaction[2])) {
             dispatch(submitReaction(latestPostId, isReaction[1], isReaction[2]));
-        } else if (message.indexOf('/') === 0) {
+        } else if (message.indexOf('/') === 0 && !options.ignoreSlash) {
             await dispatch(submitCommand(channelId, rootId, draft));
         } else {
             dispatch(submitPost(channelId, rootId, draft));
@@ -149,7 +171,7 @@ export function makeOnSubmit(channelId, rootId, latestPostId) {
 function makeGetCurrentUsersLatestPost(channelId, rootId) {
     return createSelector(
         getCurrentUserId,
-        (state) => state.entities.posts.postsInChannel[channelId],
+        (state) => getPostIdsInChannel(state, channelId),
         (state) => (id) => getPost(state, id),
         (userId, postIds, getPostById) => {
             let lastPost = null;
@@ -162,10 +184,13 @@ function makeGetCurrentUsersLatestPost(channelId, rootId) {
                 const post = getPostById(id) || {};
 
                 // don't edit webhook posts, deleted posts, or system messages
-                if (post.user_id !== userId ||
+                if (
+                    post.user_id !== userId ||
                     (post.props && post.props.from_webhook) ||
                     post.state === Constants.POST_DELETED ||
-                    (post.type && post.type.startsWith(Constants.SYSTEM_MESSAGE_PREFIX))) {
+                    (post.type && post.type.startsWith(Constants.SYSTEM_MESSAGE_PREFIX)) ||
+                    isPostPendingOrFailed(post)
+                ) {
                     continue;
                 }
 
@@ -181,7 +206,7 @@ function makeGetCurrentUsersLatestPost(channelId, rootId) {
             }
 
             return lastPost;
-        }
+        },
     );
 }
 
@@ -195,15 +220,15 @@ export function makeOnEditLatestPost(channelId, rootId) {
         const lastPost = getCurrentUsersLatestPost(state);
 
         if (!lastPost) {
-            return;
+            return {data: false};
         }
 
-        dispatch(PostActions.setEditingPost(
+        return dispatch(PostActions.setEditingPost(
             lastPost.id,
             getCommentCount(state, {post: lastPost}),
             'reply_textbox',
             Utils.localizeMessage('create_comment.commentTitle', 'Comment'),
-            true
+            true,
         ));
     };
 }

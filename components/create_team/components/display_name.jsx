@@ -10,7 +10,7 @@ import {trackEvent} from 'actions/diagnostics_actions.jsx';
 import Constants from 'utils/constants.jsx';
 import {cleanUpUrlable} from 'utils/url.jsx';
 import logoImage from 'images/logo.png';
-import {localizeMessage} from 'utils/utils.jsx';
+import NextIcon from 'components/icon/next_icon';
 
 export default class TeamSignupDisplayNamePage extends React.PureComponent {
     static propTypes = {
@@ -86,6 +86,7 @@ export default class TeamSignupDisplayNamePage extends React.PureComponent {
             <div>
                 <form>
                     <img
+                        alt={'signup logo'}
                         className='signup-team-logo'
                         src={logoImage}
                     />
@@ -99,6 +100,7 @@ export default class TeamSignupDisplayNamePage extends React.PureComponent {
                         <div className='row'>
                             <div className='col-sm-9'>
                                 <input
+                                    id='teamNameInput'
                                     type='text'
                                     ref='name'
                                     className='form-control'
@@ -120,6 +122,7 @@ export default class TeamSignupDisplayNamePage extends React.PureComponent {
                         />
                     </div>
                     <button
+                        id='teamNameNextButton'
                         type='submit'
                         className='btn btn-primary margin--extra'
                         onClick={this.submitNext}
@@ -128,10 +131,7 @@ export default class TeamSignupDisplayNamePage extends React.PureComponent {
                             id='create_team.display_name.next'
                             defaultMessage='Next'
                         />
-                        <i
-                            className='fa fa-chevron-right'
-                            title={localizeMessage('generic_icons.next', 'Next Icon')}
-                        />
+                        <NextIcon/>
                     </button>
                 </form>
             </div>

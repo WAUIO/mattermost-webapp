@@ -3,23 +3,19 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
 import {Posts} from 'mattermost-redux/constants';
 
-import * as PostActions from 'actions/post_actions.jsx';
 import * as PostUtils from 'utils/post_utils.jsx';
 import * as Utils from 'utils/utils.jsx';
 import DelayedAction from 'utils/delayed_action.jsx';
-import {stripMarkdown} from 'utils/markdown';
 
-import CommentedOnFilesMessage from 'components/post_view/commented_on_files_message';
+import CommentedOn from 'components/post_view/commented_on';
 import FileAttachmentListContainer from 'components/file_attachment_list';
 import FailedPostOptions from 'components/post_view/failed_post_options';
 import PostBodyAdditionalContent from 'components/post_view/post_body_additional_content';
 import PostMessageView from 'components/post_view/post_message_view';
-import ReactionListContainer from 'components/post_view/reaction_list';
-
-import loadingGif from 'images/load.gif';
+import ReactionList from 'components/post_view/reaction_list';
+import LoadingBars from 'components/widgets/loading/loading_bars.jsx';
 
 const SENDING_ANIMATION_DELAY = 3000;
 
@@ -60,21 +56,6 @@ export default class PostBody extends React.PureComponent {
          * Set to render a preview of the parent post above this reply
          */
         isFirstReply: PropTypes.bool,
-
-        /**
-         * Set to collapse image and video previews
-         */
-        previewCollapsed: PropTypes.string,
-
-        /**
-         * User's preference to link previews
-         */
-        previewEnabled: PropTypes.bool,
-
-        /**
-         * Post identifiers for selenium tests
-         */
-        lastPostCount: PropTypes.number,
 
         /*
          * Post type components from plugins
@@ -139,68 +120,15 @@ export default class PostBody extends React.PureComponent {
         const post = this.props.post;
         const parentPost = this.props.parentPost;
 
-        let comment = '';
+        let comment;
         let postClass = '';
         const isEphemeral = Utils.isPostEphemeral(post);
         if (this.props.isFirstReply && parentPost && !isEphemeral) {
-            const profile = this.props.parentPostUser;
-
-            let apostrophe = '';
-            let name = '...';
-            if (profile != null) {
-                let username = Utils.getDisplayNameByUser(profile);
-                if (parentPost.props &&
-                        parentPost.props.from_webhook &&
-                        parentPost.props.override_username &&
-                        this.props.enablePostUsernameOverride) {
-                    username = parentPost.props.override_username;
-                }
-
-                if (username.slice(-1) === 's') {
-                    apostrophe = '\'';
-                } else {
-                    apostrophe = '\'s';
-                }
-                name = (
-                    <a
-                        className='theme'
-                        onClick={PostActions.searchForTerm.bind(null, username)}
-                    >
-                        {username}
-                    </a>
-                );
-            }
-
-            let message = '';
-            if (parentPost.message) {
-                message = Utils.replaceHtmlEntities(parentPost.message);
-            } else if (parentPost.file_ids && parentPost.file_ids.length > 0) {
-                message = (
-                    <CommentedOnFilesMessage
-                        parentPostId={parentPost.id}
-                    />
-                );
-            }
-
             comment = (
-                <div className='post__link'>
-                    <span>
-                        <FormattedMessage
-                            id='post_body.commentedOn'
-                            defaultMessage='Commented on {name}{apostrophe} message: '
-                            values={{
-                                name,
-                                apostrophe,
-                            }}
-                        />
-                        <a
-                            className='theme'
-                            onClick={this.props.handleCommentClick}
-                        >
-                            {stripMarkdown(message)}
-                        </a>
-                    </span>
-                </div>
+                <CommentedOn
+                    post={parentPost}
+                    onCommentClick={this.props.handleCommentClick}
+                />
             );
         }
 
@@ -224,24 +152,15 @@ export default class PostBody extends React.PureComponent {
             );
         }
 
-        let sending;
         if (this.state.sending) {
-            sending = (
-                <img
-                    className='post-loading-gif pull-right'
-                    src={loadingGif}
-                />
-            );
-
             postClass += ' post-waiting';
         }
 
         const messageWrapper = (
             <React.Fragment>
                 {failedOptions}
-                {sending}
+                {this.state.sending && <LoadingBars/>}
                 <PostMessageView
-                    lastPostCount={this.props.lastPostCount}
                     post={this.props.post}
                     compactDisplay={this.props.compactDisplay}
                     hasMention={true}
@@ -249,7 +168,8 @@ export default class PostBody extends React.PureComponent {
             </React.Fragment>
         );
 
-        const hasPlugin = post.type && this.props.pluginPostTypes.hasOwnProperty(post.type);
+        const hasPlugin = (post.type && this.props.pluginPostTypes.hasOwnProperty(post.type)) ||
+            (post.props && post.props.type && this.props.pluginPostTypes.hasOwnProperty(post.props.type));
 
         let messageWithAdditionalContent;
         if (this.props.post.state === Posts.POST_DELETED || hasPlugin) {
@@ -258,8 +178,6 @@ export default class PostBody extends React.PureComponent {
             messageWithAdditionalContent = (
                 <PostBodyAdditionalContent
                     post={this.props.post}
-                    previewCollapsed={this.props.previewCollapsed}
-                    previewEnabled={this.props.previewEnabled}
                     isEmbedVisible={this.props.isEmbedVisible}
                 >
                     {messageWrapper}
@@ -286,7 +204,7 @@ export default class PostBody extends React.PureComponent {
                 >
                     {messageWithAdditionalContent}
                     {fileAttachmentHolder}
-                    <ReactionListContainer
+                    <ReactionList
                         post={post}
                         isReadOnly={this.props.isReadOnly}
                     />

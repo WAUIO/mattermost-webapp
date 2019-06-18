@@ -5,11 +5,18 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import {checkMfa, switchFromLdapToEmail} from 'actions/user_actions.jsx';
 import * as Utils from 'utils/utils.jsx';
+import {t} from 'utils/i18n.jsx';
 import LoginMfa from 'components/login/login_mfa.jsx';
+import LocalizedInput from 'components/localized_input/localized_input';
 
 export default class LDAPToEmail extends React.Component {
+    static propTypes = {
+        email: PropTypes.string,
+        passwordConfig: PropTypes.object,
+        switchLdapToEmail: PropTypes.func.isRequired,
+    };
+
     constructor(props) {
         super(props);
 
@@ -67,46 +74,25 @@ export default class LDAPToEmail extends React.Component {
         state.ldapPassword = ldapPassword;
         this.setState(state);
 
-        checkMfa(
-            this.props.email,
-            (requiresMfa) => {
-                if (requiresMfa) {
-                    this.setState({showMfa: true});
-                } else {
-                    this.submit(this.props.email, password, '', ldapPassword);
-                }
-            },
-            (err) => {
-                this.setState({error: err.message});
-            }
-        );
+        this.submit(this.props.email, password, '', ldapPassword);
     }
 
     submit(loginId, password, token, ldapPassword) {
-        switchFromLdapToEmail(
-            this.props.email,
-            password,
-            token,
-            ldapPassword || this.state.ldapPassword,
-            (data) => {
-                if (data.follow_link) {
-                    window.location.href = data.follow_link;
-                }
-            },
-            (err) => {
-                if (err.id.startsWith('model.user.is_valid.pwd')) {
+        this.props.switchLdapToEmail(ldapPassword || this.state.ldapPassword, this.props.email, password, token).then(({data, error: err}) => {
+            if (data && data.follow_link) {
+                window.location.href = data.follow_link;
+            } else if (err) {
+                if (err.server_error_id.startsWith('model.user.is_valid.pwd')) {
                     this.setState({passwordError: err.message, showMfa: false});
+                } else if (err.server_error_id === 'ent.ldap.do_login.invalid_password.app_error') {
+                    this.setState({ldapPasswordError: err.message, showMfa: false});
+                } else if (!this.state.showMfa && err.server_error_id === 'mfa.validate_token.authenticate.app_error') {
+                    this.setState({showMfa: true});
                 } else {
-                    switch (err.id) {
-                    case 'ent.ldap.do_login.invalid_password.app_error':
-                        this.setState({ldapPasswordError: err.message, showMfa: false});
-                        break;
-                    default:
-                        this.setState({serverError: err.message, showMfa: false});
-                    }
+                    this.setState({serverError: err.message, showMfa: false});
                 }
             }
-        );
+        });
     }
 
     render() {
@@ -191,23 +177,23 @@ export default class LDAPToEmail extends React.Component {
                         />
                     </p>
                     <div className={passwordClass}>
-                        <input
+                        <LocalizedInput
                             type='password'
                             className='form-control'
                             name='password'
                             ref='password'
-                            placeholder={Utils.localizeMessage('claim.ldap_to_email.pwd', 'Password')}
+                            placeholder={{id: t('claim.ldap_to_email.pwd'), defaultMessage: 'Password'}}
                             spellCheck='false'
                         />
                     </div>
                     {passwordError}
                     <div className={confimClass}>
-                        <input
+                        <LocalizedInput
                             type='password'
                             className='form-control'
                             name='passwordconfirm'
                             ref='passwordconfirm'
-                            placeholder={Utils.localizeMessage('claim.ldap_to_email.confirm', 'Confirm Password')}
+                            placeholder={{id: t('claim.ldap_to_email.confirm'), defaultMessage: 'Confirm Password'}}
                             spellCheck='false'
                         />
                     </div>
@@ -239,8 +225,3 @@ export default class LDAPToEmail extends React.Component {
         );
     }
 }
-
-LDAPToEmail.propTypes = {
-    email: PropTypes.string,
-    passwordConfig: PropTypes.object,
-};

@@ -8,7 +8,9 @@ import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
 import ConfirmModal from 'components/confirm_modal.jsx';
+import LoadingWrapper from 'components/widgets/loading/loading_wrapper.jsx';
 
+import * as Utils from 'utils/utils.jsx';
 import Constants from 'utils/constants.jsx';
 
 const MAX_TEAMS_PER_SCHEME_SUMMARY = 8;
@@ -62,24 +64,17 @@ export default class PermissionsSchemeSummary extends React.Component {
             </div>
         );
 
-        let confirmButton = (
-            <FormattedMessage
-                id='admin.permissions.permissionsSchemeSummary.deleteConfirmButton'
-                defaultMessage='Yes, Delete'
-            />
+        const confirmButton = (
+            <LoadingWrapper
+                loading={this.state.deleting}
+                text={Utils.localizeMessage('admin.permissions.permissionsSchemeSummary.deleting', 'Deleting...')}
+            >
+                <FormattedMessage
+                    id='admin.permissions.permissionsSchemeSummary.deleteConfirmButton'
+                    defaultMessage='Yes, Delete'
+                />
+            </LoadingWrapper>
         );
-
-        if (this.state.deleting) {
-            confirmButton = (
-                <span>
-                    <span className='fa fa-refresh icon--rotate'/>
-                    <FormattedMessage
-                        id='admin.permissions.permissionsSchemeSummary.deleting'
-                        defaultMessage='Deleting...'
-                    />
-                </span>
-            );
-        }
 
         return (
             <ConfirmModal
@@ -119,7 +114,7 @@ export default class PermissionsSchemeSummary extends React.Component {
     }
 
     goToEdit = () => {
-        this.props.history.push('/admin_console/permissions/team-override-scheme/' + this.props.scheme.id);
+        this.props.history.push('/admin_console/user_management/permissions/team_override_scheme/' + this.props.scheme.id);
     }
 
     render = () => {
@@ -181,7 +176,7 @@ export default class PermissionsSchemeSummary extends React.Component {
                     <div className='actions'>
                         <Link
                             className='edit-button'
-                            to={'/admin_console/permissions/team-override-scheme/' + scheme.id}
+                            to={'/admin_console/user_management/permissions/team_override_scheme/' + scheme.id}
                         >
                             <FormattedMessage
                                 id='admin.permissions.permissionsSchemeSummary.edit'

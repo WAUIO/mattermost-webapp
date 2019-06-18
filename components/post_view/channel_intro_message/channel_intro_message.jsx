@@ -2,44 +2,50 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import {FormattedDate, FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedDate, FormattedMessage} from 'react-intl';
 import PropTypes from 'prop-types';
 
 import {Permissions} from 'mattermost-redux/constants';
 
 import * as GlobalActions from 'actions/global_actions.jsx';
-import ChannelStore from 'stores/channel_store.jsx';
-import TeamStore from 'stores/team_store.jsx';
-import UserStore from 'stores/user_store.jsx';
 import Constants from 'utils/constants.jsx';
 import ChannelInviteModal from 'components/channel_invite_modal';
 import EditChannelHeaderModal from 'components/edit_channel_header_modal';
 import ProfilePicture from 'components/profile_picture.jsx';
 import ToggleModalButton from 'components/toggle_modal_button.jsx';
-import UserProfile from 'components/user_profile.jsx';
+import UserProfile from 'components/user_profile';
 import ChannelPermissionGate from 'components/permissions_gates/channel_permission_gate';
 import TeamPermissionGate from 'components/permissions_gates/team_permission_gate';
 import FormattedMarkdownMessage from 'components/formatted_markdown_message';
+import EditIcon from 'components/icon/edit_icon';
+import AddGroupsToChannelModal from 'components/add_groups_to_channel_modal';
+import AddGroupsToTeamModal from 'components/add_groups_to_team_modal';
 
 import {getMonthLong} from 'utils/i18n.jsx';
 import * as Utils from 'utils/utils.jsx';
 
 export default class ChannelIntroMessage extends React.PureComponent {
     static propTypes = {
+        currentUserId: PropTypes.string.isRequired,
         channel: PropTypes.object.isRequired,
         fullWidth: PropTypes.bool.isRequired,
         locale: PropTypes.string.isRequired,
+        channelProfiles: PropTypes.array.isRequired,
         enableUserCreation: PropTypes.bool,
         isReadOnly: PropTypes.bool,
+        teamIsGroupConstrained: PropTypes.bool,
     };
 
     render() {
         const {
+            currentUserId,
             channel,
             fullWidth,
             locale,
             enableUserCreation,
             isReadOnly,
+            channelProfiles,
+            teamIsGroupConstrained,
         } = this.props;
 
         let centeredIntro = '';
@@ -50,9 +56,9 @@ export default class ChannelIntroMessage extends React.PureComponent {
         if (channel.type === Constants.DM_CHANNEL) {
             return createDMIntroMessage(channel, centeredIntro);
         } else if (channel.type === Constants.GM_CHANNEL) {
-            return createGMIntroMessage(channel, centeredIntro);
-        } else if (ChannelStore.isDefault(channel)) {
-            return createDefaultIntroMessage(channel, centeredIntro, enableUserCreation, isReadOnly);
+            return createGMIntroMessage(channel, centeredIntro, channelProfiles, currentUserId);
+        } else if (channel.name === Constants.DEFAULT_CHANNEL) {
+            return createDefaultIntroMessage(channel, centeredIntro, enableUserCreation, isReadOnly, teamIsGroupConstrained);
         } else if (channel.name === Constants.OFFTOPIC_CHANNEL) {
             return createOffTopicIntroMessage(channel, centeredIntro);
         } else if (channel.type === Constants.OPEN_CHANNEL || channel.type === Constants.PRIVATE_CHANNEL) {
@@ -62,34 +68,22 @@ export default class ChannelIntroMessage extends React.PureComponent {
     }
 }
 
-function createGMIntroMessage(channel, centeredIntro) {
-    const profiles = UserStore.getProfileListInChannel(channel.id, true);
+function createGMIntroMessage(channel, centeredIntro, profiles, currentUserId) {
     const channelIntroId = 'channelIntro';
 
     if (profiles.length > 0) {
-        const pictures = [];
-        let names = '';
-        for (let i = 0; i < profiles.length; i++) {
-            const profile = profiles[i];
-
-            pictures.push(
+        const pictures = profiles.
+            filter((profile) => profile.id !== currentUserId).
+            map((profile) => (
                 <ProfilePicture
                     key={'introprofilepicture' + profile.id}
                     src={Utils.imageURLForUser(profile)}
                     width='50'
                     height='50'
-                    user={profile}
+                    userId={profile.id}
+                    username={profile.username}
                 />
-            );
-
-            if (i === profiles.length - 1) {
-                names += Utils.getDisplayNameByUser(profile);
-            } else if (i === profiles.length - 2) {
-                names += Utils.getDisplayNameByUser(profile) + ' and ';
-            } else {
-                names += Utils.getDisplayNameByUser(profile) + ', ';
-            }
-        }
+            ));
 
         return (
             <div
@@ -100,11 +94,11 @@ function createGMIntroMessage(channel, centeredIntro) {
                     {pictures}
                 </div>
                 <p className='channel-intro-text'>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='intro_messages.GM'
-                        defaultMessage='This is the start of your group message history with {names}.<br />Messages and files shared here are not shown to people outside this area.'
+                        defaultMessage='This is the start of your group message history with {names}.\nMessages and files shared here are not shown to people outside this area.'
                         values={{
-                            names,
+                            names: channel.display_name,
                         }}
                     />
                 </p>
@@ -148,29 +142,28 @@ function createDMIntroMessage(channel, centeredIntro) {
                         src={Utils.imageURLForUser(teammate)}
                         width='50'
                         height='50'
-                        user={teammate}
+                        userId={teammate.id}
+                        username={teammate.username}
                         hasMention={true}
                     />
                 </div>
-                <div className='channel-intro-profile'>
-                    <strong>
-                        <UserProfile
-                            user={teammate}
-                            disablePopover={false}
-                            hasMention={true}
-                        />
-                    </strong>
+                <div className='channel-intro-profile d-flex'>
+                    <UserProfile
+                        userId={teammate.id}
+                        disablePopover={false}
+                        hasMention={true}
+                    />
                 </div>
                 <p className='channel-intro-text'>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='intro_messages.DM'
-                        defaultMessage='This is the start of your direct message history with {teammate}.<br />Direct messages and files shared here are not shown to people outside this area.'
+                        defaultMessage='This is the start of your direct message history with {teammate}.\nDirect messages and files shared here are not shown to people outside this area.'
                         values={{
                             teammate: teammateName,
                         }}
                     />
                 </p>
-                {createSetHeaderButton(channel)}
+                {teammate.is_bot ? null : createSetHeaderButton(channel)}
             </div>
         );
     }
@@ -191,21 +184,13 @@ function createDMIntroMessage(channel, centeredIntro) {
 }
 
 function createOffTopicIntroMessage(channel, centeredIntro) {
-    var uiType = (
-        <FormattedMessage
-            id='intro_messages.channel'
-            defaultMessage='channel'
-        />
-    );
-
-    const teamId = TeamStore.getCurrentId();
     const isPrivate = channel.type === Constants.PRIVATE_CHANNEL;
     const children = createSetHeaderButton(channel);
     let setHeaderButton = null;
     if (children) {
         setHeaderButton = (
             <ChannelPermissionGate
-                teamId={teamId}
+                teamId={channel.team_id}
                 channelId={channel.id}
                 permissions={[isPrivate ? Permissions.MANAGE_PRIVATE_CHANNEL_PROPERTIES : Permissions.MANAGE_PUBLIC_CHANNEL_PROPERTIES]}
             >
@@ -214,7 +199,7 @@ function createOffTopicIntroMessage(channel, centeredIntro) {
         );
     }
 
-    const channelInviteButton = createInviteChannelMemberButton(channel, uiType);
+    const channelInviteButton = createInviteChannelButton(channel);
 
     return (
         <div
@@ -245,7 +230,7 @@ function createOffTopicIntroMessage(channel, centeredIntro) {
     );
 }
 
-export function createDefaultIntroMessage(channel, centeredIntro, enableUserCreation, isReadOnly) {
+export function createDefaultIntroMessage(channel, centeredIntro, enableUserCreation, isReadOnly, teamIsGroupConstrained) {
     let teamInviteLink = null;
 
     if (!isReadOnly && enableUserCreation) {
@@ -258,25 +243,57 @@ export function createDefaultIntroMessage(channel, centeredIntro, enableUserCrea
                     teamId={channel.team_id}
                     permissions={[Permissions.ADD_USER_TO_TEAM]}
                 >
+                    {!teamIsGroupConstrained &&
                     <span
                         className='intro-links color--link cursor--pointer'
                         onClick={GlobalActions.showGetTeamInviteLinkModal}
                     >
-                        <i
-                            className='fa fa-user-plus'
-                            title={Utils.localizeMessage('generic_icons.add', 'Add Icon')}
-                        />
+                        <FormattedMessage
+                            id='generic_icons.add'
+                            defaultMessage='Add Icon'
+                        >
+                            {(title) => (
+                                <i
+                                    className='fa fa-user-plus'
+                                    title={title}
+                                />
+                            )}
+                        </FormattedMessage>
                         <FormattedMessage
                             id='intro_messages.inviteOthers'
                             defaultMessage='Invite others to this team'
                         />
                     </span>
+                    }
+                    {teamIsGroupConstrained &&
+                    <ToggleModalButton
+                        className='intro-links color--link'
+                        dialogType={AddGroupsToTeamModal}
+                        dialogProps={{channel}}
+                    >
+                        <FormattedMessage
+                            id='generic_icons.add'
+                            defaultMessage='Add Icon'
+                        >
+                            {(title) => (
+                                <i
+                                    className='fa fa-user-plus'
+                                    title={title}
+                                />
+                            )}
+                        </FormattedMessage>
+                        <FormattedMessage
+                            id='intro_messages.addGroupsToTeam'
+                            defaultMessage='Add other groups to this team'
+                        />
+                    </ToggleModalButton>
+
+                    }
                 </TeamPermissionGate>
             </TeamPermissionGate>
         );
     }
 
-    const teamId = TeamStore.getCurrentId();
     const isPrivate = channel.type === Constants.PRIVATE_CHANNEL;
 
     let setHeaderButton = null;
@@ -285,7 +302,7 @@ export function createDefaultIntroMessage(channel, centeredIntro, enableUserCrea
         if (children) {
             setHeaderButton = (
                 <ChannelPermissionGate
-                    teamId={teamId}
+                    teamId={channel.team_id}
                     channelId={channel.id}
                     permissions={[isPrivate ? Permissions.MANAGE_PRIVATE_CHANNEL_PROPERTIES : Permissions.MANAGE_PUBLIC_CHANNEL_PROPERTIES]}
                 >
@@ -313,7 +330,7 @@ export function createDefaultIntroMessage(channel, centeredIntro, enableUserCrea
                 {!isReadOnly &&
                     <FormattedMarkdownMessage
                         id='intro_messages.default'
-                        defaultMessage={'**Welcome to {display_name}!**\n \nPost messages here that you want everyone to see. Everyone automatically becomes a permanent member of this channel when they join the team.'}
+                        defaultMessage='**Welcome to {display_name}!**\n \nPost messages here that you want everyone to see. Everyone automatically becomes a permanent member of this channel when they join the team.'
                         values={{
                             display_name: channel.display_name,
                         }}
@@ -322,7 +339,7 @@ export function createDefaultIntroMessage(channel, centeredIntro, enableUserCrea
                 {isReadOnly &&
                     <FormattedMarkdownMessage
                         id='intro_messages.readonly.default'
-                        defaultMessage={'**Welcome to {display_name}!**\n \nMessages can only be posted by system admins. Everyone automatically becomes a permanent member of this channel when they join the team.'}
+                        defaultMessage='**Welcome to {display_name}!**\n \nMessages can only be posted by system admins. Everyone automatically becomes a permanent member of this channel when they join the team.'
                         values={{
                             display_name: channel.display_name,
                         }}
@@ -339,19 +356,12 @@ export function createDefaultIntroMessage(channel, centeredIntro, enableUserCrea
 function createStandardIntroMessage(channel, centeredIntro, locale) {
     var uiName = channel.display_name;
     var creatorName = Utils.getDisplayNameByUserId(channel.creator_id);
-    var uiType;
     var memberMessage;
     const channelIsArchived = channel.delete_at !== 0;
 
     if (channelIsArchived) {
         memberMessage = '';
     } else if (channel.type === Constants.PRIVATE_CHANNEL) {
-        uiType = (
-            <FormattedMessage
-                id='intro_messages.group'
-                defaultMessage='private channel'
-            />
-        );
         memberMessage = (
             <FormattedMessage
                 id='intro_messages.onlyInvited'
@@ -359,12 +369,6 @@ function createStandardIntroMessage(channel, centeredIntro, locale) {
             />
         );
     } else {
-        uiType = (
-            <FormattedMessage
-                id='intro_messages.channel'
-                defaultMessage='channel'
-            />
-        );
         memberMessage = (
             <FormattedMessage
                 id='intro_messages.anyMember'
@@ -384,26 +388,45 @@ function createStandardIntroMessage(channel, centeredIntro, locale) {
 
     var createMessage;
     if (creatorName === '') {
+        if (channel.type === Constants.PRIVATE_CHANNEL) {
+            createMessage = (
+                <FormattedMessage
+                    id='intro_messages.noCreatorPrivate'
+                    defaultMessage='This is the start of the {name} private channel, created on {date}.'
+                    values={{name: (uiName), date}}
+                />
+            );
+        } else if (channel.type === Constants.OPEN_CHANNEL) {
+            createMessage = (
+                <FormattedMessage
+                    id='intro_messages.noCreator'
+                    defaultMessage='This is the start of the {name} channel, created on {date}.'
+                    values={{name: (uiName), date}}
+                />
+            );
+        }
+    } else if (channel.type === Constants.PRIVATE_CHANNEL) {
         createMessage = (
-            <FormattedMessage
-                id='intro_messages.noCreator'
-                defaultMessage='This is the start of the {name} {type}, created on {date}.'
-                values={{
-                    name: (uiName),
-                    type: (uiType),
-                    date,
-                }}
-            />
+            <span>
+                <FormattedMessage
+                    id='intro_messages.creatorPrivate'
+                    defaultMessage='This is the start of the {name} private channel, created by {creator} on {date}.'
+                    values={{
+                        name: (uiName),
+                        creator: (creatorName),
+                        date,
+                    }}
+                />
+            </span>
         );
-    } else {
+    } else if (channel.type === Constants.OPEN_CHANNEL) {
         createMessage = (
             <span>
                 <FormattedMessage
                     id='intro_messages.creator'
-                    defaultMessage='This is the start of the {name} {type}, created by {creator} on {date}.'
+                    defaultMessage='This is the start of the {name} channel, created by {creator} on {date}.'
                     values={{
                         name: (uiName),
-                        type: (uiType),
                         creator: (creatorName),
                         date,
                     }}
@@ -414,28 +437,36 @@ function createStandardIntroMessage(channel, centeredIntro, locale) {
 
     var purposeMessage = '';
     if (channel.purpose && channel.purpose !== '') {
-        purposeMessage = (
-            <span>
-                <FormattedMessage
-                    id='intro_messages.purpose'
-                    defaultMessage=" This {type}'s purpose is: {purpose}"
-                    values={{
-                        purpose: channel.purpose,
-                        type: (uiType),
-                    }}
-                />
-            </span>
-        );
+        if (channel.type === Constants.PRIVATE_CHANNEL) {
+            purposeMessage = (
+                <span>
+                    <FormattedMessage
+                        id='intro_messages.purposePrivate'
+                        defaultMessage=" This private channel's purpose is: {purpose}"
+                        values={{purpose: channel.purpose}}
+                    />
+                </span>
+            );
+        } else if (channel.type === Constants.OPEN_CHANNEL) {
+            purposeMessage = (
+                <span>
+                    <FormattedMessage
+                        id='intro_messages.purpose'
+                        defaultMessage=" This channel's purpose is: {purpose}"
+                        values={{purpose: channel.purpose}}
+                    />
+                </span>
+            );
+        }
     }
 
-    const teamId = TeamStore.getCurrentId();
     const isPrivate = channel.type === Constants.PRIVATE_CHANNEL;
     let setHeaderButton = null;
     const children = createSetHeaderButton(channel);
     if (children) {
         setHeaderButton = (
             <ChannelPermissionGate
-                teamId={teamId}
+                teamId={channel.team_id}
                 channelId={channel.id}
                 permissions={[isPrivate ? Permissions.MANAGE_PRIVATE_CHANNEL_PROPERTIES : Permissions.MANAGE_PUBLIC_CHANNEL_PROPERTIES]}
             >
@@ -444,7 +475,7 @@ function createStandardIntroMessage(channel, centeredIntro, locale) {
         );
     }
 
-    const channelInviteButton = createInviteChannelMemberButton(channel, uiType);
+    const channelInviteButton = createInviteChannelButton(channel);
 
     return (
         <div
@@ -472,7 +503,8 @@ function createStandardIntroMessage(channel, centeredIntro, locale) {
     );
 }
 
-function createInviteChannelMemberButton(channel, uiType) {
+function createInviteChannelButton(channel) {
+    const modal = channel.group_constrained ? AddGroupsToChannelModal : ChannelInviteModal;
     const channelIsArchived = channel.delete_at !== 0;
     if (channelIsArchived) {
         return null;
@@ -486,20 +518,35 @@ function createInviteChannelMemberButton(channel, uiType) {
         >
             <ToggleModalButton
                 className='intro-links color--link'
-                dialogType={ChannelInviteModal}
+                dialogType={modal}
                 dialogProps={{channel}}
             >
-                <i
-                    className='fa fa-user-plus'
-                    title={Utils.localizeMessage('generic_icons.add', 'Add Icon')}
-                />
                 <FormattedMessage
-                    id='intro_messages.invite'
-                    defaultMessage='Invite others to this {type}'
-                    values={{
-                        type: (uiType),
-                    }}
-                />
+                    id='generic_icons.add'
+                    defaultMessage='Add Icon'
+                >
+                    {(title) => (
+                        <i
+                            className='fa fa-user-plus'
+                            title={title}
+                        />
+                    )}
+                </FormattedMessage>
+                {isPrivate && channel.group_constrained &&
+                    <FormattedMessage
+                        id='intro_messages.addGroups'
+                        defaultMessage='Add groups to this private channel'
+                    />}
+                {isPrivate && !channel.group_constrained &&
+                    <FormattedMessage
+                        id='intro_messages.invitePrivate'
+                        defaultMessage='Invite others to this private channel'
+                    />}
+                {!isPrivate &&
+                    <FormattedMessage
+                        id='intro_messages.invite'
+                        defaultMessage='Invite others to this channel'
+                    />}
             </ToggleModalButton>
         </ChannelPermissionGate>
     );
@@ -516,11 +563,7 @@ function createSetHeaderButton(channel) {
             dialogType={EditChannelHeaderModal}
             dialogProps={{channel}}
         >
-            <i
-                className='fa fa-pencil'
-                title={Utils.localizeMessage('generic_icons.edit', 'Edit Icon')}
-
-            />
+            <EditIcon/>
             <FormattedMessage
                 id='intro_messages.setHeader'
                 defaultMessage='Set a Header'

@@ -2,8 +2,7 @@
 
 @media screen and (max-width: 1800px) {
     .inner-wrap {
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             .date-separator,
             .new-separator {
                 &.hovered--comment {
@@ -19,8 +18,7 @@
 
 @media screen and (max-width: 1440px) {
     .inner-wrap {
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             .help__format-text {
                 display: none;
             }
@@ -59,6 +57,10 @@
             }
         }
     }
+
+    .integration-option {
+        flex: 0 0 45%;
+    }
 }
 
 @media screen and (max-width: 1140px) {
@@ -74,8 +76,7 @@
     }
 
     .inner-wrap {
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             .file-overlay {
                 font-size: em(18px);
 
@@ -101,10 +102,6 @@
                 width: 150px;
             }
         }
-    }
-
-    .integration-option {
-        width: 280px;
     }
 }
 

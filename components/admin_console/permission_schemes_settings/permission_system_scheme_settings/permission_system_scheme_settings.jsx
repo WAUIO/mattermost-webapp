@@ -4,20 +4,32 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {FormattedMessage} from 'react-intl';
-import {Modal} from 'react-bootstrap';
+
+import Permissions from 'mattermost-redux/constants/permissions';
+
+import ConfirmModal from 'components/confirm_modal.jsx';
 
 import {PermissionsScope, DefaultRolePermissions} from 'utils/constants.jsx';
 import {localizeMessage} from 'utils/utils.jsx';
+import {t} from 'utils/i18n';
 
 import SaveButton from 'components/save_button.jsx';
 import LoadingScreen from 'components/loading_screen.jsx';
-import AccordionToggleIcon from 'components/svg/accordion_toggle_icon.jsx';
 import FormError from 'components/form_error.jsx';
 import BlockableLink from 'components/admin_console/blockable_link';
+import AdminPanelTogglable from 'components/widgets/admin_console/admin_panel_togglable.jsx';
 
 import FormattedMarkdownMessage from 'components/formatted_markdown_message';
 
 import PermissionsTree from '../permissions_tree';
+
+const EXCLUDED_PERMISSIONS = [
+    Permissions.VIEW_MEMBERS,
+    Permissions.JOIN_PUBLIC_TEAMS,
+    Permissions.LIST_PUBLIC_TEAMS,
+    Permissions.JOIN_PRIVATE_TEAMS,
+    Permissions.LIST_PRIVATE_TEAMS,
+];
 
 export default class PermissionSystemSchemeSettings extends React.Component {
     static propTypes = {
@@ -127,30 +139,47 @@ export default class PermissionSystemSchemeSettings extends React.Component {
         };
     }
 
+    restoreExcludedPermissions = (roles) => {
+        for (const permission of this.props.roles.system_user.permissions) {
+            if (EXCLUDED_PERMISSIONS.includes(permission)) {
+                roles.system_user.permissions.push(permission);
+            }
+        }
+        for (const permission of this.props.roles.team_user.permissions) {
+            if (EXCLUDED_PERMISSIONS.includes(permission)) {
+                roles.team_user.permissions.push(permission);
+            }
+        }
+        for (const permission of this.props.roles.channel_user.permissions) {
+            if (EXCLUDED_PERMISSIONS.includes(permission)) {
+                roles.channel_user.permissions.push(permission);
+            }
+        }
+        return roles;
+    }
+
     handleSubmit = async () => {
         const teamAdminPromise = this.props.actions.editRole(this.state.roles.team_admin);
         const channelAdminPromise = this.props.actions.editRole(this.state.roles.channel_admin);
-        const roles = this.deriveRolesFromAllUsers(this.state.roles.all_users);
+        const roles = this.restoreExcludedPermissions(this.deriveRolesFromAllUsers(this.state.roles.all_users));
         const systemUserPromise = this.props.actions.editRole(roles.system_user);
         const teamUserPromise = this.props.actions.editRole(roles.team_user);
         const channelUserPromise = this.props.actions.editRole(roles.channel_user);
         this.setState({saving: true});
 
-        Promise.all([teamAdminPromise, channelAdminPromise, systemUserPromise, teamUserPromise, channelUserPromise]).then(
-            (results) => {
-                let serverError = null;
-                let saveNeeded = false;
-                for (const result of results) {
-                    if (result.error) {
-                        serverError = result.error.message;
-                        saveNeeded = true;
-                        break;
-                    }
-                }
-                this.setState({serverError, saving: false, saveNeeded});
-                this.props.actions.setNavigationBlocked(saveNeeded);
+        const results = await Promise.all([teamAdminPromise, channelAdminPromise, systemUserPromise, teamUserPromise, channelUserPromise]);
+        let serverError = null;
+        let saveNeeded = false;
+        for (const result of results) {
+            if (result.error) {
+                serverError = result.error.message;
+                saveNeeded = true;
+                break;
             }
-        );
+        }
+
+        this.setState({serverError, saving: false, saveNeeded});
+        this.props.actions.setNavigationBlocked(saveNeeded);
     }
 
     toggleRole = (roleId) => {
@@ -189,164 +218,110 @@ export default class PermissionSystemSchemeSettings extends React.Component {
     }
 
     render = () => {
-        const hasCustomSchemes = this.props.license.CustomPermissionsSchemes === 'true';
         if (!this.state.loaded) {
             return <LoadingScreen/>;
         }
         return (
             <div className='wrapper--fixed'>
-                <h3 className={'admin-console-header ' + (hasCustomSchemes ? 'with-back' : '')}>
-                    {hasCustomSchemes &&
+                <div className='admin-console__header with-back'>
+                    <div>
                         <BlockableLink
-                            to='/admin_console/permissions/schemes'
-                            className='fa fa-chevron-left back'
-                        />}
-                    <FormattedMessage
-                        id='admin.permissions.systemScheme'
-                        defaultMessage='System Scheme'
-                    />
-                </h3>
+                            to='/admin_console/user_management/permissions'
+                            className='fa fa-angle-left back'
+                        />
+                        <FormattedMessage
+                            id='admin.permissions.systemScheme'
+                            defaultMessage='System Scheme'
+                        />
+                    </div>
+                </div>
 
-                <div className={'banner info'}>
-                    <div className='banner__content'>
-                        <span>
-                            <FormattedMarkdownMessage
-                                id='admin.permissions.systemScheme.introBanner'
-                                defaultMessage='Configure the default permissions for Team Admins, Channel Admins and other members. This scheme is inherited by all teams unless a [Team Override Scheme](!https://about.mattermost.com/default-team-override-scheme) is applied in specific teams.'
+                <div className='admin-console__wrapper'>
+                    <div className='admin-console__content'>
+                        <div className={'banner info'}>
+                            <div className='banner__content'>
+                                <span>
+                                    <FormattedMarkdownMessage
+                                        id='admin.permissions.systemScheme.introBanner'
+                                        defaultMessage='Configure the default permissions for Team Admins, Channel Admins and other members. This scheme is inherited by all teams unless a [Team Override Scheme](!https://about.mattermost.com/default-team-override-scheme) is applied in specific teams.'
+                                    />
+                                </span>
+                            </div>
+                        </div>
+
+                        <AdminPanelTogglable
+                            className='permissions-block'
+                            open={this.state.openRoles.all_users}
+                            id='all_users'
+                            onToggle={() => this.toggleRole('all_users')}
+                            titleId={t('admin.permissions.systemScheme.allMembersTitle')}
+                            titleDefault='All Members'
+                            subtitleId={t('admin.permissions.systemScheme.allMembersDescription')}
+                            subtitleDefault='Permissions granted to all members, including administrators and newly created users.'
+                        >
+                            <PermissionsTree
+                                selected={this.state.selectedPermission}
+                                role={this.state.roles.all_users}
+                                scope={'system_scope'}
+                                onToggle={this.togglePermission}
+                                selectRow={this.selectRow}
                             />
-                        </span>
-                    </div>
-                </div>
+                        </AdminPanelTogglable>
 
-                <div
-                    className={'permissions-block ' + (this.state.openRoles.all_users ? '' : 'closed')}
-                    id='all_users'
-                >
-                    <div
-                        className='header'
-                        onClick={() => this.toggleRole('all_users')}
-                    >
-                        <div>
-                            <h3>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.allMembersTitle'
-                                    defaultMessage='All Members'
-                                />
-                            </h3>
-                            <span>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.allMembersDescription'
-                                    defaultMessage='Permissions granted to all members, including administrators and newly created users.'
-                                />
-                            </span>
-                        </div>
-                        <div className='button'>
-                            <AccordionToggleIcon/>
-                        </div>
-                    </div>
-                    <PermissionsTree
-                        selected={this.state.selectedPermission}
-                        role={this.state.roles.all_users}
-                        scope={'system_scope'}
-                        onToggle={this.togglePermission}
-                        selectRow={this.selectRow}
-                    />
-                </div>
+                        <AdminPanelTogglable
+                            className='permissions-block'
+                            open={this.state.openRoles.channel_admin}
+                            onToggle={() => this.toggleRole('channel_admin')}
+                            titleId={t('admin.permissions.systemScheme.channelAdminsTitle')}
+                            titleDefault='Channel Administrators'
+                            subtitleId={t('admin.permissions.systemScheme.channelAdminsDescription')}
+                            subtitleDefault='Permissions granted to channel creators and any users promoted to Channel Administrator.'
+                        >
+                            <PermissionsTree
+                                parentRole={this.state.roles.all_users}
+                                role={this.state.roles.channel_admin}
+                                scope={'channel_scope'}
+                                onToggle={this.togglePermission}
+                                selectRow={this.selectRow}
+                            />
+                        </AdminPanelTogglable>
 
-                <div className={'permissions-block ' + (this.state.openRoles.channel_admin ? '' : 'closed')}>
-                    <div
-                        className='header'
-                        onClick={() => this.toggleRole('channel_admin')}
-                    >
-                        <div>
-                            <h3>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.channelAdminsTitle'
-                                    defaultMessage='Channel Administrators'
-                                />
-                            </h3>
-                            <span>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.channelAdminsDescription'
-                                    defaultMessage='Permissions granted to channel creators and any users promoted to Channel Administrator.'
-                                />
-                            </span>
-                        </div>
-                        <div className='button'>
-                            <AccordionToggleIcon/>
-                        </div>
-                    </div>
-                    <PermissionsTree
-                        parentRole={this.state.roles.all_users}
-                        role={this.state.roles.channel_admin}
-                        scope={'channel_scope'}
-                        onToggle={this.togglePermission}
-                        selectRow={this.selectRow}
-                    />
-                </div>
+                        <AdminPanelTogglable
+                            className='permissions-block'
+                            open={this.state.openRoles.team_admin}
+                            onToggle={() => this.toggleRole('team_admin')}
+                            titleId={t('admin.permissions.systemScheme.teamAdminsTitle')}
+                            titleDefault='Team Administrators'
+                            subtitleId={t('admin.permissions.systemScheme.teamAdminsDescription')}
+                            subtitleDefault='Permissions granted to team creators and any users promoted to Team Administrator.'
+                        >
+                            <PermissionsTree
+                                parentRole={this.state.roles.all_users}
+                                role={this.state.roles.team_admin}
+                                scope={'team_scope'}
+                                onToggle={this.togglePermission}
+                                selectRow={this.selectRow}
+                            />
+                        </AdminPanelTogglable>
 
-                <div className={'permissions-block ' + (this.state.openRoles.team_admin ? '' : 'closed')}>
-                    <div
-                        className='header'
-                        onClick={() => this.toggleRole('team_admin')}
-                    >
-                        <div>
-                            <h3>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.teamAdminsTitle'
-                                    defaultMessage='Team Administrators'
-                                />
-                            </h3>
-                            <span>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.teamAdminsDescription'
-                                    defaultMessage='Permissions granted to team creators and any users promoted to Team Administrator.'
-                                />
-                            </span>
-                        </div>
-                        <div className='button'>
-                            <AccordionToggleIcon/>
-                        </div>
+                        <AdminPanelTogglable
+                            className='permissions-block'
+                            open={this.state.openRoles.system_admin}
+                            onToggle={() => this.toggleRole('system_admin')}
+                            titleId={t('admin.permissions.systemScheme.systemAdminsTitle')}
+                            titleDefault='System Administrators'
+                            subtitleId={t('admin.permissions.systemScheme.systemAdminsDescription')}
+                            subtitleDefault='Full permissions granted to System Administrators.'
+                        >
+                            <PermissionsTree
+                                readOnly={true}
+                                role={this.state.roles.system_admin}
+                                scope={'system_scope'}
+                                onToggle={this.togglePermission}
+                                selectRow={this.selectRow}
+                            />
+                        </AdminPanelTogglable>
                     </div>
-                    <PermissionsTree
-                        parentRole={this.state.roles.all_users}
-                        role={this.state.roles.team_admin}
-                        scope={'team_scope'}
-                        onToggle={this.togglePermission}
-                        selectRow={this.selectRow}
-                    />
-                </div>
-
-                <div className={'permissions-block ' + (this.state.openRoles.system_admin ? '' : 'closed')}>
-                    <div
-                        className='header'
-                        onClick={() => this.toggleRole('system_admin')}
-                    >
-                        <div>
-                            <h3>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.systemAdminsTitle'
-                                    defaultMessage='System Administrators'
-                                />
-                            </h3>
-                            <span>
-                                <FormattedMessage
-                                    id='admin.permissions.systemScheme.systemAdminsDescription'
-                                    defaultMessage='Full permissions granted to System Administrators.'
-                                />
-                            </span>
-                        </div>
-                        <div className='button'>
-                            <AccordionToggleIcon/>
-                        </div>
-                    </div>
-                    <PermissionsTree
-                        readOnly={true}
-                        role={this.state.roles.system_admin}
-                        scope={'system_scope'}
-                        onToggle={this.togglePermission}
-                        selectRow={this.selectRow}
-                    />
                 </div>
 
                 <div className='admin-console-save'>
@@ -358,7 +333,7 @@ export default class PermissionSystemSchemeSettings extends React.Component {
                     />
                     <BlockableLink
                         className='cancel-button'
-                        to='/admin_console/permissions/schemes'
+                        to='/admin_console/user_management/permissions'
                     >
                         <FormattedMessage
                             id='admin.permissions.permissionSchemes.cancel'
@@ -379,55 +354,32 @@ export default class PermissionSystemSchemeSettings extends React.Component {
                     </div>
                 </div>
 
-                <Modal
-                    dialogClassName='admin-modal'
+                <ConfirmModal
                     show={this.state.showResetDefaultModal}
-                    onHide={() => this.setState({showResetDefaultModal: false})}
-                >
-                    <Modal.Header
-                        closeButton={true}
-                    >
-                        <h4 className='modal-title'>
-                            <FormattedMessage
-                                id='admin.permissions.systemScheme.resetDefaultsButtonModalTitle'
-                                defaultMessage='Reset to Default?'
-                            />
-                        </h4>
-                    </Modal.Header>
-                    <Modal.Body>
+                    title={
+                        <FormattedMessage
+                            id='admin.permissions.systemScheme.resetDefaultsButtonModalTitle'
+                            defaultMessage='Reset to Default?'
+                        />
+                    }
+                    message={
                         <FormattedMessage
                             id='admin.permissions.systemScheme.resetDefaultsButtonModalBody'
                             defaultMessage='This will reset all selections on this page to their default settings. Are you sure you want to reset?'
                         />
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <button
-                            type='button'
-                            className='btn btn-cancel'
-                            onClick={() => this.setState({showResetDefaultModal: false})}
-                        >
-                            <FormattedMessage
-                                id='confirm_modal.cancel'
-                                defaultMessage='Cancel'
-                            />
-                        </button>
-                        <button
-                            id='linkModalCloseButton'
-                            type='button'
-                            className='btn btn-default'
-                            onClick={() => {
-                                this.resetDefaults();
-                                this.setState({showResetDefaultModal: false});
-                            }}
-                        >
-                            <FormattedMessage
-                                id='admin.permissions.systemScheme.resetDefaultsConfirmationButton'
-                                defaultMessage='Yes, Reset'
-                            />
-                        </button>
-                    </Modal.Footer>
-                </Modal>
-
+                    }
+                    confirmButtonText={
+                        <FormattedMessage
+                            id='admin.permissions.systemScheme.resetDefaultsConfirmationButton'
+                            defaultMessage='Yes, Reset'
+                        />
+                    }
+                    onConfirm={() => {
+                        this.resetDefaults();
+                        this.setState({showResetDefaultModal: false});
+                    }}
+                    onCancel={() => this.setState({showResetDefaultModal: false})}
+                />
             </div>
         );
     };

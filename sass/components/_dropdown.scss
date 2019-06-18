@@ -8,49 +8,12 @@
         z-index: 2500;
     }
 
-    .fa {
-        @include opacity(.6);
-        margin-right: 5px;
-    }
+    .dropdown-item__plugin {
+        display: flex;
+        justify-content: center;
 
-    .divider {
-        @include opacity(.15);
-
-        & + .divider {
+        &:empty {
             display: none;
-        }
-
-        &:last-child {
-            display: none;
-        }
-    }
-
-    div,
-    li {
-        > a {
-            color: inherit;
-            padding: 5px 16px;
-            text-decoration: none;
-
-            &:focus,
-            &:hover {
-                color: inherit;
-            }
-        }
-    }
-
-    > li {
-        > button {
-            clear: both;
-            color: inherit;
-            cursor: pointer;
-            display: block;
-            font-weight: normal;
-            line-height: 1.42857143;
-            padding: 5px 15px;
-            text-align: left;
-            white-space: nowrap;
-            width: 100%;
         }
     }
 }

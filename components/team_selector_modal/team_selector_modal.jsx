@@ -4,14 +4,16 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {Modal} from 'react-bootstrap';
-import {FormattedMessage, FormattedHTMLMessage} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 
-import Constants from 'utils/constants.jsx';
+import Constants, {ModalIdentifiers} from 'utils/constants.jsx';
 import {localizeMessage} from 'utils/utils.jsx';
 
 import MultiSelect from 'components/multiselect/multiselect.jsx';
 import TeamInfo from 'components/team_info.jsx';
 import ConfirmModal from 'components/confirm_modal.jsx';
+
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 
 const TEAMS_PER_PAGE = 50;
 
@@ -23,6 +25,7 @@ export default class TeamSelectorModal extends React.Component {
         teams: PropTypes.array.isRequired,
         onModalDismissed: PropTypes.func,
         onTeamsSelected: PropTypes.func,
+        modalID: PropTypes.string,
         actions: PropTypes.shape({
             loadTeams: PropTypes.func.isRequired,
             setModalSearchTerm: PropTypes.func.isRequired,
@@ -46,7 +49,7 @@ export default class TeamSelectorModal extends React.Component {
     }
 
     componentDidMount() {
-        this.props.actions.loadTeams(0, TEAMS_PER_PAGE * 2).then(() => {
+        this.props.actions.loadTeams(0, TEAMS_PER_PAGE + 1).then(() => {
             this.setTeamsLoadingState(false);
         });
     }
@@ -96,7 +99,7 @@ export default class TeamSelectorModal extends React.Component {
     }
 
     addValue = (value, confirmed = false) => {
-        if (value.scheme_id !== null && value.scheme_id !== '' && !confirmed) {
+        if (this.props.modalID === ModalIdentifiers.ADD_TEAMS_TO_SCHEME && value.scheme_id !== null && value.scheme_id !== '' && !confirmed) {
             this.setState({confirmAddModal: true, confirmAddTeam: value});
             return;
         }
@@ -118,7 +121,7 @@ export default class TeamSelectorModal extends React.Component {
     handlePageChange = (page, prevPage) => {
         if (page > prevPage) {
             this.setTeamsLoadingState(true);
-            this.props.actions.loadTeams(page + 1, TEAMS_PER_PAGE).then(() => {
+            this.props.actions.loadTeams(page, TEAMS_PER_PAGE + 1).then(() => {
                 this.setTeamsLoadingState(false);
             });
         }
@@ -128,7 +131,10 @@ export default class TeamSelectorModal extends React.Component {
         this.setState({values});
     }
 
-    search = (term) => {
+    search = (term, multiselectComponent) => {
+        if (multiselectComponent.state.page !== 0) {
+            multiselectComponent.setState({page: 0});
+        }
         this.props.actions.setModalSearchTerm(term);
     }
 
@@ -159,8 +165,8 @@ export default class TeamSelectorModal extends React.Component {
         );
     }
 
-    renderValue(team) {
-        return team.display_name;
+    renderValue(props) {
+        return props.data.display_name;
     }
 
     renderConfirmModal(show, team) {
@@ -229,12 +235,17 @@ export default class TeamSelectorModal extends React.Component {
                 show={this.state.show}
                 onHide={this.handleHide}
                 onExited={this.handleExit}
+                role='dialog'
+                aria-labelledby='teamSelectorModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
-                        <FormattedHTMLMessage
+                    <Modal.Title
+                        componentClass='h1'
+                        id='teamSelectorModalLabel'
+                    >
+                        <FormattedMarkdownMessage
                             id='add_teams_to_scheme.title'
-                            defaultMessage='Add Teams To <strong>Team Selection</strong> List'
+                            defaultMessage='Add Teams To **Team Selection** List'
                         />
                     </Modal.Title>
                 </Modal.Header>
@@ -245,7 +256,6 @@ export default class TeamSelectorModal extends React.Component {
                         options={teams}
                         optionRenderer={this.renderOption}
                         values={this.state.values}
-                        valueKey='id'
                         valueRenderer={this.renderValue}
                         perPage={TEAMS_PER_PAGE}
                         handlePageChange={this.handlePageChange}
@@ -257,6 +267,7 @@ export default class TeamSelectorModal extends React.Component {
                         buttonSubmitText={buttonSubmitText}
                         saving={false}
                         loading={this.state.loadingTeams}
+                        placeholderText={localizeMessage('multiselect.addTeamsPlaceholder', 'Search and add teams')}
                     />
                 </Modal.Body>
             </Modal>

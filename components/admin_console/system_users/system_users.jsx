@@ -7,10 +7,13 @@ import {FormattedMessage} from 'react-intl';
 
 import {getStandardAnalytics} from 'actions/admin_actions.jsx';
 import {reloadIfServerVersionChanged} from 'actions/global_actions.jsx';
-import {loadProfiles, loadProfilesAndTeamMembers, loadProfilesWithoutTeam, searchUsers} from 'actions/user_actions.jsx';
-import UserStore from 'stores/user_store.jsx';
-import {Constants, UserSearchOptions, SearchUserTeamFilter} from 'utils/constants.jsx';
+import {searchUsers} from 'actions/user_actions.jsx';
+import {Constants, UserSearchOptions, SearchUserTeamFilter, SearchUserOptionsFilter} from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
+import {t} from 'utils/i18n.jsx';
+
+import LocalizedInput from 'components/localized_input/localized_input';
+import FormattedAdminHeader from 'components/widgets/admin_console/formatted_admin_header.jsx';
 
 import SystemUsersList from './list';
 
@@ -47,6 +50,8 @@ export default class SystemUsers extends React.Component {
         totalUsers: PropTypes.number.isRequired,
         searchTerm: PropTypes.string.isRequired,
         teamId: PropTypes.string.isRequired,
+        filter: PropTypes.string.isRequired,
+        users: PropTypes.object.isRequired,
 
         actions: PropTypes.shape({
 
@@ -69,6 +74,9 @@ export default class SystemUsers extends React.Component {
              * Function to get a user access token
              */
             getUserAccessToken: PropTypes.func.isRequired,
+            loadProfilesAndTeamMembers: PropTypes.func.isRequired,
+            loadProfilesWithoutTeam: PropTypes.func.isRequired,
+            getProfiles: PropTypes.func.isRequired,
             setSystemUsersSearch: PropTypes.func.isRequired,
         }).isRequired,
     }
@@ -76,12 +84,11 @@ export default class SystemUsers extends React.Component {
     constructor(props) {
         super(props);
 
-        this.loadDataForTeam = this.loadDataForTeam.bind(this);
         this.loadComplete = this.loadComplete.bind(this);
 
         this.handleTeamChange = this.handleTeamChange.bind(this);
         this.handleTermChange = this.handleTermChange.bind(this);
-        this.nextPage = this.nextPage.bind(this);
+        this.handleFilterChange = this.handleFilterChange.bind(this);
 
         this.doSearch = this.doSearch.bind(this);
         this.search = this.search.bind(this);
@@ -96,28 +103,41 @@ export default class SystemUsers extends React.Component {
     }
 
     componentDidMount() {
-        this.loadDataForTeam(this.props.teamId);
+        this.loadDataForTeam(this.props.teamId, this.props.filter);
         this.props.actions.getTeams(0, 1000).then(reloadIfServerVersionChanged);
     }
 
     componentWillUnmount() {
-        this.props.actions.setSystemUsersSearch('', '');
+        this.props.actions.setSystemUsersSearch('', '', '');
     }
 
-    loadDataForTeam(teamId) {
+    loadDataForTeam = async (teamId, filter) => {
+        const {
+            getProfiles,
+            loadProfilesWithoutTeam,
+            loadProfilesAndTeamMembers,
+            getTeamStats,
+        } = this.props.actions;
+
         if (this.props.searchTerm) {
-            this.search(this.props.searchTerm, teamId);
+            this.search(this.props.searchTerm, teamId, filter);
             return;
         }
 
+        const options = this.getFilterOptions(filter);
+
         if (teamId === SearchUserTeamFilter.ALL_USERS) {
-            loadProfiles(0, Constants.PROFILE_CHUNK_SIZE, this.loadComplete);
+            getProfiles(0, Constants.PROFILE_CHUNK_SIZE, options).then(this.loadComplete);
             getStandardAnalytics();
         } else if (teamId === SearchUserTeamFilter.NO_TEAM) {
-            loadProfilesWithoutTeam(0, Constants.PROFILE_CHUNK_SIZE, this.loadComplete);
+            loadProfilesWithoutTeam(0, Constants.PROFILE_CHUNK_SIZE).then(this.loadComplete);
         } else {
-            loadProfilesAndTeamMembers(0, Constants.PROFILE_CHUNK_SIZE, teamId, this.loadComplete);
-            this.props.actions.getTeamStats(teamId);
+            const {data} = await loadProfilesAndTeamMembers(0, Constants.PROFILE_CHUNK_SIZE, teamId);
+            if (data) {
+                this.loadComplete();
+            }
+
+            getTeamStats(teamId);
         }
     }
 
@@ -127,27 +147,41 @@ export default class SystemUsers extends React.Component {
 
     handleTeamChange(e) {
         const teamId = e.target.value;
-        this.loadDataForTeam(teamId);
-        this.props.actions.setSystemUsersSearch(this.props.searchTerm, teamId);
+        this.loadDataForTeam(teamId, this.props.filter);
+        this.props.actions.setSystemUsersSearch(this.props.searchTerm, teamId, this.props.filter);
+    }
+
+    handleFilterChange(e) {
+        const filter = e.target.value;
+        this.loadDataForTeam(this.props.teamId, filter);
+        this.props.actions.setSystemUsersSearch(this.props.searchTerm, this.props.teamId, filter);
     }
 
     handleTermChange(term) {
-        this.props.actions.setSystemUsersSearch(term, this.props.teamId);
+        this.props.actions.setSystemUsersSearch(term, this.props.teamId, this.props.filter);
     }
 
-    nextPage(page) {
+    nextPage = async (page) => {
         // Paging isn't supported while searching
+        const {
+            getProfiles,
+            loadProfilesWithoutTeam,
+            loadProfilesAndTeamMembers,
+        } = this.props.actions;
 
         if (this.props.teamId === SearchUserTeamFilter.ALL_USERS) {
-            loadProfiles(page + 1, USERS_PER_PAGE, this.loadComplete);
+            getProfiles(page + 1, USERS_PER_PAGE, {}).then(this.loadComplete);
         } else if (this.props.teamId === SearchUserTeamFilter.NO_TEAM) {
-            loadProfilesWithoutTeam(page + 1, USERS_PER_PAGE, this.loadComplete);
+            loadProfilesWithoutTeam(page + 1, USERS_PER_PAGE).then(this.loadComplete);
         } else {
-            loadProfilesAndTeamMembers(page + 1, USERS_PER_PAGE, this.props.teamId, this.loadComplete);
+            const {data} = await loadProfilesAndTeamMembers(page + 1, USERS_PER_PAGE, this.props.teamId);
+            if (data) {
+                this.loadComplete();
+            }
         }
     }
 
-    search(term, teamId = this.props.teamId) {
+    search(term, teamId = this.props.teamId, filter = '') {
         if (term === '') {
             this.setState({
                 loading: false,
@@ -157,17 +191,16 @@ export default class SystemUsers extends React.Component {
             return;
         }
 
-        this.doSearch(teamId, term);
+        this.doSearch(teamId, term, filter);
     }
 
-    doSearch(teamId, term, now = false) {
+    doSearch(teamId, term, filter, now = false) {
         clearTimeout(this.searchTimeoutId);
 
         this.setState({loading: true});
 
-        const options = {
-            [UserSearchOptions.ALLOW_INACTIVE]: true,
-        };
+        const options = this.getFilterOptions(filter);
+
         if (teamId === SearchUserTeamFilter.NO_TEAM) {
             options[UserSearchOptions.WITHOUT_TEAM] = true;
         }
@@ -195,8 +228,18 @@ export default class SystemUsers extends React.Component {
         );
     }
 
+    getFilterOptions(filter) {
+        const options = {};
+        if (filter === SearchUserOptionsFilter.SYSTEM_ADMIN) {
+            options[UserSearchOptions.ROLE] = SearchUserOptionsFilter.SYSTEM_ADMIN;
+        } else if (filter === SearchUserOptionsFilter.ALLOW_INACTIVE) {
+            options[SearchUserOptionsFilter.ALLOW_INACTIVE] = true;
+        }
+        return options;
+    }
+
     getUserById(id) {
-        if (UserStore.hasProfile(id)) {
+        if (this.props.users[id]) {
             this.setState({loading: false});
             return;
         }
@@ -239,19 +282,19 @@ export default class SystemUsers extends React.Component {
         return (
             <div className='system-users__filter-row'>
                 <div className='system-users__filter'>
-                    <input
+                    <LocalizedInput
                         id='searchUsers'
                         ref='filter'
                         className='form-control filter-textbox'
-                        placeholder={Utils.localizeMessage('filtered_user_list.search', 'Search users')}
+                        placeholder={{id: t('filtered_user_list.search'), defaultMessage: 'Search users'}}
                         onInput={doSearch}
                     />
                 </div>
                 <label>
                     <span className='system-users__team-filter-label'>
                         <FormattedMessage
-                            id='filtered_user_list.show'
-                            defaultMessage='Filter:'
+                            id='filtered_user_list.team'
+                            defaultMessage='Team:'
                         />
                     </span>
                     <select
@@ -264,6 +307,23 @@ export default class SystemUsers extends React.Component {
                         {teams}
                     </select>
                 </label>
+                <label>
+                    <span className='system-users__filter-label'>
+                        <FormattedMessage
+                            id='filtered_user_list.userStatus'
+                            defaultMessage='User Status:'
+                        />
+                    </span>
+                    <select
+                        className='form-control system-users__filter'
+                        value={this.props.filter}
+                        onChange={this.handleFilterChange}
+                    >
+                        <option value=''>{Utils.localizeMessage('admin.system_users.allUsers', 'All Users')}</option>
+                        <option value={SearchUserOptionsFilter.SYSTEM_ADMIN}>{Utils.localizeMessage('admin.system_users.system_admin', 'System Admin')}</option>
+                        <option value={SearchUserOptionsFilter.ALLOW_INACTIVE}>{Utils.localizeMessage('admin.system_users.inactive', 'Inactive')}</option>
+                    </select>
+                </label>
             </div>
         );
     }
@@ -271,31 +331,35 @@ export default class SystemUsers extends React.Component {
     render() {
         return (
             <div className='wrapper--fixed'>
-                <h3 className='admin-console-header'>
-                    <FormattedMessage
-                        id='admin.system_users.title'
-                        defaultMessage='{siteName} Users'
-                        values={{
-                            siteName: this.props.siteName,
-                        }}
-                    />
-                </h3>
-                <div className='more-modal__list member-list-holder'>
-                    <SystemUsersList
-                        loading={this.state.loading}
-                        renderFilterRow={this.renderFilterRow}
-                        search={this.search}
-                        nextPage={this.nextPage}
-                        usersPerPage={USERS_PER_PAGE}
-                        total={this.props.totalUsers}
-                        teams={this.props.teams}
-                        teamId={this.props.teamId}
-                        term={this.props.searchTerm}
-                        onTermChange={this.handleTermChange}
-                        mfaEnabled={this.props.mfaEnabled}
-                        enableUserAccessTokens={this.props.enableUserAccessTokens}
-                        experimentalEnableAuthenticationTransfer={this.props.experimentalEnableAuthenticationTransfer}
-                    />
+                <FormattedAdminHeader
+                    id='admin.system_users.title'
+                    defaultMessage='{siteName} Users'
+                    values={{
+                        siteName: this.props.siteName,
+                    }}
+                />
+
+                <div className='admin-console__wrapper'>
+                    <div className='admin-console__content'>
+                        <div className='more-modal__list member-list-holder'>
+                            <SystemUsersList
+                                loading={this.state.loading}
+                                renderFilterRow={this.renderFilterRow}
+                                search={this.search}
+                                nextPage={this.nextPage}
+                                usersPerPage={USERS_PER_PAGE}
+                                total={this.props.totalUsers}
+                                teams={this.props.teams}
+                                teamId={this.props.teamId}
+                                filter={this.props.filter}
+                                term={this.props.searchTerm}
+                                onTermChange={this.handleTermChange}
+                                mfaEnabled={this.props.mfaEnabled}
+                                enableUserAccessTokens={this.props.enableUserAccessTokens}
+                                experimentalEnableAuthenticationTransfer={this.props.experimentalEnableAuthenticationTransfer}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         );

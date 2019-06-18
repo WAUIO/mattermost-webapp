@@ -6,8 +6,7 @@
         @include translateX(100%);
         z-index: 10;
 
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             -webkit-transform: translateX(0) !important;
             -moz-transform: translateX(0) !important;
             -ms-transform: translateX(0) !important;
@@ -34,8 +33,7 @@
             margin-right: 0 !important;
         }
 
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             margin-right: 0 !important;
 
             .channel-header__links {
@@ -46,7 +44,6 @@
         }
 
         &.move--left,
-        &.webrtc--show,
         &.move--right {
             .header-list__right {
                 // hide it behind the RHS
@@ -57,6 +54,26 @@
 }
 
 @media screen and (max-width: 960px) {
+    .system-users__filter-row {
+        flex-direction: column;
+
+        .system-users__filter {
+            &:first-child {
+                flex: 1 1 auto;
+                padding-bottom: 12px;
+            }
+        }
+
+        > label {
+            margin-bottom: 12px;
+
+            span {
+                flex: 0 0 auto;
+                padding-left: 0;
+            }
+        }
+    }
+
     .app__body {
         .modal {
             .modal-image {
@@ -80,9 +97,6 @@
                 }
 
                 .modal-button-bar {
-                    @include opacity(1);
-                    @include border-radius(0 0 $border-rad $border-rad);
-                    position: relative;
                     line-height: 30px;
                     padding: 5px 10px 5px 5px;
                     bottom: 20px;
@@ -154,24 +168,6 @@
     }
 }
 
-// Larger tablets
-@media (min-width: 960px) {
-    .app__body {
-        .modal {
-            .modal-image {
-                .modal-image__wrapper {
-                    audio,
-                    canvas,
-                    progress,
-                    video {
-                        margin: -40px 0 40px;
-                    }
-                }
-            }
-        }
-    }
-}
-
 @media (min-width: 880px) {
     .post-collapse__show-more {
         padding-right: 60px;
@@ -190,6 +186,11 @@
 
 // Tablet and desktop
 @media screen and (min-width: 768px) {
+    .channel-header__popover {
+        left: 236px !important;
+        top: 44px !important;
+    }
+
     .col-sm-auto {
         float: left;
     }
@@ -209,8 +210,7 @@
     }
 
     .sidebar--right {
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             @include translateX(0);
         }
 
@@ -251,19 +251,31 @@
     }
 
     .inner-wrap {
-        &.move--left,
-        &.webrtc--show {
+        &.move--left {
             margin-right: 400px;
         }
     }
 
     .post {
-        &.post--compact {
-            .post-message {
-                &.post-message--overflow {
-                    @include clearfix;
-                    margin-top: 22px;
+        .sidebar--right & {
+            &.same--root {
+                &.post--comment {
+                    &:not(.post--compact) {
+                        .post__pinned-badge {
+                            margin-left: 7px;
+                        }
+                    }
                 }
+            }
+        }
+
+        &.post--compact {
+            .post-message--overflow {
+                @include clearfix;
+                margin-top: 22px; //Any value change to this needs to reflect for MARGIN_CHANGE_FOR_COMPACT_POST variable in show_more component
+            }
+            .attachment__body .post-message--overflow {
+                margin-top: 0px; //The above margin was added for wrapping texg in compact view but it isnt needed for attachment text
             }
 
             &.same--root {
@@ -319,7 +331,7 @@
             }
 
             &:not(.post--thread) {
-                padding: 0 .5em 0 77px;
+                padding: 0 .5em 0 77px; // .post-row__padding.bottom needs to be changed accordingly if this is changed
 
                 .post__link {
                     margin: 3px 0 7px;
@@ -433,8 +445,6 @@
                 }
 
                 &.post--comment {
-                    padding-top: 1px;
-
                     &.same--user {
                         .post__img {
                             img {
@@ -486,16 +496,26 @@
                         }
                     }
 
+                    .flag-icon__container {
+                        .sidebar--right & {
+                            left: 30px;
+                        }
+                    }
+
                     .post__time {
                         display: inline-block;
                         font-size: 11px;
-                        left: -14px;
+                        left: -18px;
                         line-height: 20px;
                         position: absolute;
                         text-align: right;
                         text-rendering: auto;
                         top: 4px;
                         width: 51px;
+
+                        .sidebar--right & {
+                            left: -20px;
+                        }
 
                         &:hover {
                             text-decoration: underline;
@@ -510,5 +530,13 @@
                 }
             }
         }
+    }
+
+    .post-row__padding.top .post--compact {
+        padding-top: 1em;
+    }
+
+    .post-row__padding.bottom .post--compact {
+        padding-bottom: 1em;
     }
 }

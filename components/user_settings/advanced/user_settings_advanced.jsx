@@ -5,23 +5,44 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import {savePreferences, updateActive, revokeAllSessions} from 'actions/user_actions.jsx';
-import {clientLogout} from 'actions/global_actions.jsx';
-import PreferenceStore from 'stores/preference_store.jsx';
-import UserStore from 'stores/user_store.jsx';
+import {emitUserLoggedOutEvent} from 'actions/global_actions.jsx';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 import SettingItemMax from 'components/setting_item_max.jsx';
 import SettingItemMin from 'components/setting_item_min.jsx';
-import ConfirmModal from '../../confirm_modal.jsx';
+import ConfirmModal from 'components/confirm_modal.jsx';
+import BackIcon from 'components/icon/back_icon';
+
+import JoinLeaveSection from './join_leave_section';
+import CodeBlockCtrlEnterSection from './code_block_ctrl_enter_section';
 
 const PreReleaseFeatures = Constants.PRE_RELEASE_FEATURES;
 
 export default class AdvancedSettingsDisplay extends React.Component {
+    static propTypes = {
+        currentUser: PropTypes.object.isRequired,
+        advancedSettingsCategory: PropTypes.array.isRequired,
+        sendOnCtrlEnter: PropTypes.string.isRequired,
+        formatting: PropTypes.string.isRequired,
+        joinLeave: PropTypes.string.isRequired,
+        updateSection: PropTypes.func,
+        activeSection: PropTypes.string,
+        prevActiveSection: PropTypes.string,
+        closeModal: PropTypes.func.isRequired,
+        collapseModal: PropTypes.func.isRequired,
+        enablePreviewFeatures: PropTypes.bool,
+        enableUserDeactivation: PropTypes.bool,
+        actions: PropTypes.shape({
+            savePreferences: PropTypes.func.isRequired,
+            updateUserActive: PropTypes.func.isRequired,
+            revokeAllSessions: PropTypes.func.isRequired,
+        }).isRequired,
+    }
+
     constructor(props) {
         super(props);
 
-        this.state = this.getStateFromStores();
+        this.state = this.getStateFromProps();
 
         this.prevSections = {
             advancedCtrlSend: 'dummySectionName', // dummy value that should never match any section name
@@ -32,36 +53,24 @@ export default class AdvancedSettingsDisplay extends React.Component {
         };
     }
 
-    getStateFromStores = () => {
-        const advancedSettings = PreferenceStore.getCategory(Constants.Preferences.CATEGORY_ADVANCED_SETTINGS);
+    getStateFromProps = () => {
+        const advancedSettings = this.props.advancedSettingsCategory;
         const settings = {
-            send_on_ctrl_enter: PreferenceStore.get(
-                Constants.Preferences.CATEGORY_ADVANCED_SETTINGS,
-                'send_on_ctrl_enter',
-                'false'
-            ),
-            formatting: PreferenceStore.get(
-                Constants.Preferences.CATEGORY_ADVANCED_SETTINGS,
-                'formatting',
-                'true'
-            ),
-            join_leave: PreferenceStore.get(
-                Constants.Preferences.CATEGORY_ADVANCED_SETTINGS,
-                'join_leave',
-                'true'
-            ),
+            send_on_ctrl_enter: this.props.sendOnCtrlEnter,
+            formatting: this.props.formatting,
+            join_leave: this.props.joinLeave,
         };
 
         const preReleaseFeaturesKeys = Object.keys(PreReleaseFeatures);
         let enabledFeatures = 0;
-        for (const [name, value] of advancedSettings) {
+        for (const as of advancedSettings) {
             for (const key of preReleaseFeaturesKeys) {
                 const feature = PreReleaseFeatures[key];
 
-                if (name === Constants.FeatureTogglePrefix + feature.label) {
-                    settings[name] = value;
+                if (as.name === Constants.FeatureTogglePrefix + feature.label) {
+                    settings[as.name] = as.value;
 
-                    if (value === 'true') {
+                    if (as.value === 'true') {
                         enabledFeatures += 1;
                     }
                 }
@@ -115,9 +124,10 @@ export default class AdvancedSettingsDisplay extends React.Component {
         this.handleSubmit(features);
     }
 
-    handleSubmit = (settings) => {
+    handleSubmit = async (settings) => {
         const preferences = [];
-        const userId = UserStore.getCurrentId();
+        const {actions, currentUser} = this.props;
+        const userId = currentUser.id;
 
         // this should be refactored so we can actually be certain about what type everything is
         (Array.isArray(settings) ? settings : [settings]).forEach((setting) => {
@@ -131,32 +141,30 @@ export default class AdvancedSettingsDisplay extends React.Component {
 
         this.setState({isSaving: true});
 
-        savePreferences(
-            preferences,
-            () => {
-                this.handleUpdateSection('');
-            }
-        );
+        await actions.savePreferences(userId, preferences);
+
+        this.handleUpdateSection('');
     }
 
     handleDeactivateAccountSubmit = () => {
-        const userId = UserStore.getCurrentId();
+        const userId = this.props.currentUser.id;
 
         this.setState({isSaving: true});
 
-        updateActive(userId, false,
-            null,
-            (err) => {
-                this.setState({serverError: err.message});
-            }
-        );
+        this.props.actions.updateUserActive(userId, false).
+            then(({error}) => {
+                if (error) {
+                    this.setState({serverError: error.message});
+                }
+            });
 
-        revokeAllSessions(userId,
-            () => {
-                clientLogout();
-            },
-            (err) => {
-                this.setState({serverError: err.message});
+        this.props.actions.revokeAllSessions(userId).then(
+            ({data, error}) => {
+                if (data) {
+                    emitUserLoggedOutEvent();
+                } else if (error) {
+                    this.setState({serverError: error.message});
+                }
             }
         );
     }
@@ -175,7 +183,7 @@ export default class AdvancedSettingsDisplay extends React.Component {
 
     handleUpdateSection = (section) => {
         if (!section) {
-            this.setState(this.getStateFromStores());
+            this.setState(this.getStateFromProps());
         }
         this.setState({isSaving: false});
         this.props.updateSection(section);
@@ -247,7 +255,7 @@ export default class AdvancedSettingsDisplay extends React.Component {
                                 <br/>
                                 <FormattedMessage
                                     id='user.settings.advance.formattingDesc'
-                                    defaultMessage='If enabled, posts will be formatted to create links, show emoji, style the text, and add line breaks. By default, this setting is enabled. Changing this setting requires the page to be refreshed.'
+                                    defaultMessage='If enabled, posts will be formatted to create links, show emoji, style the text, and add line breaks. By default, this setting is enabled.'
                                 />
                             </div>
                         </div>,
@@ -275,88 +283,6 @@ export default class AdvancedSettingsDisplay extends React.Component {
                 updateSection={this.handleUpdateSection}
             />
         );
-    }
-
-    renderJoinLeaveSection = () => {
-        if (this.props.buildEnterpriseReady && this.props.isLicensed) {
-            if (this.props.activeSection === 'join_leave') {
-                return (
-                    <SettingItemMax
-                        title={
-                            <FormattedMessage
-                                id='user.settings.advance.joinLeaveTitle'
-                                defaultMessage='Enable Join/Leave Messages'
-                            />
-                        }
-                        inputs={[
-                            <div key='joinLeaveSetting'>
-                                <div className='radio'>
-                                    <label>
-                                        <input
-                                            id='joinLeaveOn'
-                                            type='radio'
-                                            name='join_leave'
-                                            checked={this.state.settings.join_leave !== 'false'}
-                                            onChange={this.updateSetting.bind(this, 'join_leave', 'true')}
-                                        />
-                                        <FormattedMessage
-                                            id='user.settings.advance.on'
-                                            defaultMessage='On'
-                                        />
-                                    </label>
-                                    <br/>
-                                </div>
-                                <div className='radio'>
-                                    <label>
-                                        <input
-                                            id='joinLeaveOff'
-                                            type='radio'
-                                            name='join_leave'
-                                            checked={this.state.settings.join_leave === 'false'}
-                                            onChange={this.updateSetting.bind(this, 'join_leave', 'false')}
-                                        />
-                                        <FormattedMessage
-                                            id='user.settings.advance.off'
-                                            defaultMessage='Off'
-                                        />
-                                    </label>
-                                    <br/>
-                                </div>
-                                <div>
-                                    <br/>
-                                    <FormattedMessage
-                                        id='user.settings.advance.joinLeaveDesc'
-                                        defaultMessage='When "On", System Messages saying a user has joined or left a channel will be visible. When "Off", the System Messages about joining or leaving a channel will be hidden. A message will still show up when you are added to a channel, so you can receive a notification.'
-                                    />
-                                </div>
-                            </div>,
-                        ]}
-                        setting={'join_leave'}
-                        submit={this.handleSubmit}
-                        saving={this.state.isSaving}
-                        server_error={this.state.serverError}
-                        updateSection={this.handleUpdateSection}
-                    />
-                );
-            }
-
-            return (
-                <SettingItemMin
-                    title={
-                        <FormattedMessage
-                            id='user.settings.advance.joinLeaveTitle'
-                            defaultMessage='Enable Join/Leave Messages'
-                        />
-                    }
-                    describe={this.renderOnOffLabel(this.state.settings.join_leave)}
-                    focused={this.props.prevActiveSection === this.prevSections.join_leave}
-                    section={'join_leave'}
-                    updateSection={this.handleUpdateSection}
-                />
-            );
-        }
-
-        return null;
     }
 
     renderFeatureLabel(feature) {
@@ -465,15 +391,6 @@ export default class AdvancedSettingsDisplay extends React.Component {
             formattingSectionDivider = <div className='divider-light'/>;
         }
 
-        const displayJoinLeaveSection = this.renderJoinLeaveSection();
-        let displayJoinLeaveSectionDivider = null;
-        if (displayJoinLeaveSection) {
-            displayJoinLeaveSectionDivider = <div className='divider-light'/>;
-            this.prevSections.advancedPreviewFeatures = 'join_leave';
-        } else {
-            this.prevSections.advancedPreviewFeatures = this.prevSections.join_leave;
-        }
-
         let previewFeaturesSection;
         let previewFeaturesSectionDivider;
         if (this.state.previewFeaturesEnabled && this.state.preReleaseFeaturesKeys.length > 0) {
@@ -550,7 +467,7 @@ export default class AdvancedSettingsDisplay extends React.Component {
 
         let deactivateAccountSection = '';
         let makeConfirmationModal = '';
-        const currentUser = UserStore.getCurrentUser();
+        const currentUser = this.props.currentUser;
 
         if (currentUser.auth_service === '' && this.props.enableUserDeactivation) {
             if (this.props.activeSection === 'deactivateAccount') {
@@ -652,11 +569,9 @@ export default class AdvancedSettingsDisplay extends React.Component {
                         ref='title'
                     >
                         <div className='modal-back'>
-                            <i
-                                className='fa fa-angle-left'
-                                title={Utils.localizeMessage('generic_icons.back', 'Back Icon')}
-                                onClick={this.props.collapseModal}
-                            />
+                            <span onClick={this.props.collapseModal}>
+                                <BackIcon/>
+                            </span>
                         </div>
                         <FormattedMessage
                             id='user.settings.advance.title'
@@ -673,10 +588,21 @@ export default class AdvancedSettingsDisplay extends React.Component {
                     </h3>
                     <div className='divider-dark first'/>
                     {ctrlSendSection}
+                    <CodeBlockCtrlEnterSection
+                        activeSection={this.props.activeSection}
+                        onUpdateSection={this.handleUpdateSection}
+                        prevActiveSection={this.props.prevActiveSection}
+                        renderOnOffLabel={this.renderOnOffLabel}
+                    />
                     {formattingSectionDivider}
                     {formattingSection}
-                    {displayJoinLeaveSectionDivider}
-                    {displayJoinLeaveSection}
+                    <div className='divider-light'/>
+                    <JoinLeaveSection
+                        activeSection={this.props.activeSection}
+                        onUpdateSection={this.handleUpdateSection}
+                        prevActiveSection={this.props.prevActiveSection}
+                        renderOnOffLabel={this.renderOnOffLabel}
+                    />
                     {previewFeaturesSectionDivider}
                     {previewFeaturesSection}
                     {formattingSectionDivider}
@@ -688,15 +614,3 @@ export default class AdvancedSettingsDisplay extends React.Component {
         );
     }
 }
-
-AdvancedSettingsDisplay.propTypes = {
-    updateSection: PropTypes.func,
-    activeSection: PropTypes.string,
-    prevActiveSection: PropTypes.string,
-    closeModal: PropTypes.func.isRequired,
-    collapseModal: PropTypes.func.isRequired,
-    enablePreviewFeatures: PropTypes.bool,
-    buildEnterpriseReady: PropTypes.bool,
-    isLicensed: PropTypes.bool,
-    enableUserDeactivation: PropTypes.bool,
-};

@@ -6,7 +6,7 @@ import React from 'react';
 import {Route, Switch} from 'react-router-dom';
 import iNoBounce from 'inobounce';
 
-import {loadStatusesForChannelAndSidebar, startPeriodicStatusUpdates, stopPeriodicStatusUpdates} from 'actions/status_actions.jsx';
+import {startPeriodicStatusUpdates, stopPeriodicStatusUpdates} from 'actions/status_actions.jsx';
 import {startPeriodicSync, stopPeriodicSync, reconnect} from 'actions/websocket_actions.jsx';
 import * as GlobalActions from 'actions/global_actions.jsx';
 import Constants from 'utils/constants.jsx';
@@ -24,7 +24,6 @@ let lastTime = (new Date()).getTime();
 const WAKEUP_CHECK_INTERVAL = 30000; // 30 seconds
 const WAKEUP_THRESHOLD = 60000; // 60 seconds
 const UNREAD_CHECK_TIME_MILLISECONDS = 10000;
-const TEAMS_PER_PAGE = 200;
 
 export default class NeedsTeam extends React.Component {
     static propTypes = {
@@ -38,10 +37,11 @@ export default class NeedsTeam extends React.Component {
             getMyTeamUnreads: PropTypes.func.isRequired,
             viewChannel: PropTypes.func.isRequired,
             markChannelAsRead: PropTypes.func.isRequired,
-            getTeams: PropTypes.func.isRequired,
-            joinTeam: PropTypes.func.isRequired,
+            getTeamByName: PropTypes.func.isRequired,
+            addUserToTeam: PropTypes.func.isRequired,
             selectTeam: PropTypes.func.isRequired,
-            setGlobalItem: PropTypes.func.isRequired,
+            setPreviousTeamId: PropTypes.func.isRequired,
+            loadStatusesForChannelAndSidebar: PropTypes.func.isRequired,
         }).isRequired,
         theme: PropTypes.object.isRequired,
         mfaRequired: PropTypes.bool.isRequired,
@@ -158,10 +158,9 @@ export default class NeedsTeam extends React.Component {
     }
 
     joinTeam = async (props) => {
-        const openTeams = await this.props.actions.getTeams(0, TEAMS_PER_PAGE);
-        const team = openTeams.data.find((teamObj) => teamObj.name === props.match.params.team);
+        const {data: team} = await this.props.actions.getTeamByName(props.match.params.team);
         if (team) {
-            const {error} = await props.actions.joinTeam(team.invite_id, team.id);
+            const {error} = await props.actions.addUserToTeam(team.id, props.currentUser && props.currentUser.id);
             if (error) {
                 props.history.push('/error?type=team_not_found');
             } else {
@@ -178,7 +177,7 @@ export default class NeedsTeam extends React.Component {
         // The first load action pulls team unreads
         this.props.actions.getMyTeamUnreads();
         this.props.actions.selectTeam(team);
-        this.props.actions.setGlobalItem('team', team.id);
+        this.props.actions.setPreviousTeamId(team.id);
         GlobalActions.emitCloseRightHandSide();
 
         this.props.actions.fetchMyChannelsAndMembers(team.id).then(
@@ -189,7 +188,7 @@ export default class NeedsTeam extends React.Component {
             }
         );
 
-        loadStatusesForChannelAndSidebar();
+        this.props.actions.loadStatusesForChannelAndSidebar();
         loadProfilesForSidebar();
 
         return team;

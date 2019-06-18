@@ -94,9 +94,14 @@ export default class ResetEmailModal extends React.Component {
             <Modal
                 show={this.props.show}
                 onHide={this.doCancel}
+                role='dialog'
+                aria-labelledby='resetEmailModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='resetEmailModalLabel'
+                    >
                         {title}
                     </Modal.Title>
                 </Modal.Header>
@@ -134,7 +139,7 @@ export default class ResetEmailModal extends React.Component {
                     <Modal.Footer>
                         <button
                             type='button'
-                            className='btn btn-default'
+                            className='btn btn-link'
                             onClick={this.doCancel}
                         >
                             <FormattedMessage

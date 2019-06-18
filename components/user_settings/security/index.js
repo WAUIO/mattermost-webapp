@@ -3,27 +3,24 @@
 
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {getMe} from 'mattermost-redux/actions/users';
+import {getMe, updateUserPassword} from 'mattermost-redux/actions/users';
 import * as UserUtils from 'mattermost-redux/utils/user_utils';
-import {getConfig, getLicense} from 'mattermost-redux/selectors/entities/general';
+import {getConfig} from 'mattermost-redux/selectors/entities/general';
+import {getBool} from 'mattermost-redux/selectors/entities/preferences';
 
+import {getAuthorizedApps, deauthorizeOAuthApp} from 'actions/user_actions.jsx';
 import {getPasswordConfig} from 'utils/utils.jsx';
+import {Preferences} from 'utils/constants';
 
 import SecurityTab from './user_settings_security.jsx';
 
 function mapStateToProps(state, ownProps) {
-    const license = getLicense(state);
     const config = getConfig(state);
 
     const tokensEnabled = config.EnableUserAccessTokens === 'true';
     const userHasTokenRole = UserUtils.hasUserAccessTokenRole(ownProps.user.roles) || UserUtils.isSystemAdmin(ownProps.user.roles);
 
-    const isLicensed = license && license.IsLicensed === 'true';
-    const mfaLicensed = license && license.MFA === 'true';
-
     const enableOAuthServiceProvider = config.EnableOAuthServiceProvider === 'true';
-    const enableMultifactorAuthentication = config.EnableMultifactorAuthentication === 'true';
-    const enforceMultifactorAuthentication = config.EnforceMultifactorAuthentication === 'true';
     const enableSignUpWithEmail = config.EnableSignUpWithEmail === 'true';
     const enableSignUpWithGitLab = config.EnableSignUpWithGitLab === 'true';
     const enableSignUpWithGoogle = config.EnableSignUpWithGoogle === 'true';
@@ -34,11 +31,7 @@ function mapStateToProps(state, ownProps) {
 
     return {
         canUseAccessTokens: tokensEnabled && userHasTokenRole,
-        isLicensed,
-        mfaLicensed,
         enableOAuthServiceProvider,
-        enableMultifactorAuthentication,
-        enforceMultifactorAuthentication,
         enableSignUpWithEmail,
         enableSignUpWithGitLab,
         enableSignUpWithGoogle,
@@ -47,6 +40,7 @@ function mapStateToProps(state, ownProps) {
         enableSignUpWithOffice365,
         experimentalEnableAuthenticationTransfer,
         passwordConfig: getPasswordConfig(config),
+        militaryTime: getBool(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.USE_MILITARY_TIME, false),
     };
 }
 
@@ -54,6 +48,9 @@ function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
             getMe,
+            updateUserPassword,
+            getAuthorizedApps,
+            deauthorizeOAuthApp,
         }, dispatch),
     };
 }

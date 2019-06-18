@@ -9,6 +9,7 @@ import {Preferences} from 'mattermost-redux/constants';
 import ConfirmModal from 'components/confirm_modal.jsx';
 import {toTitleCase} from 'utils/utils.jsx';
 import {UserStatuses} from 'utils/constants.jsx';
+import {t} from 'utils/i18n';
 
 export default class ResetStatusModal extends React.PureComponent {
     static propTypes = {
@@ -69,7 +70,7 @@ export default class ResetStatusModal extends React.PureComponent {
 
                 this.setState({
                     currentUserStatus: status, // Set in state until status refactor where we store 'manual' field in redux
-                    show: Boolean(statusIsManual && autoResetPrefNotSet),
+                    show: Boolean(status.status === UserStatuses.OUT_OF_OFFICE || (statusIsManual && autoResetPrefNotSet)),
                 });
             }
         );
@@ -168,6 +169,8 @@ export default class ResetStatusModal extends React.PureComponent {
             />
         );
 
+        const showCheckbox = this.props.currentUserStatus !== UserStatuses.OUT_OF_OFFICE;
+
         return (
             <ConfirmModal
                 show={this.state.show}
@@ -178,9 +181,35 @@ export default class ResetStatusModal extends React.PureComponent {
                 cancelButtonText={manualStatusCancel}
                 onCancel={this.onCancel}
                 onExited={this.props.onHide}
-                showCheckbox={true}
+                showCheckbox={showCheckbox}
                 checkboxText={manualStatusCheckbox}
             />
         );
     }
 }
+
+t('modal.manual_status.auto_responder.message_');
+t('modal.manual_status.auto_responder.message_away');
+t('modal.manual_status.auto_responder.message_dnd');
+t('modal.manual_status.auto_responder.message_offline');
+t('modal.manual_status.auto_responder.message_online');
+t('modal.manual_status.button_');
+t('modal.manual_status.button_away');
+t('modal.manual_status.button_dnd');
+t('modal.manual_status.button_offline');
+t('modal.manual_status.button_online');
+t('modal.manual_status.cancel_');
+t('modal.manual_status.cancel_away');
+t('modal.manual_status.cancel_dnd');
+t('modal.manual_status.cancel_offline');
+t('modal.manual_status.cancel_ooo');
+t('modal.manual_status.message_');
+t('modal.manual_status.message_away');
+t('modal.manual_status.message_dnd');
+t('modal.manual_status.message_offline');
+t('modal.manual_status.message_online');
+t('modal.manual_status.title_');
+t('modal.manual_status.title_away');
+t('modal.manual_status.title_dnd');
+t('modal.manual_status.title_offline');
+t('modal.manual_status.title_ooo');

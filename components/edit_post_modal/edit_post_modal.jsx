@@ -12,61 +12,23 @@ import * as Utils from 'utils/utils.jsx';
 import DeletePostModal from 'components/delete_post_modal';
 import EmojiPickerOverlay from 'components/emoji_picker/emoji_picker_overlay.jsx';
 import EmojiIcon from 'components/svg/emoji_icon';
-import Textbox from 'components/textbox.jsx';
+import Textbox from 'components/textbox';
 
 const KeyCodes = Constants.KeyCodes;
 
 export default class EditPostModal extends React.PureComponent {
     static propTypes = {
-
-        /**
-         * Set to force form submission on CTRL/CMD + ENTER instead of ENTER
-         */
+        canEditPost: PropTypes.bool,
+        canDeletePost: PropTypes.bool,
         ctrlSend: PropTypes.bool,
-
-        /**
-         * Global config object
-         */
         config: PropTypes.object.isRequired,
-
-        /**
-         * The maximum length of a post
-         */
         maxPostSize: PropTypes.number.isRequired,
-
-        /**
-         * Editing post information
-         */
         editingPost: PropTypes.shape({
-
-            /**
-             * The post being edited
-             */
             post: PropTypes.object,
-
-            /**
-             * The ID of the post being edited
-             */
             postId: PropTypes.string,
-
-            /**
-             * The ID of a DOM node to focus with the keyboard when this modal closes
-             */
             refocusId: PropTypes.string,
-
-            /**
-             * Whether or not to show the modal
-             */
             show: PropTypes.bool.isRequired,
-
-            /**
-             * What to show in the title of the modal as "Edit {title}"
-             */
             title: PropTypes.string,
-
-            /**
-             * Whether or not the modal was open from RHS
-             */
             isRHS: PropTypes.bool,
         }).isRequired,
 
@@ -103,10 +65,16 @@ export default class EditPostModal extends React.PureComponent {
 
     toggleEmojiPicker = () => {
         this.setState({showEmojiPicker: !this.state.showEmojiPicker});
+        if (!this.state.showEmojiPicker && this.editbox) {
+            this.editbox.focus();
+        }
     }
 
     hideEmojiPicker = () => {
         this.setState({showEmojiPicker: false});
+        if (this.editbox) {
+            this.editbox.focus();
+        }
     }
 
     handleEmojiClick = (emoji) => {
@@ -129,7 +97,9 @@ export default class EditPostModal extends React.PureComponent {
 
         this.setState({showEmojiPicker: false});
 
-        this.refs.editbox.focus();
+        if (this.editbox) {
+            this.editbox.focus();
+        }
     }
 
     handleGifClick = (gif) => {
@@ -140,7 +110,7 @@ export default class EditPostModal extends React.PureComponent {
             this.setState({editText: newMessage});
         }
         this.setState({showEmojiPicker: false});
-        this.refs.editbox.focus();
+        this.editbox.focus();
     }
 
     getEditPostControls = () => {
@@ -154,6 +124,10 @@ export default class EditPostModal extends React.PureComponent {
     }
 
     handleEdit = async () => {
+        if (this.isSaveDisabled()) {
+            return;
+        }
+
         const {actions, editingPost} = this.props;
         const updatedPost = {
             message: this.state.editText,
@@ -213,11 +187,11 @@ export default class EditPostModal extends React.PureComponent {
     handleEditKeyPress = (e) => {
         if (!UserAgent.isMobile() && !this.props.ctrlSend && Utils.isKeyPressed(e, KeyCodes.ENTER) && !e.shiftKey && !e.altKey) {
             e.preventDefault();
-            this.refs.editbox.blur();
+            this.editbox.blur();
             this.handleEdit();
         } else if (this.props.ctrlSend && e.ctrlKey && Utils.isKeyPressed(e, KeyCodes.ENTER)) {
             e.preventDefault();
-            this.refs.editbox.blur();
+            this.editbox.blur();
             this.handleEdit();
         }
     }
@@ -225,6 +199,8 @@ export default class EditPostModal extends React.PureComponent {
     handleKeyDown = (e) => {
         if (this.props.ctrlSend && Utils.isKeyPressed(e, KeyCodes.ENTER) && e.ctrlKey === true) {
             this.handleEdit();
+        } else if (Utils.isKeyPressed(e, KeyCodes.ESCAPE) && !this.state.showEmojiPicker) {
+            this.handleHide();
         }
     }
 
@@ -234,12 +210,16 @@ export default class EditPostModal extends React.PureComponent {
     }
 
     handleEntered = () => {
-        this.refs.editbox.focus();
-        this.refs.editbox.recalculateSize();
+        if (this.editbox) {
+            this.editbox.focus();
+            this.editbox.recalculateSize();
+        }
     }
 
     handleExit = () => {
-        this.refs.editbox.hidePreview();
+        if (this.editbox) {
+            this.editbox.hidePreview();
+        }
     }
 
     handleExited = () => {
@@ -255,6 +235,30 @@ export default class EditPostModal extends React.PureComponent {
 
         this.refocusId = null;
         this.setState({editText: '', postError: '', errorClass: null, showEmojiPicker: false});
+    }
+
+    setEditboxRef = (ref) => {
+        if (ref && ref.getWrappedInstance) {
+            this.editbox = ref.getWrappedInstance();
+        }
+
+        if (this.editbox) {
+            this.editbox.focus();
+        }
+    }
+
+    isSaveDisabled = () => {
+        const post = this.props.editingPost.post;
+        const hasAttachments = post && post.file_ids && post.file_ids.length > 0;
+        if (hasAttachments) {
+            return !this.props.canEditPost;
+        }
+
+        if (this.state.editText !== '') {
+            return !this.props.canEditPost;
+        }
+
+        return !this.props.canDeletePost;
     }
 
     render() {
@@ -277,7 +281,6 @@ export default class EditPostModal extends React.PureComponent {
                         onEmojiClick={this.handleEmojiClick}
                         onGifClick={this.handleGifClick}
                         enableGifPicker={this.props.config.EnableGifPicker === 'true'}
-                        rightOffset={50}
                         topOffset={-20}
                     />
                     <EmojiIcon
@@ -290,6 +293,7 @@ export default class EditPostModal extends React.PureComponent {
 
         return (
             <Modal
+                id='editPostModal'
                 dialogClassName='edit-modal'
                 show={this.props.editingPost.show}
                 onKeyDown={this.handleKeyDown}
@@ -297,9 +301,15 @@ export default class EditPostModal extends React.PureComponent {
                 onEntered={this.handleEntered}
                 onExit={this.handleExit}
                 onExited={this.handleExited}
+                keyboard={false}
+                role='dialog'
+                aria-labelledby='editPostModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='editPostModalLabel'
+                    >
                         <FormattedMessage
                             id='edit_post.edit'
                             defaultMessage='Edit {title}'
@@ -310,7 +320,7 @@ export default class EditPostModal extends React.PureComponent {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body
-                    bsClass='modal-body edit-modal-body'
+                    bsClass={`modal-body edit-modal-body${this.state.showEmojiPicker ? ' edit-modal-body--add-reaction' : ''}`}
                     ref='editModalBody'
                 >
                     <Textbox
@@ -325,10 +335,11 @@ export default class EditPostModal extends React.PureComponent {
                         supportsCommands={false}
                         suggestionListStyle='bottom'
                         id='edit_textbox'
-                        ref='editbox'
+                        ref={this.setEditboxRef}
                         characterLimit={this.props.maxPostSize}
                     />
                     <span
+                        id='editPostEmoji'
                         ref='editPostEmoji'
                         className='edit-post__actions'
                     >
@@ -341,7 +352,7 @@ export default class EditPostModal extends React.PureComponent {
                 <Modal.Footer>
                     <button
                         type='button'
-                        className='btn btn-default'
+                        className='btn btn-link'
                         onClick={this.handleHide}
                     >
                         <FormattedMessage
@@ -350,8 +361,10 @@ export default class EditPostModal extends React.PureComponent {
                         />
                     </button>
                     <button
+                        id='editButton'
                         type='button'
                         className='btn btn-primary'
+                        disabled={this.isSaveDisabled()}
                         onClick={this.handleEdit}
                     >
                         <FormattedMessage

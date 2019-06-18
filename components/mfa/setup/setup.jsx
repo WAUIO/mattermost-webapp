@@ -2,14 +2,26 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import {FormattedHTMLMessage, FormattedMessage} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 import PropTypes from 'prop-types';
 
-import {activateMfa, generateMfaSecret} from 'actions/user_actions.jsx';
-import UserStore from 'stores/user_store.jsx';
 import * as Utils from 'utils/utils.jsx';
+import {t} from 'utils/i18n.jsx';
+
+import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
+import LocalizedInput from 'components/localized_input/localized_input';
 
 export default class Setup extends React.Component {
+    static propTypes = {
+        currentUser: PropTypes.object,
+        siteName: PropTypes.string,
+        enforceMultifactorAuthentication: PropTypes.bool.isRequired,
+        actions: PropTypes.shape({
+            activateMfa: PropTypes.func.isRequired,
+            generateMfaSecret: PropTypes.func.isRequired,
+        }).isRequired,
+    }
+
     constructor(props) {
         super(props);
 
@@ -17,16 +29,25 @@ export default class Setup extends React.Component {
     }
 
     componentDidMount() {
-        const user = UserStore.getCurrentUser();
+        const user = this.props.currentUser;
         if (!user || user.mfa_active) {
             this.props.history.push('/');
             return;
         }
 
-        generateMfaSecret(
-            (data) => this.setState({secret: data.secret, qrCode: data.qr_code}),
-            (err) => this.setState({serverError: err.message})
-        );
+        this.props.actions.generateMfaSecret().then(({data, error}) => {
+            if (error) {
+                this.setState({
+                    serverError: error.message,
+                });
+                return;
+            }
+
+            this.setState({
+                secret: data.secret,
+                qrCode: data.qr_code,
+            });
+        });
     }
 
     submit = (e) => {
@@ -39,19 +60,23 @@ export default class Setup extends React.Component {
 
         this.setState({error: null});
 
-        activateMfa(
-            code,
-            () => {
-                this.props.history.push('/mfa/confirm');
-            },
-            (err) => {
-                if (err.id === 'ent.mfa.activate.authenticate.app_error') {
-                    this.setState({error: Utils.localizeMessage('mfa.setup.badCode', 'Invalid code. If this issue persists, contact your System Administrator.')});
-                    return;
+        this.props.actions.activateMfa(code).then(({error}) => {
+            if (error) {
+                if (error.server_error_id === 'ent.mfa.activate.authenticate.app_error') {
+                    this.setState({
+                        error: Utils.localizeMessage('mfa.setup.badCode', 'Invalid code. If this issue persists, contact your System Administrator.'),
+                    });
+                } else {
+                    this.setState({
+                        error: error.message,
+                    });
                 }
-                this.setState({error: err.message});
+
+                return;
             }
-        );
+
+            this.props.history.push('/mfa/confirm');
+        });
     }
 
     render() {
@@ -66,9 +91,9 @@ export default class Setup extends React.Component {
         if (this.props.enforceMultifactorAuthentication) {
             mfaRequired = (
                 <p>
-                    <FormattedHTMLMessage
+                    <FormattedMarkdownMessage
                         id='mfa.setup.required'
-                        defaultMessage='<strong>Multi-factor authentication is required on {siteName}.</strong>'
+                        defaultMessage='**Multi-factor authentication is required on {siteName}.**'
                         values={{
                             siteName: this.props.siteName,
                         }}
@@ -85,20 +110,21 @@ export default class Setup extends React.Component {
                 >
                     {mfaRequired}
                     <p>
-                        <FormattedHTMLMessage
+                        <FormattedMarkdownMessage
                             id='mfa.setup.step1'
-                            defaultMessage="<strong>Step 1: </strong>On your phone, download Google Authenticator from <a target='_blank' href='https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8'>iTunes</a> or <a target='_blank' href='https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en'>Google Play</a>"
+                            defaultMessage="**Step 1: **On your phone, download Google Authenticator from [iTunes](!https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8') or [Google Play](!https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en)"
                         />
                     </p>
                     <p>
-                        <FormattedHTMLMessage
+                        <FormattedMarkdownMessage
                             id='mfa.setup.step2'
-                            defaultMessage='<strong>Step 2: </strong>Use Google Authenticator to scan this QR code, or manually type in the secret key'
+                            defaultMessage='**Step 2: **Use Google Authenticator to scan this QR code, or manually type in the secret key'
                         />
                     </p>
                     <div className='form-group'>
                         <div className='col-sm-12'>
                             <img
+                                alt={'qr code image'}
                                 style={style.qrCode}
                                 src={'data:image/png;base64,' + this.state.qrCode}
                             />
@@ -117,16 +143,16 @@ export default class Setup extends React.Component {
                         </p>
                     </div>
                     <p>
-                        <FormattedHTMLMessage
+                        <FormattedMarkdownMessage
                             id='mfa.setup.step3'
-                            defaultMessage='<strong>Step 3: </strong>Enter the code generated by Google Authenticator'
+                            defaultMessage='**Step 3: **Enter the code generated by Google Authenticator'
                         />
                     </p>
                     <p>
-                        <input
+                        <LocalizedInput
                             ref='code'
                             className='form-control'
-                            placeholder={Utils.localizeMessage('mfa.setup.code', 'MFA Code')}
+                            placeholder={{id: t('mfa.setup.code'), defaultMessage: 'MFA Code'}}
                             autoFocus={true}
                         />
                     </p>
@@ -145,11 +171,6 @@ export default class Setup extends React.Component {
         );
     }
 }
-
-Setup.propTypes = {
-    siteName: PropTypes.string,
-    enforceMultifactorAuthentication: PropTypes.bool.isRequired,
-};
 
 const style = {
     qrCode: {maxHeight: 170},

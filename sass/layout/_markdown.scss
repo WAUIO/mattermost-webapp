@@ -57,6 +57,10 @@ h6 {
         margin: 5px 0;
         max-height: 500px;
     }
+    div.markdown-inline-img {
+        display: inline;
+        width: 100%;
+    }
 }
 
 .post-code {
@@ -168,7 +172,7 @@ h6 {
 
 blockquote {
     border: none;
-    font-size: 16px;
+    font-size: inherit;
     margin-bottom: 0;
     padding: 10px 10px 10px 38px;
     position: relative;

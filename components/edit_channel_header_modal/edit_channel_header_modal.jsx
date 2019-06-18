@@ -1,23 +1,23 @@
 // Copyright (c) 2015-present WAU Chat, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 import React from 'react';
-import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import {Modal} from 'react-bootstrap';
 import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
 
 import {RequestStatus} from 'mattermost-redux/constants';
 
-import Textbox from 'components/textbox.jsx';
+import Textbox from 'components/textbox';
 import Constants from 'utils/constants.jsx';
 import {isMobile} from 'utils/user_agent.jsx';
 import {isKeyPressed, localizeMessage} from 'utils/utils.jsx';
+import {t} from 'utils/i18n';
 
 const KeyCodes = Constants.KeyCodes;
 
 const holders = defineMessages({
     error: {
-        id: 'edit_channel_header_modal.error',
+        id: t('edit_channel_header_modal.error'),
         defaultMessage: 'This channel header is too long, please enter a shorter one',
     },
 });
@@ -108,7 +108,13 @@ class EditChannelHeaderModal extends React.PureComponent {
 
     focusTextbox = () => {
         if (this.refs.editChannelHeaderTextbox) {
-            this.refs.editChannelHeaderTextbox.focus();
+            this.refs.editChannelHeaderTextbox.getWrappedInstance().focus();
+        }
+    }
+
+    blurTextbox = () => {
+        if (this.refs.editChannelHeaderTextbox) {
+            this.refs.editChannelHeaderTextbox.getWrappedInstance().blur();
         }
     }
 
@@ -128,7 +134,7 @@ class EditChannelHeaderModal extends React.PureComponent {
         if (!isMobile() && ((ctrlSend && e.ctrlKey) || !ctrlSend)) {
             if (isKeyPressed(e, KeyCodes.ENTER) && !e.shiftKey && !e.altKey) {
                 e.preventDefault();
-                ReactDOM.findDOMNode(this.refs.editChannelHeaderTextbox).blur();
+                this.blurTextbox();
                 this.handleSave(e);
             }
         }
@@ -180,9 +186,14 @@ class EditChannelHeaderModal extends React.PureComponent {
                 onHide={this.onHide}
                 onEntering={this.handleEntering}
                 onExited={this.props.onHide}
+                role='dialog'
+                aria-labelledby='editChannelHeaderModalLabel'
             >
                 <Modal.Header closeButton={true}>
-                    <Modal.Title>
+                    <Modal.Title
+                        componentClass='h1'
+                        id='editChannelHeaderModalLabel'
+                    >
                         {headerTitle}
                     </Modal.Title>
                 </Modal.Header>
@@ -215,7 +226,7 @@ class EditChannelHeaderModal extends React.PureComponent {
                 <Modal.Footer>
                     <button
                         type='button'
-                        className='btn btn-default cancel-button'
+                        className='btn btn-link cancel-button'
                         onClick={this.onHide}
                     >
                         <FormattedMessage

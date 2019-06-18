@@ -141,10 +141,6 @@
     margin: 5px 0;
     position: relative;
 
-    .file__image-loading {
-        min-height: 100px;
-    }
-
     .file__image {
         @include legacy-pie-clearfix;
 
@@ -164,6 +160,7 @@
         }
 
         .image-container {
+            @include legacy-pie-clearfix;
             position: relative;
             max-width: 1024px;
             width: 100%;
@@ -177,44 +174,57 @@
             right: 0;
             bottom: 0;
             left: 0;
-            display: inline-block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            .fa {
+                font-size: 20px;
+                opacity: .6;
+            }
         }
 
         .image-loaded {
             @include single-transition(all, .1s, linear);
             @include border-radius(4px);
             bottom: 0;
-            cursor: 'pointer';
-            display: inline-block;
-            left: 0;
+            min-height: 40px;
+            min-width: 40px;
             max-height: 350px;
             max-width: 100%;
-            display: inline-block;
-            opacity: 0;
-            overflow: hidden;
-            position: absolute;
-            position: relative;
-            right: 0;
-            top: 0;
-            z-index: 2;
-
-            &:hover {
-                @include box-shadow(0 2px 5px 0 rgba($black, 0.1), 0 2px 10px 0 rgba($black, 0.1));
-            }
 
             img {
+                @include border-radius(4px);
                 @include single-transition(all, .1s, linear);
+                align-self: center;
+                cursor: pointer;
                 max-height: 350px;
-
+                overflow: hidden;
+                position: relative;
+                z-index: 2;
+                &:hover {
+                    @include box-shadow(0 2px 5px 0 rgba($black, 0.1), 0 2px 10px 0 rgba($black, 0.1));
+                }
                 &.min-preview {
                     max-height: 50px;
-                    max-width: initial;
+                    max-width: 100%;
                 }
 
                 &.min-preview--portrait {
                     max-height: initial;
                     max-width: 50px;
                 }
+            }
+            &.svg {
+                  width: 100%;
+                  height: inherit;
+                  display: block;
+                img {
+                    height: inherit;
+                    &:hover {
+                        @include box-shadow(0 2px 5px 0 rgba($black, 0.1), 0 2px 10px 0 rgba($black, 0.1));
+                    }
+               }
             }
         }
 
@@ -333,6 +343,7 @@
 
 .post-image__details {
     @include clearfix;
+    position: relative;
     align-items: center;
     border-left: 1px solid $light-gray;
     color: alpha-color($black, .8);
@@ -402,6 +413,22 @@
             }
         }
     }
+    .post-image__progressBar {
+        margin-bottom: 0px;
+        height: 7px;
+        position: absolute;
+        bottom: 0px;
+        width: 100%;
+        margin-left: -15px;
+        border-radius: 0px;
+    }
+
+    .progress-bar {
+        background-color: rgb(40, 90, 185);
+    }
+    .post-image__uploadingTxt {
+        opacity: 0.6;
+    }
 }
 
 .file-details__container {
@@ -463,5 +490,24 @@
 
 .view-image__loading {
     background: $black;
-    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+    flex-direction: column;
+    padding-top: 28px;
+
+    .fa {
+        color: $white;
+        font-size: 20px;
+        opacity: .6;
+    }
+}
+
+.image-loading__container {
+    max-height: inherit;
+    overflow: hidden;
+    &.markdown-inline-img svg {
+        margin: 5px 0px;
+    }
 }

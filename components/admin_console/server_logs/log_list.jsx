@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import {localizeMessage} from 'utils/utils.jsx';
+import NextIcon from 'components/icon/next_icon';
 
 const NEXT_BUTTON_TIMEOUT = 500;
 
@@ -25,8 +25,8 @@ export default class Logs extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        this.nextPage = this.nextPage.bind(this);
-        this.previousPage = this.previousPage.bind(this);
+        this.logPanel = React.createRef();
+
         this.state = {
             nextDisabled: false,
         };
@@ -34,19 +34,18 @@ export default class Logs extends React.PureComponent {
 
     componentDidMount() {
         // Scroll Down to get the latest logs
-        var node = this.refs.logPanel;
+        const node = this.logPanel.current;
         node.scrollTop = node.scrollHeight;
         node.focus();
     }
 
     componentDidUpdate() {
         // Scroll Down to get the latest logs
-        var node = this.refs.logPanel;
+        const node = this.logPanel.current;
         node.scrollTop = node.scrollHeight;
-        node.focus();
     }
 
-    nextPage(e) {
+    nextPage = (e) => {
         e.preventDefault();
 
         this.setState({nextDisabled: true});
@@ -55,7 +54,7 @@ export default class Logs extends React.PureComponent {
         this.props.nextPage();
     }
 
-    previousPage(e) {
+    previousPage = (e) => {
         e.preventDefault();
 
         this.props.previousPage();
@@ -77,10 +76,7 @@ export default class Logs extends React.PureComponent {
                         id='admin.logs.next'
                         defaultMessage='Next'
                     />
-                    <i
-                        className='fa fa-chevron-right margin-left'
-                        title={localizeMessage('generic_icons.next', 'Next Icon')}
-                    />
+                    <NextIcon additionalClassName='margin-left'/>
                 </button>
             );
         }
@@ -91,10 +87,17 @@ export default class Logs extends React.PureComponent {
                     className='btn btn-default filter-control filter-control__prev'
                     onClick={this.previousPage}
                 >
-                    <i
-                        className='fa fa-angle-left'
-                        title={localizeMessage('generic_icons.previous', 'Previous Icon')}
-                    />
+                    <FormattedMessage
+                        id='generic_icons.previous'
+                        defaultMessage='Previous Icon'
+                    >
+                        {(title) => (
+                            <i
+                                className='fa fa-angle-left'
+                                title={title}
+                            />
+                        )}
+                    </FormattedMessage>
                     <FormattedMessage
                         id='admin.logs.prev'
                         defaultMessage='Previous'
@@ -130,7 +133,7 @@ export default class Logs extends React.PureComponent {
             <div>
                 <div
                     tabIndex='-1'
-                    ref='logPanel'
+                    ref={this.logPanel}
                     className='log__panel'
                 >
                     {content}

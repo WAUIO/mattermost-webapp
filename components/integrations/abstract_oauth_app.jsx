@@ -7,6 +7,7 @@ import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {Permissions} from 'mattermost-redux/constants';
 
+import {localizeMessage} from 'utils/utils.jsx';
 import BackstageHeader from 'components/backstage/components/backstage_header.jsx';
 import FormError from 'components/form_error.jsx';
 import SpinnerButton from 'components/spinner_button.jsx';
@@ -29,6 +30,11 @@ export default class AbstractOAuthApp extends React.PureComponent {
         * The footer text to render, has id and defaultMessage
         */
         footer: PropTypes.object.isRequired,
+
+        /**
+        * The spinner loading text to render, has id and defaultMessage
+        */
+        loading: PropTypes.object.isRequired,
 
         /**
          * Any extra component/node to render
@@ -216,7 +222,10 @@ export default class AbstractOAuthApp extends React.PureComponent {
         if (this.state.has_icon) {
             icon = (
                 <div className='integration__icon'>
-                    <img src={this.state.icon_url}/>
+                    <img
+                        alt={'integration icon'}
+                        src={this.state.icon_url}
+                    />
                 </div>
             );
         }
@@ -431,7 +440,7 @@ export default class AbstractOAuthApp extends React.PureComponent {
                                 errors={[this.props.serverError, this.state.clientError]}
                             />
                             <Link
-                                className='btn btn-sm'
+                                className='btn btn-link btn-sm'
                                 to={`/${this.props.team.name}/integrations/oauth2-apps`}
                             >
                                 <FormattedMessage
@@ -443,7 +452,9 @@ export default class AbstractOAuthApp extends React.PureComponent {
                                 className='btn btn-primary'
                                 type='submit'
                                 spinning={this.state.saving}
+                                spinningText={localizeMessage(this.props.loading.id, this.props.loading.defaultMessage)}
                                 onClick={this.handleSubmit}
+                                id='saveOauthApp'
                             >
                                 <FormattedMessage
                                     id={footerToRender.id}

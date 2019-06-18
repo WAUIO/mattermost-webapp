@@ -3,15 +3,27 @@
 
 import React from 'react';
 
-import {autocompleteChannels} from 'actions/channel_actions.jsx';
-import AppDispatcher from 'dispatcher/app_dispatcher.jsx';
-import ChannelStore from 'stores/channel_store.jsx';
-import {sortChannelsByDisplayName} from 'utils/channel_utils.jsx';
-import {ActionTypes, Constants} from 'utils/constants.jsx';
-import {localizeMessage} from 'utils/utils.jsx';
+import {sortChannelsByTypeAndDisplayName} from 'mattermost-redux/utils/channel_utils';
+
+import {autocompleteChannelsForSearch} from 'actions/channel_actions.jsx';
+import Constants from 'utils/constants.jsx';
+import SelectIcon from 'components/icon/select_icon';
+import BotBadge from 'components/widgets/badges/bot_badge.jsx';
+
+import {getDirectTeammate} from 'utils/utils.jsx';
 
 import Provider from './provider.jsx';
 import Suggestion from './suggestion.jsx';
+
+function itemToName(item) {
+    if (item.type === Constants.DM_CHANNEL) {
+        return '@' + item.display_name;
+    }
+    if (item.type === Constants.GM_CHANNEL) {
+        return '@' + item.display_name.replace(/ /g, '');
+    }
+    return item.name;
+}
 
 class SearchChannelSuggestion extends Suggestion {
     render() {
@@ -22,64 +34,55 @@ class SearchChannelSuggestion extends Suggestion {
             className += ' selected';
         }
 
+        const name = itemToName(item);
+
+        let tag = null;
+        if (item.type === Constants.DM_CHANNEL) {
+            const teammate = getDirectTeammate(item.id);
+            tag = (
+                <BotBadge
+                    show={Boolean(teammate && teammate.is_bot)}
+                    className='badge-popoverlist'
+                />
+            );
+        }
+
         return (
             <div
                 onClick={this.handleClick}
                 className={className}
                 {...Suggestion.baseProps}
             >
-                <i
-                    className='fa fa fa-plus-square'
-                    title={localizeMessage('generic_icons.select', 'Select Icon')}
-                />{item.name}
+                <SelectIcon/>
+                {name}
+                {tag}
             </div>
         );
     }
 }
 
 export default class SearchChannelProvider extends Provider {
-    handlePretextChanged(suggestionId, pretext) {
+    handlePretextChanged(pretext, resultsCallback) {
         const captured = (/\b(?:in|channel):\s*(\S*)$/i).exec(pretext.toLowerCase());
         if (captured) {
             const channelPrefix = captured[1];
 
-            this.startNewRequest(suggestionId, channelPrefix);
+            this.startNewRequest(channelPrefix);
 
-            autocompleteChannels(
+            autocompleteChannelsForSearch(
                 channelPrefix,
                 (data) => {
                     if (this.shouldCancelDispatch(channelPrefix)) {
                         return;
                     }
 
-                    const publicChannels = data;
+                    //
+                    // MM-12677 When this is migrated this needs to be fixed to pull the user's locale
+                    //
+                    const channels = data.sort(sortChannelsByTypeAndDisplayName.bind(null, 'en'));
+                    const channelNames = channels.map(itemToName);
 
-                    const localChannels = ChannelStore.getAll();
-                    let privateChannels = [];
-
-                    for (const id of Object.keys(localChannels)) {
-                        const channel = localChannels[id];
-                        if (channel.name.startsWith(channelPrefix) && channel.type === Constants.PRIVATE_CHANNEL) {
-                            privateChannels.push(channel);
-                        }
-                    }
-
-                    let filteredPublicChannels = [];
-                    publicChannels.forEach((item) => {
-                        if (item.name.startsWith(channelPrefix)) {
-                            filteredPublicChannels.push(item);
-                        }
-                    });
-
-                    privateChannels = privateChannels.sort(sortChannelsByDisplayName);
-                    filteredPublicChannels = filteredPublicChannels.sort(sortChannelsByDisplayName);
-
-                    const channels = filteredPublicChannels.concat(privateChannels);
-                    const channelNames = channels.map((channel) => channel.name);
-
-                    AppDispatcher.handleServerAction({
-                        type: ActionTypes.SUGGESTION_RECEIVED_SUGGESTIONS,
-                        id: suggestionId,
+                    resultsCallback({
                         matchedPretext: channelPrefix,
                         terms: channelNames,
                         items: channels,

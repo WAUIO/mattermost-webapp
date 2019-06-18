@@ -3,6 +3,7 @@
 
 /* eslint max-nested-callbacks: ["error", 3] */
 
+import Observable from 'zen-observable';
 import localForage from 'localforage';
 import {extendPrototype} from 'localforage-observable';
 import {createTransform, persistStore} from 'redux-persist';
@@ -11,6 +12,7 @@ import configureServiceStore from 'mattermost-redux/store';
 import reduxInitialState from 'mattermost-redux/store/initial_state';
 
 import {storageRehydrate} from 'actions/storage';
+import {clearUserCookie} from 'actions/views/root';
 import appReducer from 'reducers';
 import {transformSet} from 'store/utils';
 import {detect} from 'utils/network.js';
@@ -56,6 +58,8 @@ const whitelist = {
         return -1;
     },
 };
+
+window.Observable = Observable;
 
 export default function configureStore(initialState) {
     const setTransformer = createTransform(
@@ -145,8 +149,11 @@ export default function configureStore(initialState) {
                         purging = true;
 
                         persistor.purge().then(() => {
-                            document.cookie = 'MMUSERID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-                            window.location.href = basePath;
+                            clearUserCookie();
+
+                            // Preserve any query string parameters on logout, including parameters
+                            // used by the application such as extra and redirect_to.
+                            window.location.href = `${basePath}${window.location.search}`;
 
                             store.dispatch({
                                 type: General.OFFLINE_STORE_RESET,

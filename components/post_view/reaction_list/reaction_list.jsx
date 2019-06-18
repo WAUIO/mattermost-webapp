@@ -7,17 +7,16 @@ import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 import Permissions from 'mattermost-redux/constants/permissions';
 
-import {postListScrollChange} from 'actions/global_actions.jsx';
-import {emitEmojiPosted} from 'actions/post_actions.jsx';
 import Constants from 'utils/constants.jsx';
 import Reaction from 'components/post_view/reaction';
 import EmojiPickerOverlay from 'components/emoji_picker/emoji_picker_overlay.jsx';
 import ChannelPermissionGate from 'components/permissions_gates/channel_permission_gate';
+import {disableVirtList} from 'utils/utils.jsx';
 
 const DEFAULT_EMOJI_PICKER_RIGHT_OFFSET = 15;
 const EMOJI_PICKER_WIDTH_OFFSET = 260;
 
-export default class ReactionListView extends React.PureComponent {
+export default class ReactionList extends React.PureComponent {
     static propTypes = {
 
         /**
@@ -33,12 +32,7 @@ export default class ReactionListView extends React.PureComponent {
         /**
          * The reactions to render
          */
-        reactions: PropTypes.arrayOf(PropTypes.object),
-
-        /**
-         * The emojis for the different reactions
-         */
-        emojis: PropTypes.object.isRequired,
+        reactions: PropTypes.object,
 
         /**
          * Whether to show the emoji picker.
@@ -48,14 +42,14 @@ export default class ReactionListView extends React.PureComponent {
         actions: PropTypes.shape({
 
             /**
-             * Function to get reactions for a post
-             */
-            getReactionsForPost: PropTypes.func.isRequired,
-
-            /**
              * Function to add a reaction to the post
              */
             addReaction: PropTypes.func.isRequired,
+
+            /**
+             * Function used for correcting scroll when component is updated with first reaction
+             */
+            scrollPostList: PropTypes.func.isRequired,
         }),
     }
 
@@ -67,15 +61,9 @@ export default class ReactionListView extends React.PureComponent {
         };
     }
 
-    componentDidMount() {
-        if (this.props.post.has_reactions) {
-            this.props.actions.getReactionsForPost(this.props.post.id);
-        }
-    }
-
     componentDidUpdate(prevProps) {
-        if (this.props.reactions !== prevProps.reactions) {
-            postListScrollChange();
+        if (this.props.reactions !== prevProps.reactions && disableVirtList()) {
+            this.props.actions.scrollPostList();
         }
     }
 
@@ -87,7 +75,6 @@ export default class ReactionListView extends React.PureComponent {
         this.setState({showEmojiPicker: false});
         const emojiName = emoji.name || emoji.aliases[0];
         this.props.actions.addReaction(this.props.post.id, emojiName);
-        emitEmojiPosted(emojiName);
     }
 
     hideEmojiPicker = () => {
@@ -99,7 +86,7 @@ export default class ReactionListView extends React.PureComponent {
     }
 
     render() {
-        if (!this.props.post.has_reactions || (this.props.reactions && this.props.reactions.length === 0)) {
+        if (!this.props.post.has_reactions || !this.props.reactions) {
             return null;
         }
 
@@ -107,7 +94,7 @@ export default class ReactionListView extends React.PureComponent {
         const emojiNames = [];
 
         if (this.props.reactions) {
-            for (const reaction of this.props.reactions) {
+            for (const reaction of Object.values(this.props.reactions)) {
                 const emojiName = reaction.emoji_name;
 
                 if (reactionsByName.has(emojiName)) {
@@ -126,7 +113,6 @@ export default class ReactionListView extends React.PureComponent {
                     post={this.props.post}
                     emojiName={emojiName}
                     reactions={reactionsByName.get(emojiName) || []}
-                    emojis={this.props.emojis}
                 />
             );
         });
@@ -158,6 +144,7 @@ export default class ReactionListView extends React.PureComponent {
                         show={this.state.showEmojiPicker}
                         target={this.getTarget}
                         onHide={this.hideEmojiPicker}
+                        onEmojiClose={this.hideEmojiPicker}
                         onEmojiClick={this.handleEmojiClick}
                         rightOffset={rightOffset}
                         topOffset={-5}
@@ -178,6 +165,7 @@ export default class ReactionListView extends React.PureComponent {
                                 onClick={this.toggleEmojiPicker}
                             >
                                 <span
+                                    id={`addReaction-${this.props.post.id}`}
                                     className='post-reaction__add'
                                     ref='addReactionButton'
                                 >

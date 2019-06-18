@@ -6,9 +6,6 @@ import React from 'react';
 import {FormattedDate, FormattedMessage, FormattedTime} from 'react-intl';
 import {Link} from 'react-router-dom';
 
-import {browserHistory} from 'utils/browser_history';
-import {deactivateMfa, deauthorizeOAuthApp, getAuthorizedApps, updatePassword} from 'actions/user_actions.jsx';
-import PreferenceStore from 'stores/preference_store.jsx';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 import icon50 from 'images/icon50x50.png';
@@ -18,6 +15,7 @@ import SettingItemMax from 'components/setting_item_max.jsx';
 import SettingItemMin from 'components/setting_item_min.jsx';
 import ToggleModalButton from 'components/toggle_modal_button.jsx';
 
+import MfaSection from './mfa_section';
 import UserAccessTokenSection from './user_access_token_section';
 
 const SECTION_MFA = 'mfa';
@@ -40,20 +38,8 @@ export default class SecurityTab extends React.Component {
          */
         canUseAccessTokens: PropTypes.bool,
 
-        // Whether or not this instance of WAU Chat is licensed.
-        isLicensed: PropTypes.bool,
-
-        // Whether or not this instance of WAU Chat is licensed to use multi-factor authentication.
-        mfaLicensed: PropTypes.bool,
-
         // Whether or not OAuth applications are enabled.
         enableOAuthServiceProvider: PropTypes.bool,
-
-        // Whether or not multi-factor authentication is enabled.
-        enableMultifactorAuthentication: PropTypes.bool,
-
-        // Whether or not multi-factor authentication is enforced.
-        enforceMultifactorAuthentication: PropTypes.bool,
 
         // Whether or not sign-up with email is enabled.
         enableSignUpWithEmail: PropTypes.bool,
@@ -77,9 +63,13 @@ export default class SecurityTab extends React.Component {
         experimentalEnableAuthenticationTransfer: PropTypes.bool,
 
         passwordConfig: PropTypes.object,
+        militaryTime: PropTypes.bool,
 
         actions: PropTypes.shape({
             getMe: PropTypes.func.isRequired,
+            updateUserPassword: PropTypes.func.isRequired,
+            getAuthorizedApps: PropTypes.func.isRequired,
+            deauthorizeOAuthApp: PropTypes.func.isRequired,
         }).isRequired,
     }
 
@@ -104,12 +94,13 @@ export default class SecurityTab extends React.Component {
 
     componentDidMount() {
         if (this.props.enableOAuthServiceProvider) {
-            getAuthorizedApps(
-                (authorizedApps) => {
-                    this.setState({authorizedApps, serverError: null}); //eslint-disable-line react/no-did-mount-set-state
-                },
-                (err) => {
-                    this.setState({serverError: err.message}); //eslint-disable-line react/no-did-mount-set-state
+            this.props.actions.getAuthorizedApps().then(
+                ({data, error}) => {
+                    if (data) {
+                        this.setState({authorizedApps: data, serverError: null}); //eslint-disable-line react/no-did-mount-set-state
+                    } else if (error) {
+                        this.setState({serverError: error.message}); //eslint-disable-line react/no-did-mount-set-state
+                    }
                 }
             );
         }
@@ -143,56 +134,26 @@ export default class SecurityTab extends React.Component {
 
         this.setState({savingPassword: true});
 
-        updatePassword(
+        this.props.actions.updateUserPassword(
             user.id,
             currentPassword,
-            newPassword,
-            () => {
-                this.props.updateSection('');
-                this.props.actions.getMe();
-                this.setState(this.getDefaultState());
-            },
-            (err) => {
-                var state = this.getDefaultState();
-                if (err.message) {
-                    state.serverError = err.message;
-                } else {
-                    state.serverError = err;
+            newPassword).
+            then(({data, error: err}) => {
+                if (data) {
+                    this.props.updateSection('');
+                    this.props.actions.getMe();
+                    this.setState(this.getDefaultState());
+                } else if (err) {
+                    var state = this.getDefaultState();
+                    if (err.message) {
+                        state.serverError = err.message;
+                    } else {
+                        state.serverError = err;
+                    }
+                    state.passwordError = '';
+                    this.setState(state);
                 }
-                state.passwordError = '';
-                this.setState(state);
-            }
-        );
-    }
-
-    setupMfa = (e) => {
-        e.preventDefault();
-        browserHistory.push('/mfa/setup');
-    }
-
-    removeMfa = () => {
-        deactivateMfa(
-            () => {
-                if (this.props.mfaLicensed &&
-                        this.props.enableMultifactorAuthentication &&
-                        this.props.enforceMultifactorAuthentication) {
-                    browserHistory.push('/mfa/setup');
-                    return;
-                }
-
-                this.props.updateSection('');
-                this.setState(this.getDefaultState());
-            },
-            (err) => {
-                const state = this.getDefaultState();
-                if (err.message) {
-                    state.serverError = err.message;
-                } else {
-                    state.serverError = err;
-                }
-                this.setState(state);
-            }
-        );
+            });
     }
 
     updateCurrentPassword = (e) => {
@@ -210,17 +171,17 @@ export default class SecurityTab extends React.Component {
     deauthorizeApp = (e) => {
         e.preventDefault();
         const appId = e.currentTarget.getAttribute('data-app');
-        deauthorizeOAuthApp(
-            appId,
-            () => {
-                const authorizedApps = this.state.authorizedApps.filter((app) => {
-                    return app.id !== appId;
-                });
+        this.props.actions.deauthorizeOAuthApp(appId).then(
+            ({data, error}) => {
+                if (data) {
+                    const authorizedApps = this.state.authorizedApps.filter((app) => {
+                        return app.id !== appId;
+                    });
 
-                this.setState({authorizedApps, serverError: null});
-            },
-            (err) => {
-                this.setState({serverError: err.message});
+                    this.setState({authorizedApps, serverError: null});
+                } else if (error) {
+                    this.setState({serverError: error.message});
+                }
             }
         );
     }
@@ -252,128 +213,6 @@ export default class SecurityTab extends React.Component {
 
             this.props.updateSection('');
         }
-    }
-
-    createMfaSection = () => {
-        if (this.props.activeSection === SECTION_MFA) {
-            let content;
-            let extraInfo;
-            if (this.props.user.mfa_active) {
-                let mfaRemoveHelp;
-                let mfaButtonText;
-
-                if (this.props.enforceMultifactorAuthentication) {
-                    mfaRemoveHelp = (
-                        <FormattedMessage
-                            id='user.settings.mfa.requiredHelp'
-                            defaultMessage='Multi-factor authentication is required on this server. Resetting is only recommended when you need to switch code generation to a new mobile device. You will be required to set it up again immediately.'
-                        />
-                    );
-
-                    mfaButtonText = (
-                        <FormattedMessage
-                            id='user.settings.mfa.reset'
-                            defaultMessage='Reset MFA on your account'
-                        />
-                    );
-                } else {
-                    mfaRemoveHelp = (
-                        <FormattedMessage
-                            id='user.settings.mfa.removeHelp'
-                            defaultMessage='Removing multi-factor authentication means you will no longer require a phone-based passcode to sign-in to your account.'
-                        />
-                    );
-
-                    mfaButtonText = (
-                        <FormattedMessage
-                            id='user.settings.mfa.remove'
-                            defaultMessage='Remove MFA from your account'
-                        />
-                    );
-                }
-
-                content = (
-                    <div key='mfaQrCode'>
-                        <a
-                            className='btn btn-primary'
-                            href='#'
-                            onClick={this.removeMfa}
-                        >
-                            {mfaButtonText}
-                        </a>
-                        <br/>
-                    </div>
-                );
-
-                extraInfo = (
-                    <span>
-                        {mfaRemoveHelp}
-                    </span>
-                );
-            } else {
-                content = (
-                    <div key='mfaQrCode'>
-                        <a
-                            className='btn btn-primary'
-                            href='#'
-                            onClick={this.setupMfa}
-                        >
-                            <FormattedMessage
-                                id='user.settings.mfa.add'
-                                defaultMessage='Add MFA to your account'
-                            />
-                        </a>
-                        <br/>
-                    </div>
-                );
-
-                extraInfo = (
-                    <span>
-                        <FormattedMessage
-                            id='user.settings.mfa.addHelp'
-                            defaultMessage='Adding multi-factor authentication will make your account more secure by requiring a code from your mobile phone each time you sign in.'
-                        />
-                    </span>
-                );
-            }
-
-            const inputs = [];
-            inputs.push(
-                <div
-                    key='mfaSetting'
-                    className='padding-top'
-                >
-                    {content}
-                </div>
-            );
-
-            return (
-                <SettingItemMax
-                    title={Utils.localizeMessage('user.settings.mfa.title', 'Multi-factor Authentication')}
-                    inputs={inputs}
-                    extraInfo={extraInfo}
-                    serverError={this.state.serverError}
-                    updateSection={this.handleUpdateSection}
-                    width='medium'
-                />
-            );
-        }
-
-        let describe;
-        if (this.props.user.mfa_active) {
-            describe = Utils.localizeMessage('user.settings.security.active', 'Active');
-        } else {
-            describe = Utils.localizeMessage('user.settings.security.inactive', 'Inactive');
-        }
-
-        return (
-            <SettingItemMin
-                title={Utils.localizeMessage('user.settings.mfa.title', 'Multi-factor Authentication')}
-                describe={describe}
-                section={SECTION_MFA}
-                updateSection={this.handleUpdateSection}
-            />
-        );
     }
 
     createPasswordSection = () => {
@@ -457,7 +296,7 @@ export default class SecurityTab extends React.Component {
                         key='oauthEmailInfo'
                         className='form-group'
                     >
-                        <div className='setting-list__hint col-sm-12'>
+                        <div className='padding-bottom x2'>
                             <FormattedMessage
                                 id='user.settings.security.passwordGitlabCantUpdate'
                                 defaultMessage='Login occurs through GitLab. Password cannot be updated.'
@@ -471,7 +310,7 @@ export default class SecurityTab extends React.Component {
                         key='oauthEmailInfo'
                         className='form-group'
                     >
-                        <div className='setting-list__hint col-sm-12'>
+                        <div className='padding-bottom x2'>
                             <FormattedMessage
                                 id='user.settings.security.passwordLdapCantUpdate'
                                 defaultMessage='Login occurs through AD/LDAP. Password cannot be updated.'
@@ -485,7 +324,7 @@ export default class SecurityTab extends React.Component {
                         key='oauthEmailInfo'
                         className='form-group'
                     >
-                        <div className='setting-list__hint col-sm-12'>
+                        <div className='padding-bottom x2'>
                             <FormattedMessage
                                 id='user.settings.security.passwordSamlCantUpdate'
                                 defaultMessage='This field is handled through your login provider. If you want to change it, you need to do so through your login provider.'
@@ -499,7 +338,7 @@ export default class SecurityTab extends React.Component {
                         key='oauthEmailInfo'
                         className='form-group'
                     >
-                        <div className='setting-list__hint col-sm-12'>
+                        <div className='padding-bottom x2'>
                             <FormattedMessage
                                 id='user.settings.security.passwordGoogleCantUpdate'
                                 defaultMessage='Login occurs through Google Apps. Password cannot be updated.'
@@ -513,7 +352,7 @@ export default class SecurityTab extends React.Component {
                         key='oauthEmailInfo'
                         className='form-group'
                     >
-                        <div className='setting-list__hint col-sm-12'>
+                        <div className='padding-bottom x2'>
                             <FormattedMessage
                                 id='user.settings.security.passwordOffice365CantUpdate'
                                 defaultMessage='Login occurs through Office 365. Password cannot be updated.'
@@ -545,7 +384,6 @@ export default class SecurityTab extends React.Component {
 
         if (this.props.user.auth_service === '') {
             const d = new Date(this.props.user.last_password_update);
-            const hours12 = !PreferenceStore.getBool(Constants.Preferences.CATEGORY_DISPLAY_SETTINGS, Constants.Preferences.USE_MILITARY_TIME, false);
 
             describe = (
                 <FormattedMessage
@@ -563,7 +401,7 @@ export default class SecurityTab extends React.Component {
                         time: (
                             <FormattedTime
                                 value={d}
-                                hour12={hours12}
+                                hour12={!this.props.militaryTime}
                                 hour='2-digit'
                                 minute='2-digit'
                             />
@@ -619,6 +457,7 @@ export default class SecurityTab extends React.Component {
                 describe={describe}
                 section={SECTION_PASSWORD}
                 updateSection={this.handleUpdateSection}
+                focused={true}
             />
         );
     }
@@ -978,13 +817,6 @@ export default class SecurityTab extends React.Component {
             signInSection = this.createSignInSection();
         }
 
-        let mfaSection;
-        if (this.props.enableMultifactorAuthentication &&
-                this.props.isLicensed &&
-                (user.auth_service === '' || user.auth_service === Constants.LDAP_SERVICE)) {
-            mfaSection = this.createMfaSection();
-        }
-
         let oauthSection;
         if (this.props.enableOAuthServiceProvider) {
             oauthSection = this.createOAuthAppsSection();
@@ -1005,25 +837,39 @@ export default class SecurityTab extends React.Component {
         return (
             <div>
                 <div className='modal-header'>
-                    <button
-                        type='button'
-                        className='close'
-                        data-dismiss='modal'
-                        aria-label={Utils.localizeMessage('user.settings.security.close', 'Close')}
-                        onClick={this.props.closeModal}
+                    <FormattedMessage
+                        id='user.settings.security.close'
+                        defaultMessage='Close'
                     >
-                        <span aria-hidden='true'>{'×'}</span>
-                    </button>
+                        {(ariaLabel) => (
+                            <button
+                                type='button'
+                                className='close'
+                                data-dismiss='modal'
+                                aria-label={ariaLabel}
+                                onClick={this.props.closeModal}
+                            >
+                                <span aria-hidden='true'>{'×'}</span>
+                            </button>
+                        )}
+                    </FormattedMessage>
                     <h4
                         className='modal-title'
                         ref='title'
                     >
                         <div className='modal-back'>
-                            <i
-                                className='fa fa-angle-left'
-                                title={Utils.localizeMessage('generic_icons.collapse', 'Collapse Icon')}
-                                onClick={this.props.collapseModal}
-                            />
+                            <FormattedMessage
+                                id='generic_icons.collapse'
+                                defaultMessage='Collapse Icon'
+                            >
+                                {(title) => (
+                                    <i
+                                        className='fa fa-angle-left'
+                                        title={title}
+                                        onClick={this.props.collapseModal}
+                                    />
+                                )}
+                            </FormattedMessage>
                         </div>
                         <FormattedMessage
                             id='user.settings.security.title'
@@ -1041,7 +887,10 @@ export default class SecurityTab extends React.Component {
                     <div className='divider-dark first'/>
                     {passwordSection}
                     <div className='divider-light'/>
-                    {mfaSection}
+                    <MfaSection
+                        active={this.props.activeSection === SECTION_MFA}
+                        updateSection={this.handleUpdateSection}
+                    />
                     <div className='divider-light'/>
                     {oauthSection}
                     <div className='divider-light'/>
@@ -1054,10 +903,17 @@ export default class SecurityTab extends React.Component {
                         className='security-links color--link'
                         dialogType={AccessHistoryModal}
                     >
-                        <i
-                            className='fa fa-clock-o'
-                            title={Utils.localizeMessage('user.settings.security.viewHistory.icon', 'Access History Icon')}
-                        />
+                        <FormattedMessage
+                            id='user.settings.security.viewHistory.icon'
+                            defaultMessage='Access History Icon'
+                        >
+                            {(title) => (
+                                <i
+                                    className='fa fa-clock-o'
+                                    title={title}
+                                />
+                            )}
+                        </FormattedMessage>
                         <FormattedMessage
                             id='user.settings.security.viewHistory'
                             defaultMessage='View Access History'
@@ -1067,10 +923,17 @@ export default class SecurityTab extends React.Component {
                         className='security-links color--link margin-top'
                         dialogType={ActivityLogModal}
                     >
-                        <i
-                            className='fa fa-clock-o'
-                            title={Utils.localizeMessage('user.settings.security.logoutActiveSessions.icon', 'Active Sessions Icon')}
-                        />
+                        <FormattedMessage
+                            id='user.settings.security.logoutActiveSessions.icon'
+                            defaultMessage='Active Sessions Icon'
+                        >
+                            {(title) => (
+                                <i
+                                    className='fa fa-clock-o'
+                                    title={title}
+                                />
+                            )}
+                        </FormattedMessage>
                         <FormattedMessage
                             id='user.settings.security.logoutActiveSessions'
                             defaultMessage='View and Logout of Active Sessions'

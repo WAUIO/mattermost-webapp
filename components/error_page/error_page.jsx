@@ -9,7 +9,7 @@ import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 
 import {ErrorPageTypes, Constants} from 'utils/constants.jsx';
-import {localizeMessage} from 'utils/utils.jsx';
+import WarningIcon from 'components/icon/warning_icon';
 
 import ErrorTitle from './error_title.jsx';
 import ErrorMessage from './error_message.jsx';
@@ -85,6 +85,15 @@ export default class ErrorPage extends React.PureComponent {
                     />
                 </Link>
             );
+        } else if (type === ErrorPageTypes.OAUTH_ACCESS_DENIED || type === ErrorPageTypes.OAUTH_MISSING_CODE) {
+            backButton = (
+                <Link to='/'>
+                    <FormattedMessage
+                        id='error.generic.link_login'
+                        defaultMessage='Back to login page'
+                    />
+                </Link>
+            );
         } else {
             backButton = (
                 <Link to='/'>
@@ -103,10 +112,7 @@ export default class ErrorPage extends React.PureComponent {
             <div className='container-fluid'>
                 <div className='error__container'>
                     <div className='error__icon'>
-                        <i
-                            className='fa fa-exclamation-triangle'
-                            title={localizeMessage('generic_icons.warning', 'Warning Icon')}
-                        />
+                        <WarningIcon/>
                     </div>
                     <h2>
                         <ErrorTitle

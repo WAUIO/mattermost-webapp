@@ -6,32 +6,25 @@ import React from 'react';
 
 import {getFilePreviewUrl, getFileUrl} from 'mattermost-redux/utils/file_utils';
 
-import {FileTypes, StoragePrefixes} from 'utils/constants.jsx';
+import SizeAwareImage from 'components/size_aware_image';
+import {FileTypes} from 'utils/constants.jsx';
 import {
     getFileType,
-    localizeMessage,
 } from 'utils/utils';
 
-import {postListScrollChange} from 'actions/global_actions.jsx';
-
-import LoadingImagePreview from 'components/loading_image_preview';
 import ViewImageModal from 'components/view_image';
 
-import BrowserStore from 'stores/browser_store.jsx';
-
-const PREVIEW_IMAGE_MAX_WIDTH = 1024;
-const PREVIEW_IMAGE_MAX_HEIGHT = 350;
 const PREVIEW_IMAGE_MIN_DIMENSION = 50;
 
 export default class SingleImageView extends React.PureComponent {
     static propTypes = {
-
-        /**
-         * FileInfo to view
-         **/
+        postId: PropTypes.string.isRequired,
         fileInfo: PropTypes.object.isRequired,
         isRhsOpen: PropTypes.bool.isRequired,
         isEmbedVisible: PropTypes.bool,
+        actions: PropTypes.shape({
+            toggleEmbedVisibility: PropTypes.func.isRequired,
+        }).isRequired,
     };
 
     static defaultProps = {
@@ -40,67 +33,40 @@ export default class SingleImageView extends React.PureComponent {
 
     constructor(props) {
         super(props);
-
         this.state = {
             loaded: false,
             showPreviewModal: false,
-            viewPortWidth: 0,
+            dimensions: {
+                width: props.fileInfo.width,
+                height: props.fileInfo.height,
+            },
         };
-
-        this.imageLoaded = null;
     }
 
     componentDidMount() {
-        window.addEventListener('resize', this.handleResize);
-        this.setViewPortWidth();
-        this.loadImage(this.props.fileInfo);
-
-        // Timeout used to delay execution until after current render cycle
-        setTimeout(postListScrollChange, 0);
+        this.mounted = true;
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line camelcase
-        this.loadImage(nextProps.fileInfo);
-
-        if (nextProps.isRhsOpen !== this.props.isRhsOpen) {
-            this.handleResize();
+    static getDerivedStateFromProps(props, state) {
+        if ((props.fileInfo.width !== state.dimensions.width) || props.fileInfo.height !== state.dimensions.height) {
+            return {
+                dimensions: {
+                    width: props.fileInfo.width,
+                    height: props.fileInfo.height,
+                },
+            };
         }
+        return null;
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.handleResize);
+        this.mounted = false;
     }
 
-    handleResize = () => {
-        this.setViewPortWidth();
-    }
-
-    setViewPortRef = (node) => {
-        this.viewPort = node;
-    }
-
-    setViewPortWidth = () => {
-        if (this.viewPort && this.viewPort.getBoundingClientRect) {
-            const rect = this.viewPort.getBoundingClientRect();
-            this.setState({viewPortWidth: rect.width});
-        }
-    }
-
-    loadImage = (fileInfo) => {
-        const {has_preview_image: hasPreviewImage, id} = fileInfo;
-        const fileURL = getFileUrl(id);
-        const previewURL = hasPreviewImage ? getFilePreviewUrl(id) : fileURL;
-
-        const loaderImage = new Image();
-
-        loaderImage.src = previewURL;
-        loaderImage.onload = () => {
-            if (this.imageLoaded) {
-                this.imageLoaded.src = previewURL;
-            }
-
+    imageLoaded = () => {
+        if (this.mounted) {
             this.setState({loaded: true});
-        };
+        }
     }
 
     handleImageClick = (e) => {
@@ -112,44 +78,23 @@ export default class SingleImageView extends React.PureComponent {
         this.setState({showPreviewModal: false});
     }
 
-    setImageLoadedRef = (node) => {
-        this.imageLoaded = node;
-    }
-
-    computeImageDimensions = () => {
-        const {fileInfo} = this.props;
-        const viewPortWidth = this.state.viewPortWidth;
-
-        let previewWidth = fileInfo.width;
-        let previewHeight = fileInfo.height;
-
-        if (viewPortWidth && previewWidth > viewPortWidth) {
-            const origRatio = fileInfo.height / fileInfo.width;
-            previewWidth = Math.min(PREVIEW_IMAGE_MAX_WIDTH, fileInfo.width, viewPortWidth);
-            previewHeight = previewWidth * origRatio;
-        }
-
-        if (previewHeight > PREVIEW_IMAGE_MAX_HEIGHT) {
-            const heightRatio = PREVIEW_IMAGE_MAX_HEIGHT / previewHeight;
-            previewHeight = PREVIEW_IMAGE_MAX_HEIGHT;
-            previewWidth *= heightRatio;
-        }
-
-        return {previewWidth, previewHeight};
-    }
-
     toggleEmbedVisibility = () => {
-        BrowserStore.setGlobalItem(StoragePrefixes.EMBED_VISIBLE + this.props.fileInfo.post_id, !this.props.isEmbedVisible);
+        this.props.actions.toggleEmbedVisibility(this.props.postId);
     }
 
     render() {
         const {fileInfo} = this.props;
         const {
             loaded,
-            viewPortWidth,
         } = this.state;
 
-        const {previewHeight, previewWidth} = this.computeImageDimensions();
+        const {has_preview_image: hasPreviewImage, id} = fileInfo;
+        const fileURL = getFileUrl(id);
+        const previewURL = hasPreviewImage ? getFilePreviewUrl(id) : fileURL;
+
+        const previewHeight = fileInfo.height;
+        const previewWidth = fileInfo.width;
+
         let minPreviewClass = '';
         if (
             previewWidth < PREVIEW_IMAGE_MIN_DIMENSION ||
@@ -181,37 +126,25 @@ export default class SingleImageView extends React.PureComponent {
             </div>
         );
 
-        const loading = localizeMessage('view_image.loading', 'Loading');
-
         let viewImageModal;
-        let loadingImagePreview;
         let fadeInClass = '';
 
-        let height = previewHeight;
-        if (height < PREVIEW_IMAGE_MIN_DIMENSION) {
-            height = PREVIEW_IMAGE_MIN_DIMENSION;
-        }
-
-        let width = previewWidth;
-        if (width < PREVIEW_IMAGE_MIN_DIMENSION) {
-            width = PREVIEW_IMAGE_MIN_DIMENSION;
-        }
-
         const fileType = getFileType(fileInfo.extension);
-        let svgClass = '';
-        let imageStyle = {height};
-        let imageLoadedStyle = {height};
+        let styleIfSvgWithDimentions = {};
         let imageContainerStyle = {};
-        if (width < viewPortWidth && height === PREVIEW_IMAGE_MAX_HEIGHT) {
-            imageContainerStyle = {width};
-        } else if (fileType === FileTypes.SVG) {
-            svgClass = 'post-image normal';
-            imageStyle = {};
-            imageLoadedStyle = {};
-            imageContainerStyle = {
-                width: viewPortWidth < PREVIEW_IMAGE_MAX_HEIGHT ? viewPortWidth : PREVIEW_IMAGE_MAX_HEIGHT,
-                height: PREVIEW_IMAGE_MAX_HEIGHT,
-            };
+        let svgClass = '';
+        if (fileType === FileTypes.SVG) {
+            svgClass = 'svg';
+            if (this.state.dimensions.height) {
+                styleIfSvgWithDimentions = {
+                    width: '100%',
+                };
+            } else {
+                imageContainerStyle = {
+                    height: 150,
+                    width: 'auto',
+                };
+            }
         }
 
         if (loaded) {
@@ -220,44 +153,18 @@ export default class SingleImageView extends React.PureComponent {
                     show={this.state.showPreviewModal}
                     onModalDismissed={this.showPreviewModal}
                     fileInfos={[fileInfo]}
+                    postId={this.props.postId}
                 />
             );
 
             fadeInClass = 'image-fade-in';
-            imageStyle = {cursor: 'pointer'};
-            imageLoadedStyle = {};
-
-            if (fileType === FileTypes.SVG) {
-                imageContainerStyle = {width: viewPortWidth < PREVIEW_IMAGE_MAX_HEIGHT ? viewPortWidth : PREVIEW_IMAGE_MAX_HEIGHT};
-            }
-        } else if (this.props.isEmbedVisible) {
-            loadingImagePreview = (
-                <LoadingImagePreview
-                    loading={loading}
-                    containerClass={'file__image-loading'}
-                />
-            );
-        }
-
-        let image;
-        if (this.props.isEmbedVisible) {
-            image = (
-                <img
-                    ref={this.setImageLoadedRef}
-                    style={imageStyle}
-                    className={`${minPreviewClass} ${svgClass}`}
-                    onClick={this.handleImageClick}
-                />
-            );
         }
 
         return (
             <div
-                ref='singleImageView'
                 className={`${'file-view--single'}`}
             >
                 <div
-                    ref={this.setViewPortRef}
                     className='file__image'
                 >
                     {fileHeader}
@@ -267,13 +174,17 @@ export default class SingleImageView extends React.PureComponent {
                         style={imageContainerStyle}
                     >
                         <div
-                            className={`image-loaded ${fadeInClass}`}
-                            style={imageLoadedStyle}
+                            className={`image-loaded ${fadeInClass} ${svgClass}`}
+                            style={styleIfSvgWithDimentions}
                         >
-                            {image}
-                        </div>
-                        <div className='image-preload'>
-                            {loadingImagePreview}
+                            <SizeAwareImage
+                                onClick={this.handleImageClick}
+                                className={minPreviewClass}
+                                src={previewURL}
+                                dimensions={this.state.dimensions}
+                                onImageLoaded={this.imageLoaded}
+                                showLoader={this.props.isEmbedVisible}
+                            />
                         </div>
                     </div>
                     }

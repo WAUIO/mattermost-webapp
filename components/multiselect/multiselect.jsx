@@ -7,7 +7,6 @@ import {FormattedMessage} from 'react-intl';
 import ReactSelect from 'react-select';
 
 import {Constants} from 'utils/constants.jsx';
-import {localizeMessage} from 'utils/utils.jsx';
 import SaveButton from 'components/save_button.jsx';
 
 import MultiSelectList from './multiselect_list.jsx';
@@ -18,6 +17,25 @@ export default class MultiSelect extends React.Component {
     static propTypes = {
         users: PropTypes.arrayOf(PropTypes.object),
         totalCount: PropTypes.number,
+        options: PropTypes.arrayOf(PropTypes.object),
+        optionRenderer: PropTypes.func,
+        values: PropTypes.arrayOf(PropTypes.object),
+        valueRenderer: PropTypes.func,
+        handleInput: PropTypes.func,
+        handleDelete: PropTypes.func,
+        perPage: PropTypes.number,
+        handlePageChange: PropTypes.func,
+        handleAdd: PropTypes.func,
+        handleSubmit: PropTypes.func,
+        noteText: PropTypes.node,
+        maxValues: PropTypes.number,
+        numRemainingText: PropTypes.node,
+        buttonSubmitText: PropTypes.node,
+        buttonSubmitLoadingText: PropTypes.node,
+        submitImmediatelyOn: PropTypes.func,
+        saving: PropTypes.bool,
+        loading: PropTypes.bool,
+        placeholderText: PropTypes.string,
     }
 
     constructor(props) {
@@ -27,12 +45,15 @@ export default class MultiSelect extends React.Component {
 
         this.state = {
             page: 0,
+            input: '',
         };
     }
 
     componentDidMount() {
         document.addEventListener('keydown', this.handleEnterPress);
-        this.refs.select.focus();
+        if (this.refs.reactSelect) {
+            this.refs.reactSelect.focus();
+        }
     }
 
     componentWillUnmount() {
@@ -43,7 +64,9 @@ export default class MultiSelect extends React.Component {
         if (this.props.handlePageChange) {
             this.props.handlePageChange(this.state.page + 1, this.state.page);
         }
-        this.refs.list.setSelected(0);
+        if (this.refs.list) {
+            this.refs.list.setSelected(0);
+        }
         this.setState({page: this.state.page + 1});
     }
 
@@ -80,9 +103,10 @@ export default class MultiSelect extends React.Component {
 
         this.props.handleAdd(value);
         this.selected = null;
-        this.refs.select.handleInputChange({target: {value: ''}});
+
+        this.refs.reactSelect.select.handleInputChange({currentTarget: {value: ''}});
         this.onInput('');
-        this.refs.select.focus();
+        this.refs.reactSelect.focus();
 
         const submitImmediatelyOn = this.props.submitImmediatelyOn;
         if (submitImmediatelyOn && submitImmediatelyOn(value)) {
@@ -90,7 +114,17 @@ export default class MultiSelect extends React.Component {
         }
     }
 
-    onInput = (input) => {
+    onInput = (input, change = {}) => {
+        if (change.action === 'input-blur' || change.action === 'menu-close') {
+            return;
+        }
+
+        if (this.state.input === input) {
+            return;
+        }
+
+        this.setState({input});
+
         if (input === '') {
             this.refs.list.setSelected(-1);
         } else {
@@ -98,7 +132,7 @@ export default class MultiSelect extends React.Component {
         }
         this.selected = null;
 
-        this.props.handleInput(input);
+        this.props.handleInput(input, this);
     }
 
     onInputKeyDown = (e) => {
@@ -126,19 +160,25 @@ export default class MultiSelect extends React.Component {
         this.props.handleSubmit();
     }
 
-    onChange = (values) => {
-        if (values.length < this.props.values.length) {
-            this.props.handleDelete(values);
+    onChange = (_, change) => {
+        if (change.action !== 'remove-value' && change.action !== 'pop-value') {
+            return;
         }
-    }
 
-    handleRender = () => {
-        return null;
+        const values = [...this.props.values];
+        for (let i = 0; i < values.length; i++) {
+            if (values[i].id === change.removedValue.id) {
+                values.splice(i, 1);
+                break;
+            }
+        }
+
+        this.props.handleDelete(values);
     }
 
     render() {
         const options = Object.assign([], this.props.options);
-        const {totalCount, users, values} = this.props.values;
+        const {totalCount, users, values} = this.props;
 
         let numRemainingText;
         if (this.props.numRemainingText) {
@@ -150,20 +190,6 @@ export default class MultiSelect extends React.Component {
                     defaultMessage='You can add {num, number} more. '
                     values={{
                         num: this.props.maxValues - this.props.values.length,
-                    }}
-                />
-            );
-        }
-
-        let memberCount;
-        if (users && users.length && totalCount) {
-            memberCount = (
-                <FormattedMessage
-                    id='multiselect.numMembers'
-                    defaultMessage='{memberOptions, number} of {totalCount, number} members'
-                    values={{
-                        memberOptions: this.props.users.length,
-                        totalCount: this.props.totalCount,
                     }}
                 />
             );
@@ -190,10 +216,17 @@ export default class MultiSelect extends React.Component {
             noteTextContainer = (
                 <div className='multi-select__note'>
                     <div className='note__icon'>
-                        <span
-                            className='fa fa-info'
-                            title={localizeMessage('generic_icons.info', 'Info Icon')}
-                        />
+                        <FormattedMessage
+                            id='generic_icons.info'
+                            defaultMessage='Info Icon'
+                        >
+                            {(title) => (
+                                <span
+                                    className='fa fa-info'
+                                    title={title}
+                                />
+                            )}
+                        </FormattedMessage>
                     </div>
                     <div>{this.props.noteText}</div>
                 </div>
@@ -219,7 +252,7 @@ export default class MultiSelect extends React.Component {
                 if (options.length > pageEnd) {
                     nextButton = (
                         <button
-                            className='btn btn-default filter-control filter-control__next'
+                            className='btn btn-link filter-control filter-control__next'
                             onClick={this.nextPage}
                         >
                             <FormattedMessage
@@ -233,7 +266,7 @@ export default class MultiSelect extends React.Component {
                 if (this.state.page > 0) {
                     previousButton = (
                         <button
-                            className='btn btn-default filter-control filter-control__prev'
+                            className='btn btn-link filter-control filter-control__prev'
                             onClick={this.prevPage}
                         >
                             <FormattedMessage
@@ -248,31 +281,47 @@ export default class MultiSelect extends React.Component {
             optionsToDisplay = options;
         }
 
+        let memberCount;
+        if (users && users.length && totalCount) {
+            memberCount = (
+                <FormattedMessage
+                    id='multiselect.numMembers'
+                    defaultMessage='{memberOptions, number} of {totalCount, number} members'
+                    values={{
+                        memberOptions: optionsToDisplay.length,
+                        totalCount: this.props.totalCount,
+                    }}
+                />
+            );
+        }
+
         return (
             <div className='filtered-user-list'>
                 <div className='filter-row filter-row--full'>
                     <div className='multi-select__container'>
                         <ReactSelect
-                            ref='select'
-                            multi={true}
+                            id='selectItems'
+                            ref='reactSelect'
+                            isMulti={true}
                             options={this.props.options}
-                            joinValues={true}
-                            clearable={false}
-                            openOnFocus={true}
+                            styles={styles}
+                            components={{
+                                Menu: nullComponent,
+                                IndicatorsContainer: nullComponent,
+                                MultiValueLabel: paddedComponent(this.props.valueRenderer),
+                            }}
+                            isClearable={false}
+                            openMenuOnFocus={false}
                             onInputChange={this.onInput}
-                            onInputKeyDown={this.onInputKeyDown}
-                            onBlurResetsInput={false}
-                            onCloseResetsInput={false}
+                            onKeyDown={this.onInputKeyDown}
                             onChange={this.onChange}
                             value={this.props.values}
-                            valueKey={this.props.valueKey}
-                            valueRenderer={this.props.valueRenderer}
-                            menuRenderer={this.handleRender}
-                            arrowRenderer={this.handleRender}
-                            noResultsText={null}
-                            placeholder={localizeMessage('multiselect.placeholder', 'Search and add members')}
+                            placeholder={this.props.placeholderText}
+                            inputValue={this.state.input}
+                            getOptionValue={(option) => option.id}
                         />
                         <SaveButton
+                            id='saveItems'
                             saving={this.props.saving}
                             disabled={this.props.saving}
                             onClick={this.handleOnClick}
@@ -282,8 +331,10 @@ export default class MultiSelect extends React.Component {
                     </div>
                     <div className='multi-select__help'>
                         {numRemainingText}
-                        {noteTextContainer}
                         {memberCount}
+                    </div>
+                    <div className='multi-select__help'>
+                        {noteTextContainer}
                     </div>
                 </div>
                 <MultiSelectList
@@ -306,25 +357,53 @@ export default class MultiSelect extends React.Component {
     }
 }
 
-MultiSelect.propTypes = {
-    options: PropTypes.arrayOf(PropTypes.object),
-    optionRenderer: PropTypes.func,
-    values: PropTypes.arrayOf(PropTypes.object),
-    valueKey: PropTypes.string,
-    valueRenderer: PropTypes.func,
-    handleInput: PropTypes.func,
-    handleDelete: PropTypes.func,
-    perPage: PropTypes.number,
-    handlePageChange: PropTypes.func,
-    handleAdd: PropTypes.func,
-    handleSubmit: PropTypes.func,
-    noteText: PropTypes.node,
-    maxValues: PropTypes.number,
-    numRemainingText: PropTypes.node,
-    buttonSubmitText: PropTypes.node,
-    buttonSubmitLoadingText: PropTypes.node,
-    submitImmediatelyOn: PropTypes.func,
-    saving: PropTypes.bool,
-    loading: PropTypes.bool,
-    totalCount: PropTypes.number,
+const nullComponent = () => null;
+
+const paddedComponent = (WrappedComponent) => {
+    return (props) => {
+        return (
+            <div style={{paddingRight: '5px', paddingLeft: '5px', borderRight: '1px solid rgba(0, 126, 255, 0.24)'}}>
+                <WrappedComponent {...props}/>
+            </div>
+        );
+    };
+};
+
+const styles = {
+    container: () => {
+        return {
+            display: 'table-cell',
+            paddingRight: '15px',
+            verticalAlign: 'top',
+            width: '100%',
+        };
+    },
+    control: (base) => {
+        return {
+            ...base,
+            borderRadius: '1px',
+            borderColor: 'hsl(0,0%,80%)',
+            minHeight: '36px',
+            '&:hover': {},
+            boxShadow: '',
+            backgroundColor: 'hsl(0,0%,100%)',
+        };
+    },
+    multiValue: (base) => {
+        return {
+            ...base,
+            whiteSpace: 'nowrap',
+            border: '1px solid rgba(0, 126, 255, 0.24)',
+            backgroundColor: 'rgba(0, 126, 255, 0.08)',
+            color: '#007eff',
+        };
+    },
+    multiValueRemove: (base) => {
+        return {
+            ...base,
+            ':hover': {
+                backgroundColor: 'rgba(0, 126, 255, 0.15)',
+            },
+        };
+    },
 };
