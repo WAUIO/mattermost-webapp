@@ -120,7 +120,7 @@ export default class TutorialIntroScreens extends React.Component {
                 <h1>
                     <FormattedMessage
                         id='tutorial_intro.screenOne.title2'
-                        defaultMessage='Mattermost'
+                        defaultMessage='WAU Chat'
                     />
                 </h1>
                 <p>
@@ -193,7 +193,7 @@ export default class TutorialIntroScreens extends React.Component {
                 <h3>
                     <FormattedMessage
                         id='tutorial_intro.screenTwo.title'
-                        defaultMessage='How Mattermost works:'
+                        defaultMessage='How WAU Chat works:'
                     />
                 </h3>
                 <p>

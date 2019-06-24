@@ -2857,7 +2857,7 @@
   "system_notice.body.permissions": "Sistem Panosunda bulunan bazı ilke ve izin ayarları Enterprise E10 ve E20 sürümlerinde [gelişmiş izinler](!https://about.mattermost.com/default-advanced-permissions) bölümü altına taşındı",
   "system_notice.dont_show": "Yeniden görüntülenmesin",
   "system_notice.remind_me": "Daha sonra anımsat",
-  "system_notice.title": "**Bildirim**\nMattermost tarafından",
+  "system_notice.title": "**Bildirim**\nWAU Chat tarafından",
   "system_users_list.count": "{count, number} {count, plural, one {user} other {users}}",
   "system_users_list.countPage": "{startCount, number} - {endCount, number} {count, plural, one {user} other {users}} / {total, number}",
   "system_users_list.countSearch": "{count, number} {count, plural, one {user} other {users}} / {total, number}",

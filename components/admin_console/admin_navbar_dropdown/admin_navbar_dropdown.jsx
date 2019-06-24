@@ -100,7 +100,7 @@ export default class AdminNavbarDropdown extends React.Component {
                     <MenuItemToggleModalRedux
                         modalId={ModalIdentifiers.ABOUT}
                         dialogType={AboutBuildModal}
-                        text={Utils.localizeMessage('navbar_dropdown.about', 'About Mattermost')}
+                        text={Utils.localizeMessage('navbar_dropdown.about', 'About WAU Chat')}
                     />
                 </MenuGroup>
                 <MenuGroup>

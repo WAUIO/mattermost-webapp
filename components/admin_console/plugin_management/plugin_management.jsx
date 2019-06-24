@@ -714,7 +714,7 @@ export default class PluginManagement extends AdminSettings {
                         <p className='help-text'>
                             <FormattedHTMLMessage
                                 id='admin.plugin.installedDesc'
-                                defaultMessage='Installed plugins on your Mattermost server. Pre-packaged plugins are installed by default, and can be disabled but not removed.'
+                                defaultMessage='Installed plugins on your WAU Chat server. Pre-packaged plugins are installed by default, and can be disabled but not removed.'
                             />
                         </p>
                         <br/>

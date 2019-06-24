@@ -206,7 +206,7 @@ export default class Bots extends React.PureComponent {
                 helpText={
                     <FormattedMessage
                         id='bots.manage.help'
-                        defaultMessage='Use {botAccounts} to integrate with Mattermost through plugins or the API. Bot accounts are available to everyone on your server.'
+                        defaultMessage='Use {botAccounts} to integrate with WAU Chat through plugins or the API. Bot accounts are available to everyone on your server.'
                         values={{
                             botAccounts: (
                                 <a
