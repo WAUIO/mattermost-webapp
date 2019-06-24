@@ -78,9 +78,9 @@ export default class AboutBuildModal extends React.PureComponent {
                 <a
                     target='_blank'
                     rel='noopener noreferrer'
-                    href='http://www.mattermost.org/'
+                    href='http://www.wau.co/'
                 >
-                    {'mattermost.org'}
+                    {'wau.co'}
                 </a>
             </div>
         );
