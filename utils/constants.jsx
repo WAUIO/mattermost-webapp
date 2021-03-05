@@ -23,6 +23,7 @@ import solarizedDarkIcon from 'images/themes/code_themes/solarized-dark.png';
 import solarizedLightIcon from 'images/themes/code_themes/solarized-light.png';
 import mattermostThemeImage from 'images/themes/mattermost.png';
 import mattermostDarkThemeImage from 'images/themes/mattermost_dark.png';
+import wauThemeImage from 'images/themes/wau.png';
 import defaultThemeImage from 'images/themes/organization.png';
 import windows10ThemeImage from 'images/themes/windows_dark.png';
 import logoWebhook from 'images/webhook_icon.jpg';
@@ -1183,6 +1184,7 @@ export const Constants = {
             sidebarTextActiveBorder: '#3f617a',
             sidebarTextActiveColor: '#ffffff',
             sidebarHeaderBg: '#165d74',
+            sidebarTeamBarBg: '#181818',
             sidebarHeaderTextColor: '#ffffff',
             onlineIndicator: '#2a9521',
             awayIndicator: '#ffbc42',
@@ -1197,10 +1199,10 @@ export const Constants = {
             buttonColor: '#ffffff',
             errorTextColor: '#fd5960',
             mentionHighlightBg: '#217d95',
-            mentionHighlightLink: '#166de0',
+            mentionHighlightLink: '#ffffff',
             codeTheme: 'monokai',
             mentionBg: '#ffffff',
-            image: windows10ThemeImage,
+            image: wauThemeImage,
         },
     },
     THEME_ELEMENTS: [

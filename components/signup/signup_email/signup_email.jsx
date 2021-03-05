@@ -123,6 +123,10 @@ export default class SignupEmail extends React.PureComponent {
     }
 
     handleSignupSuccess = (user, data) => {
+        //post message to parent window to close when in webview mobile
+        if (typeof window.postMessage === 'function') {
+            window.postMessage('signup.success', '*');
+        }
         trackEvent('signup', 'signup_user_02_complete');
         const redirectTo = (new URLSearchParams(this.props.location.search)).get('redirect_to');
 
