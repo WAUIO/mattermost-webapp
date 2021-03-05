@@ -2425,7 +2425,7 @@
   "channel_invite.addNewMembers": "Add people to {channel}",
   "channel_loader.posted": "Posted",
   "channel_loader.postedImage": " posted an image",
-  "channel_loader.socketError": "Please check connection, Mattermost unreachable. If issue persists, ask administrator to [check WebSocket port](!https://about.mattermost.com/default-websocket-port-help).",
+  "channel_loader.socketError": "Please check connection, WAU Chat unreachable. If issue persists, ask administrator to [check WebSocket port](!https://about.mattermost.com/default-websocket-port-help).",
   "channel_loader.someone": "Someone",
   "channel_loader.something": " did something new",
   "channel_loader.unknown_error": "We received an unexpected status code from the server.",
