@@ -4,8 +4,10 @@
 import {connect} from 'react-redux';
 import {createSelector} from 'reselect';
 import {
+    getUser,
     getCurrentUser,
     getUserStatuses,
+    getCurrentUserId,
 } from 'mattermost-redux/selectors/entities/users';
 import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {
@@ -29,12 +31,13 @@ import Mobile from './mobile_channel_header_dropdown';
 
 const getTeammateId = createSelector(
     getCurrentChannel,
-    (channel) => {
+    getCurrentUserId,
+    (channel, currentUserId) => {
         if (channel.type !== Constants.DM_CHANNEL) {
             return null;
         }
 
-        return Utils.getUserIdFromChannelName(channel);
+        return Utils.getUserIdFromChannelId(channel.name, currentUserId);
     },
 );
 
@@ -47,7 +50,7 @@ const getTeammateStatus = createSelector(
         }
 
         return userStatuses[teammateId];
-    }
+    },
 );
 
 const mapStateToProps = (state) => ({
@@ -59,14 +62,32 @@ const mapStateToProps = (state) => ({
     isReadonly: isCurrentChannelReadOnly(state),
     isArchived: isCurrentChannelArchived(state),
     penultimateViewedChannelName: getPenultimateViewedChannelName(state) || getRedirectChannelNameForTeam(state, getCurrentTeamId(state)),
+    pluginMenuItems: state.plugins.components.ChannelHeader || [],
+    isLicensedForLDAPGroups: state.entities.general.license.LDAPGroups === 'true',
 });
 
-const mobileMapStateToProps = (state) => ({
-    user: getCurrentUser(state),
-    channel: getCurrentChannel(state),
-    teammateId: getTeammateId(state),
-    teammateStatus: getTeammateStatus(state),
-});
+const mobileMapStateToProps = (state) => {
+    const user = getCurrentUser(state);
+    const channel = getCurrentChannel(state);
+    const teammateId = getTeammateId(state);
+
+    let teammateIsBot = false;
+    let displayName = '';
+    if (teammateId) {
+        const teammate = getUser(state, teammateId);
+        teammateIsBot = teammate && teammate.is_bot;
+        displayName = Utils.getDisplayNameByUser(state, teammate);
+    }
+
+    return {
+        user,
+        channel,
+        teammateId,
+        teammateIsBot,
+        teammateStatus: getTeammateStatus(state),
+        displayName,
+    };
+};
 
 export const ChannelHeaderDropdown = Desktop;
 export const ChannelHeaderDropdownItems = connect(mapStateToProps)(Items);

@@ -1,6 +1,6 @@
 .Badge {
     margin: 0 0 0 4px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
 }
 
@@ -10,10 +10,11 @@
     font-size: 10px;
     font-weight: 600;
     padding: 1px 4px;
-    margin: 0 10px 0 0;
     line-height: 14px;
+    background: var(--center-channel-color-16);
+    border: none;
 
-    &.BotBadge {
+    &.BotBadge, &.GuestBadge {
         padding: 2px 4px;
     }
 }

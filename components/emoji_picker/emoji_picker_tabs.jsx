@@ -6,8 +6,8 @@ import React, {PureComponent} from 'react';
 import {Tab, Tabs} from 'react-bootstrap';
 
 import GifPicker from 'components/gif_picker/gif_picker.jsx';
-import EmojiIcon from 'components/svg/emoji_icon';
-import GfycatIcon from 'components/svg/gfycat_icon';
+import EmojiIcon from 'components/widgets/icons/emoji_icon';
+import GfycatIcon from 'components/widgets/icons/gfycat_icon';
 
 import EmojiPickerHeader from './components/emoji_picker_header';
 
@@ -18,7 +18,8 @@ export default class EmojiPickerTabs extends PureComponent {
         style: PropTypes.object,
         rightOffset: PropTypes.number,
         topOffset: PropTypes.number,
-        placement: PropTypes.oneOf(['top', 'bottom', 'left']),
+        leftOffset: PropTypes.number,
+        placement: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
         customEmojis: PropTypes.object,
         onEmojiClose: PropTypes.func.isRequired,
         onEmojiClick: PropTypes.func.isRequired,
@@ -29,6 +30,7 @@ export default class EmojiPickerTabs extends PureComponent {
     static defaultProps = {
         rightOffset: 0,
         topOffset: 0,
+        leftOffset: 0,
     };
 
     constructor(props) {
@@ -36,6 +38,7 @@ export default class EmojiPickerTabs extends PureComponent {
 
         this.state = {
             emojiTabVisible: true,
+            filter: '',
         };
     }
 
@@ -53,7 +56,11 @@ export default class EmojiPickerTabs extends PureComponent {
 
     handleEmojiPickerClose = () => {
         this.props.onEmojiClose();
-    }
+    };
+
+    handleFilterChange = (filter) => {
+        this.setState({filter});
+    };
 
     render() {
         let pickerStyle;
@@ -69,8 +76,10 @@ export default class EmojiPickerTabs extends PureComponent {
                 pickerStyle = {...this.props.style};
             }
 
-            if (pickerStyle.top) {
-                pickerStyle.top += this.props.topOffset;
+            pickerStyle.top = pickerStyle.top ? pickerStyle.top + this.props.topOffset : this.props.topOffset;
+
+            if (pickerStyle.left) {
+                pickerStyle.left += this.props.leftOffset;
             }
         }
 
@@ -101,6 +110,8 @@ export default class EmojiPickerTabs extends PureComponent {
                             onEmojiClick={this.props.onEmojiClick}
                             customEmojis={this.props.customEmojis}
                             visible={this.state.emojiTabVisible}
+                            filter={this.state.filter}
+                            handleFilterChange={this.handleFilterChange}
                         />
                     </Tab>
                     <Tab
@@ -111,16 +122,19 @@ export default class EmojiPickerTabs extends PureComponent {
                     >
                         <GifPicker
                             onGifClick={this.props.onGifClick}
+                            defaultSearchText={this.state.filter}
+                            handleSearchTextChange={this.handleFilterChange}
                         />
                     </Tab>
                 </Tabs>
             );
         }
+
         return (
             <div
                 id='emojiPicker'
                 style={pickerStyle}
-                className={pickerClass + ' emoji-picker--single'}
+                className={`a11y__popup ${pickerClass} emoji-picker--single`}
             >
                 <EmojiPickerHeader handleEmojiPickerClose={this.handleEmojiPickerClose}/>
                 <EmojiPicker
@@ -128,6 +142,8 @@ export default class EmojiPickerTabs extends PureComponent {
                     onEmojiClose={this.props.onEmojiClose}
                     onEmojiClick={this.props.onEmojiClick}
                     customEmojis={this.props.customEmojis}
+                    filter={this.state.filter}
+                    handleFilterChange={this.handleFilterChange}
                 />
             </div>
         );

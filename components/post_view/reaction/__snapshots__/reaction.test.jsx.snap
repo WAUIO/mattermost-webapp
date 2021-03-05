@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`components/post_view/Reaction should disable add reaction when you do not have permissions 1`] = `
+exports[`components/post_view/Reaction should apply read-only class if user does not have permission to add reaction 1`] = `
 <OverlayTrigger
   defaultOverlayShown={false}
-  delayShow={1000}
+  delayShow={500}
   onEnter={[Function]}
   overlay={
     <Tooltip
@@ -22,7 +22,6 @@ exports[`components/post_view/Reaction should disable add reaction when you do n
             "reactionVerb": <FormattedMessage
               defaultMessage="reacted"
               id="reaction.reactionVerb.users"
-              values={Object {}}
             />,
             "users": <b>
               <FormattedMessage
@@ -51,31 +50,56 @@ exports[`components/post_view/Reaction should disable add reaction when you do n
     ]
   }
 >
-  <div
-    className="post-reaction post-reaction--read-only"
+  <button
+    aria-label="react with smile"
+    className="Reaction Reaction--unreacted Reaction--read-only"
     id="postReaction-post_id_1-smile"
+    onClick={[Function]}
   >
     <span
-      className="post-reaction__emoji emoticon"
-      style={
-        Object {
-          "backgroundImage": "url(emoji_image_url)",
-        }
-      }
-    />
-    <span
-      className="post-reaction__count"
+      className="d-flex align-items-center"
     >
-      2
+      <span
+        className="Reaction__emoji emoticon"
+        style={
+          Object {
+            "backgroundImage": "url(emoji_image_url)",
+          }
+        }
+      />
+      <span
+        className="Reaction__count"
+      >
+        <span
+          className="Reaction__number"
+        >
+          <span
+            className="Reaction__number--display"
+          >
+            2
+          </span>
+          <span
+            className="Reaction__number--unreacted"
+            onAnimationEnd={[Function]}
+          >
+            2
+          </span>
+          <span
+            className="Reaction__number--reacted"
+          >
+            3
+          </span>
+        </span>
+      </span>
     </span>
-  </div>
+  </button>
 </OverlayTrigger>
 `;
 
-exports[`components/post_view/Reaction should disable remove reaction when you do not have permissions 1`] = `
+exports[`components/post_view/Reaction should apply read-only class if user does not have permission to remove reaction 1`] = `
 <OverlayTrigger
   defaultOverlayShown={false}
-  delayShow={1000}
+  delayShow={500}
   onEnter={[Function]}
   overlay={
     <Tooltip
@@ -94,7 +118,6 @@ exports[`components/post_view/Reaction should disable remove reaction when you d
             "reactionVerb": <FormattedMessage
               defaultMessage="reacted"
               id="reaction.reactionVerb.youAndUsers"
-              values={Object {}}
             />,
             "users": <b>
               <FormattedMessage
@@ -123,31 +146,56 @@ exports[`components/post_view/Reaction should disable remove reaction when you d
     ]
   }
 >
-  <div
-    className="post-reaction post-reaction--read-only post-reaction--current-user"
+  <button
+    aria-label="react with smile"
+    className="Reaction Reaction--reacted Reaction--read-only"
     id="postReaction-post_id_1-smile"
+    onClick={[Function]}
   >
     <span
-      className="post-reaction__emoji emoticon"
-      style={
-        Object {
-          "backgroundImage": "url(emoji_image_url)",
-        }
-      }
-    />
-    <span
-      className="post-reaction__count"
+      className="d-flex align-items-center"
     >
-      2
+      <span
+        className="Reaction__emoji emoticon"
+        style={
+          Object {
+            "backgroundImage": "url(emoji_image_url)",
+          }
+        }
+      />
+      <span
+        className="Reaction__count"
+      >
+        <span
+          className="Reaction__number"
+        >
+          <span
+            className="Reaction__number--display"
+          >
+            2
+          </span>
+          <span
+            className="Reaction__number--unreacted"
+            onAnimationEnd={[Function]}
+          >
+            1
+          </span>
+          <span
+            className="Reaction__number--reacted"
+          >
+            2
+          </span>
+        </span>
+      </span>
     </span>
-  </div>
+  </button>
 </OverlayTrigger>
 `;
 
 exports[`components/post_view/Reaction should match snapshot 1`] = `
 <OverlayTrigger
   defaultOverlayShown={false}
-  delayShow={1000}
+  delayShow={500}
   onEnter={[Function]}
   overlay={
     <Tooltip
@@ -166,7 +214,6 @@ exports[`components/post_view/Reaction should match snapshot 1`] = `
             "reactionVerb": <FormattedMessage
               defaultMessage="reacted"
               id="reaction.reactionVerb.users"
-              values={Object {}}
             />,
             "users": <b>
               <FormattedMessage
@@ -187,7 +234,6 @@ exports[`components/post_view/Reaction should match snapshot 1`] = `
       <FormattedMessage
         defaultMessage="(click to add)"
         id="reaction.clickToAdd"
-        values={Object {}}
       />
     </Tooltip>
   }
@@ -200,32 +246,56 @@ exports[`components/post_view/Reaction should match snapshot 1`] = `
     ]
   }
 >
-  <div
-    className="post-reaction"
+  <button
+    aria-label="react with smile"
+    className="Reaction Reaction--unreacted "
     id="postReaction-post_id_1-smile"
     onClick={[Function]}
   >
     <span
-      className="post-reaction__emoji emoticon"
-      style={
-        Object {
-          "backgroundImage": "url(emoji_image_url)",
-        }
-      }
-    />
-    <span
-      className="post-reaction__count"
+      className="d-flex align-items-center"
     >
-      2
+      <span
+        className="Reaction__emoji emoticon"
+        style={
+          Object {
+            "backgroundImage": "url(emoji_image_url)",
+          }
+        }
+      />
+      <span
+        className="Reaction__count"
+      >
+        <span
+          className="Reaction__number"
+        >
+          <span
+            className="Reaction__number--display"
+          >
+            2
+          </span>
+          <span
+            className="Reaction__number--unreacted"
+            onAnimationEnd={[Function]}
+          >
+            2
+          </span>
+          <span
+            className="Reaction__number--reacted"
+          >
+            3
+          </span>
+        </span>
+      </span>
     </span>
-  </div>
+  </button>
 </OverlayTrigger>
 `;
 
 exports[`components/post_view/Reaction should match snapshot when a current user reacted to a post 1`] = `
 <OverlayTrigger
   defaultOverlayShown={false}
-  delayShow={1000}
+  delayShow={500}
   onEnter={[Function]}
   overlay={
     <Tooltip
@@ -244,7 +314,6 @@ exports[`components/post_view/Reaction should match snapshot when a current user
             "reactionVerb": <FormattedMessage
               defaultMessage="reacted"
               id="reaction.reactionVerb.youAndUsers"
-              values={Object {}}
             />,
             "users": <b>
               <FormattedMessage
@@ -265,7 +334,6 @@ exports[`components/post_view/Reaction should match snapshot when a current user
       <FormattedMessage
         defaultMessage="(click to remove)"
         id="reaction.clickToRemove"
-        values={Object {}}
       />
     </Tooltip>
   }
@@ -278,25 +346,49 @@ exports[`components/post_view/Reaction should match snapshot when a current user
     ]
   }
 >
-  <div
-    className="post-reaction post-reaction--current-user"
+  <button
+    aria-label="remove reaction smile"
+    className="Reaction Reaction--reacted "
     id="postReaction-post_id_1-smile"
     onClick={[Function]}
   >
     <span
-      className="post-reaction__emoji emoticon"
-      style={
-        Object {
-          "backgroundImage": "url(emoji_image_url)",
-        }
-      }
-    />
-    <span
-      className="post-reaction__count"
+      className="d-flex align-items-center"
     >
-      2
+      <span
+        className="Reaction__emoji emoticon"
+        style={
+          Object {
+            "backgroundImage": "url(emoji_image_url)",
+          }
+        }
+      />
+      <span
+        className="Reaction__count"
+      >
+        <span
+          className="Reaction__number"
+        >
+          <span
+            className="Reaction__number--display"
+          >
+            2
+          </span>
+          <span
+            className="Reaction__number--unreacted"
+            onAnimationEnd={[Function]}
+          >
+            1
+          </span>
+          <span
+            className="Reaction__number--reacted"
+          >
+            2
+          </span>
+        </span>
+      </span>
     </span>
-  </div>
+  </button>
 </OverlayTrigger>
 `;
 
