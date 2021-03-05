@@ -8,7 +8,7 @@ import {FormattedMessage} from 'react-intl';
 import {ClientConfig, ClientLicense} from 'mattermost-redux/types/config';
 
 import FormattedMarkdownMessage from 'components/formatted_markdown_message';
-import MattermostLogo from 'components/widgets/icons/mattermost_logo';
+import WauLogo from 'components/widgets/icons/wau_logo';
 import Nbsp from 'components/html_entities/nbsp';
 
 import {AboutLinks} from 'utils/constants';
@@ -231,7 +231,7 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                 <Modal.Body>
                     <div className='about-modal__content'>
                         <div className='about-modal__logo'>
-                            <MattermostLogo/>
+                            <WauLogo/>
                         </div>
                         <div>
                             <h3 className='about-modal__title'>{'Mattermost'} {title}</h3>

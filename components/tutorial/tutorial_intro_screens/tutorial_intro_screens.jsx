@@ -114,7 +114,7 @@ export default class TutorialIntroScreens extends React.PureComponent {
                 <h1>
                     <FormattedMessage
                         id='tutorial_intro.screenOne.title2'
-                        defaultMessage='Mattermost'
+                        defaultMessage='WAU Chat'
                     />
                 </h1>
                 <p>
@@ -126,7 +126,7 @@ export default class TutorialIntroScreens extends React.PureComponent {
                 <p>
                     <FormattedMessage
                         id='tutorial_intro.screenOne.body2'
-                        defaultMessage='Keep your team connected to help them achieve what matters most.'
+                        defaultMessage='Keep your team connected to help them achieve what wau chat.'
                     />
                 </p>
                 {circles}
@@ -187,7 +187,7 @@ export default class TutorialIntroScreens extends React.PureComponent {
                 <h3>
                     <FormattedMessage
                         id='tutorial_intro.screenTwo.title'
-                        defaultMessage='How Mattermost Works:'
+                        defaultMessage='How WAU Chat Works:'
                     />
                 </h3>
                 <p>
