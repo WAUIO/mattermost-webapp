@@ -134,7 +134,7 @@ describe('Integrations', () => {
         cy.postMessage('/help');
 
         // * Verify that a new tag opens
-        cy.window().its('open').should('have.been.calledWithMatch', 'https://about.mattermost.com/default-help/');
+        cy.window().its('open').should('have.been.calledWithMatch', 'https://wau.co');
     });
 
     it('MM-T681 /invite_people error message with no text or text that is not an email address', () => {

@@ -802,7 +802,7 @@ export default class UserSettingsDisplay extends React.PureComponent<Props, Stat
                         />
                     </h3>
                     <div className='divider-dark first'/>
-                    {themeSection}
+                    {/* themeSection */}
                     {clockSection}
                     {teammateNameDisplaySection}
                     {timezoneSelection}

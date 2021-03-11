@@ -3,7 +3,7 @@
 
 export const FEEDBACK_EMAIL = 'test@example.com';
 export const ABOUT_LINK = 'https://about.mattermost.com/default-about/';
-export const HELP_LINK = 'https://about.mattermost.com/default-help/';
+export const HELP_LINK = 'https://wau.co';
 export const PRIVACY_POLICY_LINK = 'https://about.mattermost.com/default-privacy-policy/';
 export const REPORT_A_PROBLEM_LINK = 'https://about.mattermost.com/default-report-a-problem/';
 export const TERMS_OF_SERVICE_LINK = 'https://about.mattermost.com/default-terms/';

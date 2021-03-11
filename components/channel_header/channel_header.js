@@ -478,23 +478,22 @@ class ChannelHeader extends React.PureComponent {
         if (rhsState === RHSStates.PIN) {
             pinnedIconClass += ' channel-header__icon--active';
         }
-        const pinnedIcon = (this.props.pinnedPostsCount ?
-            (<React.Fragment>
-                <i
-                    aria-hidden='true'
-                    className='icon icon-pin-outline channel-header__pin'
-                />
-                <span
-                    id='channelPinnedPostCountText'
-                    className='icon__text'
-                >
-                    {this.props.pinnedPostsCount}
-                </span>
-            </React.Fragment>) : (
-                <i
-                    aria-hidden='true'
-                    className='icon icon-pin-outline channel-header__pin'
-                />));
+        const pinnedIcon = (this.props.pinnedPostsCount ? (<React.Fragment>
+            <i
+                aria-hidden='true'
+                className='icon icon-pin-outline channel-header__pin'
+            />
+            <span
+                id='channelPinnedPostCountText'
+                className='icon__text'
+            >
+                {this.props.pinnedPostsCount}
+            </span>
+        </React.Fragment>) : (
+            <i
+                aria-hidden='true'
+                className='icon icon-pin-outline channel-header__pin'
+            />));
 
         let headerTextContainer;
         const headerText = (isDirect && dmUser.is_bot) ? dmUser.bot_description : channel.header;
@@ -871,7 +870,7 @@ class ChannelHeader extends React.PureComponent {
                         onClick={this.getFlagged}
                         tooltipKey={'flaggedPosts'}
                     />
-                    <UserGuideDropdown/>
+                    {/* <UserGuideDropdown/> */}
                 </div>
             </div>
         );

@@ -1,7 +1,7 @@
 .PHONY: build test run clean stop check-style fix-style run-unit emojis help package-ci storybook build-storybook update-dependencies
 
-BUILD_SERVER_DIR = ../mattermost-server
-BUILD_WEBAPP_DIR = ../mattermost-webapp
+BUILD_SERVER_DIR = ../mattermost-server-master
+BUILD_WEBAPP_DIR = ../mattermost-webapp-master
 MM_UTILITIES_DIR = ../mattermost-utilities
 EMOJI_TOOLS_DIR = ./build/emoji
 export NODE_OPTIONS=--max-old-space-size=4096
@@ -48,7 +48,7 @@ package: build ## Packages app
 
 	mkdir tmp
 	mv dist tmp/client
-	tar -C tmp -czf mattermost-webapp.tar.gz client
+	tar -C tmp -czf mattermost-webapp-master.tar.gz client
 	mv tmp/client dist
 	rmdir tmp
 
@@ -62,12 +62,12 @@ package-ci: ## used in the CI to build the package and bypass the npm install
 
 	mkdir tmp
 	mv dist tmp/client
-	tar -C tmp -czf mattermost-webapp.tar.gz client
+	tar -C tmp -czf mattermost-webapp-master.tar.gz client
 	mv tmp/client dist
 	rmdir tmp
 
 build: node_modules ## Builds the app
-	@echo Building mattermost Webapp
+	@echo Building WAU Chat Webapp
 
 	rm -rf dist
 
