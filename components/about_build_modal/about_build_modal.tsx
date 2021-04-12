@@ -242,7 +242,7 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                                         id='about.version'
                                         defaultMessage='WAU Chat Version:'
                                     />
-                                    <span id='versionString'>{'\u00a0' + mmversion}</span>
+                                    <span id='versionString'>{'\u00a0' + /*mmversion*/ "Team Edition"}</span>
                                 </div>
                                 <div>
                                     <FormattedMessage
@@ -264,7 +264,7 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                         </div>
                     </div>
                     <div className='about-modal__footer'>
-                        {learnMore}
+                        {/* learnMore */}
                         <div className='form-group'>
                             <div className='about-modal__copyright'>
                                 <FormattedMessage
@@ -275,21 +275,21 @@ export default class AboutBuildModal extends React.PureComponent<Props, State> {
                                     }}
                                 />
                             </div>
-                            <div className='about-modal__links'>
+                            {/*<div className='about-modal__links'>
                                 {termsOfService}
                                 {' - '}
                                 {privacyPolicy}
-                            </div>
+                                </div>*/}
                         </div>
                     </div>
-                    <div className='about-modal__notice form-group pt-3'>
+                    {/*<div className='about-modal__notice form-group pt-3'>
                         <p>
                             <FormattedMarkdownMessage
                                 id='about.notice'
                                 defaultMessage='WAU Chat is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps.'
                             />
                         </p>
-                    </div>
+                            </div>*/}
                     <div className='about-modal__hash'>
                         <p>
                             <FormattedMessage

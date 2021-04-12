@@ -364,13 +364,13 @@ class MainMenu extends React.PureComponent {
                     </SystemPermissionGate>
                 </Menu.Group>
                 <Menu.Group>
-                    <Menu.ItemExternalLink
+                    {/* <Menu.ItemExternalLink
                         id='helpLink'
                         show={Boolean(this.props.helpLink)}
                         url={this.props.helpLink}
                         text={formatMessage({id: 'navbar_dropdown.help', defaultMessage: 'Help'})}
                         icon={this.props.mobile && <i className='fa fa-question'/>}
-                    />
+                    /> */}
                     <Menu.ItemAction
                         id='gettingStarted'
                         show={this.props.showGettingStarted}
@@ -383,13 +383,13 @@ class MainMenu extends React.PureComponent {
                         onClick={this.toggleShortcutsModal}
                         text={formatMessage({id: 'navbar_dropdown.keyboardShortcuts', defaultMessage: 'Keyboard Shortcuts'})}
                     />
-                    <Menu.ItemExternalLink
+                    {/* <Menu.ItemExternalLink
                         id='reportLink'
                         show={Boolean(this.props.reportAProblemLink)}
                         url={this.props.reportAProblemLink}
                         text={formatMessage({id: 'navbar_dropdown.report', defaultMessage: 'Report a Problem'})}
                         icon={this.props.mobile && <i className='fa fa-phone'/>}
-                    />
+                    /> */}
                     <Menu.ItemExternalLink
                         id='nativeAppLink'
                         show={this.props.appDownloadLink && !UserAgent.isMobileApp()}
@@ -401,7 +401,7 @@ class MainMenu extends React.PureComponent {
                         id='about'
                         modalId={ModalIdentifiers.ABOUT}
                         dialogType={AboutBuildModal}
-                        text={formatMessage({id: 'navbar_dropdown.about', defaultMessage: 'About {appTitle}'}, {appTitle: this.props.siteName || 'Mattermost'})}
+                        text={formatMessage({id: 'navbar_dropdown.about', defaultMessage: 'About {appTitle}'}, {appTitle: this.props.siteName || 'WAU Chat'})}
                         icon={this.props.mobile && <i className='fa fa-info'/>}
                     />
                 </Menu.Group>

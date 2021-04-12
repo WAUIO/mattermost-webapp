@@ -133,7 +133,7 @@ export default class NotLoggedIn extends React.PureComponent<Props> {
                                 {`© 2015-${new Date().getFullYear()} WAU IO, Inc.`}
                             </span>
                             <span className='pull-right'>
-                                {content}
+                                {/* content */}
                             </span>
                         </div>
                     </div>

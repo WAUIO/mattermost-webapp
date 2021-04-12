@@ -54,7 +54,7 @@ class UserGuideDropdown extends React.PureComponent<Props, State> {
 
         return (
             <Menu.Group>
-                {this.props.enableAskCommunityLink === 'true' && (
+                {/* {this.props.enableAskCommunityLink === 'true' && (
                     <Menu.ItemExternalLink
                         id='askTheCommunityLink'
                         url={askTheCommunityUrl}
@@ -62,7 +62,7 @@ class UserGuideDropdown extends React.PureComponent<Props, State> {
                         onClick={this.askTheCommunityClick}
                     />
                 )}
-                <Menu.ItemExternalLink
+                 <Menu.ItemExternalLink
                     id='helpResourcesLink'
                     url={this.props.helpLink}
                     text={intl.formatMessage({id: 'userGuideHelp.helpResources', defaultMessage: 'Help resources'})}
@@ -71,7 +71,7 @@ class UserGuideDropdown extends React.PureComponent<Props, State> {
                     id='reportAProblemLink'
                     url={this.props.reportAProblemLink}
                     text={intl.formatMessage({id: 'userGuideHelp.reportAProblem', defaultMessage: 'Report a problem'})}
-                />
+                /> */}
                 <Menu.ItemAction
                     id='keyboardShortcuts'
                     onClick={this.toggleShortcutsModal}
